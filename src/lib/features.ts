@@ -18,6 +18,8 @@ export const FEATURES = {
   bookings: true,
   /** Per-tenant blog (/admin/blog, /blog, /blog/[slug]). Available to all tenants. */
   blog: true,
+  /** Social media management — connect accounts, schedule & AI-draft posts (/admin/social). */
+  social: true,
 } as const
 
 export type FeatureKey = keyof typeof FEATURES

@@ -1,10 +1,18 @@
-import type { DeliverableFile, IntakeQuestion, IntakeResponse, Payment, PortfolioItem, Project, Service, Stage, StageTemplate, User, Product, Order, OrderItem, CustomPage, Booking, CalendarBlock, GalleryTemplate } from "@/types"
+import type { DeliverableFile, IntakeQuestion, IntakeResponse, Payment, PortfolioItem, Project, Service, Stage, StageTemplate, User, Product, Order, OrderItem, CustomPage, Booking, CalendarBlock, GalleryTemplate, SocialAccount, SocialPost, SocialPostTarget, SocialSettings } from "@/types"
 
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
 
 type BaseRow = { id: string; [key: string]: unknown }
 
 type Table<Row extends BaseRow = BaseRow> = {
+  Row: Row
+  Insert: { [Key in keyof Row]?: Row[Key] | null }
+  Update: { [Key in keyof Row]?: Row[Key] | null }
+  Relationships: []
+}
+
+/** Like Table but for rows whose primary key is not named `id`. */
+type TableNoPk<Row extends Record<string, unknown>> = {
   Row: Row
   Insert: { [Key in keyof Row]?: Row[Key] | null }
   Update: { [Key in keyof Row]?: Row[Key] | null }
@@ -31,6 +39,10 @@ export type Database = {
       bookings: Table<Booking & BaseRow>
       calendar_blocks: Table<CalendarBlock & BaseRow>
       page_templates_gallery: Table<GalleryTemplate & BaseRow>
+      social_accounts: Table<SocialAccount & BaseRow>
+      social_posts: Table<SocialPost & BaseRow>
+      social_post_targets: Table<SocialPostTarget & BaseRow>
+      social_settings: TableNoPk<SocialSettings & { [key: string]: unknown }>
     }
     Views: Record<string, never>
     Functions: {

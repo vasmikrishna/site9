@@ -137,6 +137,9 @@ export async function middleware(req: NextRequest) {
   if (!FEATURES.blog && (path.startsWith("/admin/blog") || path.startsWith("/blog"))) {
     return NextResponse.redirect(new URL(path.startsWith("/admin") ? "/admin/dashboard" : "/", req.url))
   }
+  if (!FEATURES.social && path.startsWith("/admin/social")) {
+    return NextResponse.redirect(new URL("/admin/dashboard", req.url))
+  }
 
   // Superadmin: only the platform admin email can access
   if (path.startsWith("/superadmin")) {

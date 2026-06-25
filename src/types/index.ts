@@ -484,3 +484,76 @@ export interface CalendarBlock {
   all_day: boolean
   created_at: string
 }
+
+// ── Social Media Management Types ────────────────────────────────────────────
+
+export type SocialPlatform = 'facebook' | 'instagram'
+
+export type SocialAccountStatus = 'active' | 'expired' | 'revoked'
+
+export type SocialPostStatus = 'draft' | 'ready' | 'scheduled' | 'publishing' | 'published' | 'failed'
+
+export type SocialPostSource = 'manual' | 'ai'
+
+export type SocialPostTargetStatus = 'pending' | 'published' | 'failed'
+
+export interface SocialAccount {
+  id: string
+  tenant_id: string
+  platform: SocialPlatform
+  external_id: string
+  name: string
+  username: string | null
+  avatar_url: string | null
+  access_token_enc: string | null
+  token_expires_at: string | null
+  scopes: string[]
+  status: SocialAccountStatus
+  meta: Record<string, unknown>
+  created_at: string
+  updated_at: string
+}
+
+export interface SocialPost {
+  id: string
+  tenant_id: string
+  status: SocialPostStatus
+  source: SocialPostSource
+  caption: string
+  hashtags: string[]
+  media_urls: string[]
+  scheduled_at: string | null
+  published_at: string | null
+  ai_source_url: string | null
+  ai_source_title: string | null
+  error: string | null
+  created_by: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface SocialPostTarget {
+  id: string
+  post_id: string
+  social_account_id: string
+  status: SocialPostTargetStatus
+  external_post_id: string | null
+  permalink: string | null
+  error: string | null
+  published_at: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface SocialSettings {
+  tenant_id: string
+  auto_generate: boolean
+  keywords: string[]
+  niche: string | null
+  tone: string | null
+  post_count_per_run: number
+  autopublish: boolean
+  last_run_at: string | null
+  created_at: string
+  updated_at: string
+}

@@ -1,5 +1,27 @@
 # Architecture Decision Records
 
+## ADR-003 — Social media: native Meta Graph API behind a provider adapter, mock-first; paid aggregators rejected (2026-06-25)
+
+**Context.** We need Instagram + Facebook publishing for tenant admin portals. The options were:
+1. **Paid aggregator SaaS** (Ayrshare, Postiz cloud) — one HTTP API, handles OAuth + token refresh, but costs $30–$100+/month per workspace.
+2. **Native Meta Graph API** — free, direct, requires a verified Facebook App and Meta App Review to unlock `instagram_content_publish` + `pages_manage_posts`.
+3. **Self-hosted open-source scheduler** (Postiz self-hosted, Cal.com-style) — zero recurring cost, but adds a separate service to the infra.
+
+**Decision.**
+- **Use the native Meta Graph API** ($0 recurring cost). The investment is one-time: create a Meta App, complete App Review. Not appropriate for a paid third-party service when the API is free and publicly documented.
+- **Wrap it in a provider adapter** (`src/lib/social/provider.ts`). `getProvider(platform)` returns `MockProvider` when `SOCIAL_MOCK=1` or `META_APP_ID` is absent, and `MetaProvider` otherwise. This means the full feature works end-to-end with no Meta credentials during development and demos.
+- **Build mock-first, defer real OAuth.** Real Meta OAuth and Graph API calls live in `src/lib/social/meta.ts` but are gated behind the provider flag. The user supplies a Facebook App when ready; no code changes needed, just env vars.
+- **Reject paid aggregators.** Ayrshare and Postiz cloud would add $30–$100/month per tenant at scale. The extensibility trade-off is also better here: adding X/Twitter, LinkedIn, or YouTube means implementing another provider, not being dependent on a vendor's platform support.
+
+**Why not self-hosted Postiz?** It adds a separate Docker service (Postgres, Redis, workers) to maintain alongside the Next.js + Supabase stack. The native approach keeps the architecture simple and uses Supabase for state.
+
+**Consequences.**
+- Four new tables: `social_accounts`, `social_posts`, `social_post_targets`, `social_settings` — all RLS-disabled + grants per project convention (`019_social.sql`).
+- Account tokens encrypted at rest with AES-256-GCM (`SOCIAL_TOKEN_ENC_KEY`). Key rotation requires a migration of stored token blobs.
+- AI content drafting uses Tavily (search) + DeepSeek/Gemini (drafting) — see `src/lib/social/discover.ts`. Requires `TAVILY_API_KEY` and one LLM key. Can be replaced without touching the provider layer.
+- Until Meta App Review is approved, the feature runs entirely on `MockProvider`. All admin UI, scheduling, cron, and AI drafting work in mock mode.
+- Adding new platforms (X/Twitter, LinkedIn, YouTube): implement a new `SocialProvider` in `src/lib/social/` and register it in `getProvider`. UI "Coming soon" chips for those three are already present.
+
 ## ADR-002 — Customer accounts as cross-tenant identity by email, not a memberships table (2026-06-24, #7)
 
 **Context.** We want one person to sign up as a **customer** on any tenant's

@@ -8,7 +8,7 @@ import {
   LayoutDashboard, FolderKanban, Plus, Users,
   CreditCard, Image, Sliders, Mail, LogOut, ChevronRight, UserCheck, ClipboardList,
   Building2, ChevronsUpDown, Check, Package, ShoppingCart, LayoutTemplate, CalendarClock, Globe,
-  Newspaper, Receipt, Menu, X
+  Newspaper, Receipt, Menu, X, Share2
 } from "lucide-react"
 
 interface NavItem {
@@ -40,6 +40,7 @@ const adminNav: NavItem[] = [
   { label: "Orders", href: "/admin/orders", icon: ShoppingCart },
   { label: "Pages", href: "/admin/pages", icon: LayoutTemplate },
   { label: "Blog", href: "/admin/blog", icon: Newspaper },
+  { label: "Social", href: "/admin/social", icon: Share2 },
   { label: "Portfolio", href: "/admin/portfolio", icon: Image },
   { label: "Billing", href: "/admin/billing", icon: Receipt },
   { label: "Domain", href: "/admin/config/domain", icon: Globe },
@@ -74,6 +75,7 @@ export function PortalSidebar({ role, userName, userEmail }: PortalSidebarProps)
     ...(FEATURES.pageBuilder ? [] : ["/admin/pages"]),
     ...(FEATURES.bookings ? [] : ["/admin/bookings", "/client/bookings"]),
     ...(FEATURES.blog ? [] : ["/admin/blog"]),
+    ...(FEATURES.social ? [] : ["/admin/social"]),
   ]
   const nav = (role === "admin" ? adminNav : role === "employee" ? employeeNav : clientNav)
     .filter((item) => !hiddenHrefs.includes(item.href))

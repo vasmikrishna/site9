@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### Added — Social Media Management (Instagram + Facebook, mock-first)
+- **Connections tab.** Per-platform (Instagram / Facebook) account management. With `SOCIAL_MOCK=1` (or no `META_APP_ID`) the connect flow uses `MockProvider` and seeds a demo account immediately — no Meta credentials required. Real OAuth flows to `/api/social/meta/start` → `/api/social/meta/callback`. Account tokens are stored AES-256-GCM encrypted (`src/lib/social/crypto.ts`).
+- **Calendar tab.** Chronological view of scheduled, published, and failed posts. "New Post" opens the Composer from any state.
+- **Composer.** Full-screen dialog (`social-composer`) with caption (2 200-char counter), hashtag tokeniser, drag-and-drop image upload (`/api/admin/social/upload`), per-account checkboxes, live Instagram/Facebook platform preview, and three timing modes: Save Draft / Publish Now / Schedule (datetime-local picker).
+- **Drafts & AI tab.** Lists `draft` and `ready` posts. AI Content Generation card calls `POST /api/admin/social/generate` (Tavily discovery + DeepSeek/Gemini drafting via `src/lib/social/discover.ts`). Generated cards show source link, caption, hashtags, inline platform preview, and Approve & Schedule action.
+- **Settings tab.** Auto-generate toggle, auto-publish toggle, niche/industry, keywords (comma/space-separated), tone of voice (Friendly / Professional / Playful / Bold), posts-per-run count — persisted in `social_settings` per tenant.
+- **Cron automation.** `GET /api/cron/social-publish` runs every 5 min (publish due posts); `GET /api/cron/social-discover` runs every 6 h (AI discovery run). Both declared in `vercel.json` and gated by `CRON_SECRET`.
+- **Data model.** Four new tables (all RLS-disabled + grants, per project convention): `social_accounts`, `social_posts`, `social_post_targets`, `social_settings` (`019_social.sql`). Provider abstraction in `src/lib/social/provider.ts` (`MockProvider` / `MetaProvider`); `publish.ts` drives the actual posting.
+- **Feature flag + nav.** `social: true` in `src/lib/features.ts`; sidebar entry in `portal-sidebar.tsx`; middleware gate on `/admin/social`.
+- **New env vars.** `META_APP_ID`, `META_APP_SECRET`, `META_OAUTH_REDIRECT`, `SOCIAL_TOKEN_ENC_KEY`, `CRON_SECRET`, `TAVILY_API_KEY`, `SOCIAL_MOCK=1`. All documented in `social.env.example`.
+
 ### Added — Customer accounts + unified "My Businesses" hub (#7)
 - **Public entry points.** Each tenant's public site header now shows **Sign in / Sign up** when logged out, and a **My account** dropdown (→ My businesses, My dashboard, Sign out) when logged in. `(public)/layout.tsx` reads the shared session and passes it to `components/site/header.tsx`.
 - **Unified hub** at `/account` (new `(account)` route group). Lists every tenant the person belongs to, split into **Businesses you own** (role `admin`), **You're a customer of** (role `client`), and **Businesses you work with** (role `employee`). Each card's **Enter** switches the session to that tenant (`/api/auth/switch-workspace`) and navigates to its subdomain. Plus a "Create a new website" CTA (→ `/start`). The route lives outside the `(client)/(admin)/(employee)` groups so it is **not** subject to subdomain tenant-isolation; the page enforces auth itself (no middleware change).

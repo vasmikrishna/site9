@@ -1,5 +1,18 @@
 # Completed tasks
 
+- **2026-06-25 — Social Media Management — Instagram + Facebook, mock-first**
+  Admin Social tab with four panels: Connections (OAuth or mock connect/disconnect for
+  Instagram + Facebook), Calendar (scheduled/published/failed posts), Drafts & AI
+  (manual drafts + AI content generation via Tavily + DeepSeek/Gemini), Settings
+  (auto-generate, autopublish, niche, keywords, tone, post count). Full-screen Composer
+  with caption, hashtags, drag-and-drop image upload, account selection, timing modes
+  (draft/publish now/schedule), and live platform previews (Instagram + Facebook).
+  Provider adapter (`MockProvider` / `MetaProvider`) lets the whole flow run with no
+  Meta credentials. Cron: publish every 5 min, discover every 6 h. Migration
+  `019_social.sql` (four tables, RLS disabled + grants). Token encryption AES-256-GCM.
+  See [features/social-media.md](../features/social-media.md) and
+  [DECISIONS ADR-003](../../docs/DECISIONS.md).
+
 - **2026-06-25 — Onboarding: collect business mobile number** — #11
   Added a required Mobile number field (`data-testid="start-phone"`, type tel) to
   step 2 of the `/start` signup flow. `/api/onboarding/create` now requires
