@@ -12,6 +12,7 @@ interface BuildPageClientProps {
   onboardingComplete: boolean
   templateSlug?: string
   subscribed: boolean
+  savedHtml?: string
 }
 
 export function BuildPageClient({
@@ -21,10 +22,22 @@ export function BuildPageClient({
   onboardingComplete,
   templateSlug,
   subscribed,
+  savedHtml,
 }: BuildPageClientProps) {
   const [showBuilder, setShowBuilder] = useState(onboardingComplete)
-  const [generatedHtml, setGeneratedHtml] = useState("")
+  const [generatedHtml, setGeneratedHtml] = useState(savedHtml ?? "")
   const [loadingTemplate, setLoadingTemplate] = useState(!!templateSlug)
+
+  // Restore from localStorage if no server-side draft was found
+  useEffect(() => {
+    if (generatedHtml || !onboardingComplete) return
+    try {
+      const local = localStorage.getItem("s9_draft_html")
+      if (local && local.length > 100) {
+        setGeneratedHtml(local)
+      }
+    } catch { /* private browsing */ }
+  }, [generatedHtml, onboardingComplete])
 
   useEffect(() => {
     if (!templateSlug) return

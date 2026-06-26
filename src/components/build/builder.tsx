@@ -60,8 +60,33 @@ export function Builder({
   const iframeRef = useRef<HTMLIFrameElement>(null)
   const htmlResolveRef = useRef<((h: string) => void) | null>(null)
   const promptRef = useRef<HTMLInputElement>(null)
+  const draftTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const lastSavedRef = useRef<string>("")
 
   const hasContent = rawHtml.length > 100
+
+  // -- Auto-save draft (debounced 3s after last change) ----------------------
+  useEffect(() => {
+    if (!rawHtml || rawHtml.length < 100) return
+    if (rawHtml === lastSavedRef.current) return
+
+    // Save to localStorage immediately as a fast fallback
+    try { localStorage.setItem("s9_draft_html", rawHtml) } catch { /* quota */ }
+
+    if (draftTimerRef.current) clearTimeout(draftTimerRef.current)
+    draftTimerRef.current = setTimeout(() => {
+      lastSavedRef.current = rawHtml
+      fetch("/api/build/draft", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ html: rawHtml }),
+      }).catch(() => { /* silent — localStorage is the fallback */ })
+    }, 3000)
+
+    return () => {
+      if (draftTimerRef.current) clearTimeout(draftTimerRef.current)
+    }
+  }, [rawHtml])
 
   // -- postMessage listener --------------------------------------------------
   const handleMessage = useCallback((e: MessageEvent) => {
