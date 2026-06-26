@@ -1,10 +1,11 @@
 import { SignJWT, jwtVerify } from "jose"
 import { cookies } from "next/headers"
 
-if (!process.env.SESSION_SECRET) {
-  throw new Error("SESSION_SECRET environment variable is required")
+function getSecret() {
+  const key = process.env.SESSION_SECRET
+  if (!key) throw new Error("SESSION_SECRET environment variable is required")
+  return new TextEncoder().encode(key)
 }
-const SECRET = new TextEncoder().encode(process.env.SESSION_SECRET)
 const COOKIE = "session"
 
 // In production the session cookie is scoped to the parent domain (".site9.in")
@@ -27,7 +28,7 @@ export async function createSession(payload: SessionPayload) {
   const token = await new SignJWT(payload as any)
     .setProtectedHeader({ alg: "HS256" })
     .setExpirationTime("30d")
-    .sign(SECRET)
+    .sign(getSecret())
 
   const cookieStore = await cookies()
   cookieStore.set(COOKIE, token, {
@@ -45,7 +46,7 @@ export async function getSession(): Promise<SessionPayload | null> {
     const cookieStore = await cookies()
     const token = cookieStore.get(COOKIE)?.value
     if (!token) return null
-    const { payload } = await jwtVerify(token, SECRET)
+    const { payload } = await jwtVerify(token, getSecret())
     return payload as unknown as SessionPayload
   } catch {
     return null
