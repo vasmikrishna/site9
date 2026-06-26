@@ -11,6 +11,7 @@ import { FEATURES } from "@/lib/features"
 import { FormHandler } from "@/components/public/form-handler"
 import { TemplateCarousel } from "@/components/public/template-carousel"
 import { ThemeToggle } from "@/components/ui/theme-toggle"
+import { ThemeLogo } from "@/components/ui/theme-logo"
 
 function GitHubIcon({ className }: { className?: string }) {
   return (
@@ -86,8 +87,7 @@ export default async function LandingPage() {
       <header className="border-b border-border sticky top-0 z-50 bg-background/80 backdrop-blur">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center" data-testid="home-logo">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/site9-logo.png" alt="Site9 — One Website for Every Business" className="h-10 w-auto" />
+            <ThemeLogo />
           </Link>
           <nav className="hidden md:flex items-center gap-6">
             {NAV_LINKS.map(link => (
@@ -298,8 +298,7 @@ export default async function LandingPage() {
       {/* Footer */}
       <footer className="border-t border-border py-10">
         <div className="max-w-6xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/site9-logo.png" alt="Site9 — One Website for Every Business" className="h-9 w-auto" />
+          <ThemeLogo className="h-9 w-auto" />
           <p className="text-sm text-muted-foreground">One Website for Every Business. Open source on GitHub.</p>
           <div className="flex items-center gap-4">
             <a

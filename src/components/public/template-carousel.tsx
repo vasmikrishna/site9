@@ -108,10 +108,10 @@ export function TemplateCarousel() {
               data-testid={`carousel-card-${i}`}
             >
               <div
-                className={`w-72 md:w-80 rounded-xl overflow-hidden border transition-all duration-500 ${
+                className={`w-72 md:w-80 rounded-xl overflow-hidden border transition-all duration-500 bg-card ${
                   isCenter
-                    ? "border-foreground/30 shadow-2xl shadow-foreground/5"
-                    : "border-border"
+                    ? "border-foreground/20 shadow-2xl shadow-black/15 ring-1 ring-foreground/10"
+                    : "border-border shadow-lg shadow-black/10"
                 }`}
               >
                 <div className="aspect-[4/3] bg-muted overflow-hidden">

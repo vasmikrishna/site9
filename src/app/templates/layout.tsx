@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { ThemeToggle } from "@/components/ui/theme-toggle"
+import { ThemeLogo } from "@/components/ui/theme-logo"
 
 function GitHubIcon({ className }: { className?: string }) {
   return (
@@ -24,8 +25,7 @@ export default function TemplatesLayout({ children }: { children: React.ReactNod
       <header className="border-b border-border sticky top-0 z-50 bg-background/80 backdrop-blur">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center" data-testid="templates-logo">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/site9-logo.png" alt="Site9 — One Website for Every Business" className="h-10 w-auto" />
+            <ThemeLogo />
           </Link>
           <nav className="hidden md:flex items-center gap-6">
             {NAV_LINKS.map(link => (
