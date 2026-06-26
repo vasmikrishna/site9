@@ -3,7 +3,7 @@ import type { Metadata } from "next"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { ArrowRight, Check, Mail } from "lucide-react"
+import { ArrowRight, Check, Server, Cloud } from "lucide-react"
 
 export const metadata: Metadata = {
   title: "Pricing | Site9",
@@ -87,13 +87,51 @@ export default function PricingPage() {
         </div>
       </header>
 
+      {/* Self-host banner */}
+      <section className="py-16 border-b border-border">
+        <div className="max-w-4xl mx-auto px-6">
+          <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12">
+            <div className="flex-1 space-y-4">
+              <div className="flex items-center gap-3">
+                <Server className="h-6 w-6 text-green-500" />
+                <h2 className="text-2xl font-bold">Self-host for free</h2>
+              </div>
+              <p className="text-muted-foreground leading-relaxed">
+                Site9 is fully open source under the Apache 2.0 license. Clone the repo, deploy on your own infrastructure, and run it forever — no cost, no limits, no catch.
+              </p>
+              <div className="flex items-center gap-3">
+                <Button asChild variant="outline" size="sm" data-testid="self-host-github-cta">
+                  <a href="https://github.com/vasmikrishna/site9" target="_blank" rel="noopener noreferrer">
+                    <GitHubIcon className="h-4 w-4" /> View on GitHub
+                  </a>
+                </Button>
+                <Button asChild variant="ghost" size="sm">
+                  <Link href="/open-source">Learn more</Link>
+                </Button>
+              </div>
+            </div>
+            <div className="flex-1 space-y-4">
+              <div className="flex items-center gap-3">
+                <Cloud className="h-6 w-6 text-blue-500" />
+                <h2 className="text-2xl font-bold">Or let us host it</h2>
+              </div>
+              <p className="text-muted-foreground leading-relaxed">
+                Don&apos;t want to manage servers? We handle hosting, updates, backups, and security — so you can focus on your business.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Pricing */}
       <section className="py-20">
         <div className="max-w-6xl mx-auto px-6">
-          <div className="text-center mb-12">
+          <div className="text-center mb-4">
+            <Badge variant="brand" className="mb-4">Managed Hosting</Badge>
             <h1 className="text-4xl font-bold tracking-tight">Simple, honest pricing</h1>
             <p className="text-muted-foreground mt-3 text-lg">Get online for just ₹9/month. No setup fees, cancel anytime.</p>
           </div>
+          <p className="text-center text-sm text-muted-foreground mb-12">Prefer to self-host? It&apos;s free and always will be.</p>
           <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto items-start">
             {PRICING.map((plan) => (
               <Card key={plan.name} className={plan.available ? "border-foreground shadow-lg" : ""}>
