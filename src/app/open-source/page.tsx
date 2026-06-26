@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { ArrowRight, Check, Code2, GitPullRequest, BookOpen, Users, Shield, Heart } from "lucide-react"
+import { Contributors } from "@/components/public/contributors"
 
 export const metadata: Metadata = {
   title: "Open Source | Site9",
@@ -21,8 +22,9 @@ function GitHubIcon({ className }: { className?: string }) {
 
 const NAV_LINKS = [
   { href: "/#services", label: "Features" },
-  { href: "/#templates", label: "Templates" },
+  { href: "/templates", label: "Templates" },
   { href: "/pricing", label: "Pricing" },
+  { href: "/open-source", label: "Open Source" },
   { href: "/#about", label: "About" },
   { href: "/#contact", label: "Contact" },
 ]
@@ -222,8 +224,19 @@ export default function OpenSourcePage() {
         </div>
       </section>
 
-      {/* CTA */}
+      {/* Contributors */}
       <section className="bg-muted/40 py-16">
+        <div className="max-w-4xl mx-auto px-6">
+          <h2 className="text-2xl font-bold text-center mb-3">Contributors</h2>
+          <p className="text-muted-foreground text-center mb-10">
+            The people building Site9. Join us — your spot is waiting.
+          </p>
+          <Contributors />
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="py-16">
         <div className="max-w-3xl mx-auto px-6 text-center space-y-6">
           <h2 className="text-2xl font-bold">Ready to contribute?</h2>
           <p className="text-muted-foreground">
