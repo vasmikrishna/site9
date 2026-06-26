@@ -9,6 +9,7 @@ import {
   ExternalLink, Sparkles, Link2, Trash2, Monitor, Tablet, Smartphone,
   LayoutGrid, LayoutTemplate, ChevronUp, ChevronDown, Search, FileText,
   Undo2, Redo2, AlignLeft, AlignCenter, AlignRight, Minus, Plus,
+  Files, Home, Trash, Link as LinkIcon,
 } from "lucide-react"
 import { EDITOR_OVERLAY_CSS, EDITOR_SCRIPT } from "@/lib/editor-inject"
 import { GenerationLoader } from "@/components/build/generation-loader"
@@ -35,6 +36,14 @@ interface SelectedElement {
   href?: string
   rect?: { width: number; height: number }
   box?: BoxMetrics
+}
+
+interface PageMeta {
+  id: string | null
+  slug: string
+  title: string
+  is_homepage: boolean
+  status?: string
 }
 
 type Viewport = "desktop" | "tablet" | "mobile"
@@ -67,6 +76,12 @@ export function Builder({
   const [showAssetLib, setShowAssetLib] = useState(false)
   const [canUndo, setCanUndo] = useState(false)
   const [canRedo, setCanRedo] = useState(false)
+
+  // -- Multi-page ------------------------------------------------------------
+  const [pages, setPages] = useState<PageMeta[]>([])
+  const [activePage, setActivePage] = useState<PageMeta>({ id: null, slug: "home", title: "Home", is_homepage: true })
+  const [showPagesMenu, setShowPagesMenu] = useState(false)
+  const [pageBusy, setPageBusy] = useState(false)
 
   const iframeRef = useRef<HTMLIFrameElement>(null)
   const htmlResolveRef = useRef<((h: string) => void) | null>(null)
@@ -278,6 +293,96 @@ export function Builder({
     postToIframe({ type: "s9:setStyle", editKey, prop, value })
   }
 
+  // -- Pages -----------------------------------------------------------------
+  const loadPages = useCallback(async () => {
+    try {
+      const res = await fetch("/api/build/pages")
+      const data = await res.json()
+      const list: PageMeta[] = data.pages ?? []
+      setPages(list)
+      // Seed the active page's id from the homepage row (the builder opens on it).
+      setActivePage((cur) => {
+        if (cur.id) return cur
+        const home = list.find((p) => p.is_homepage)
+        return home ? { ...home } : cur
+      })
+    } catch { /* ignore */ }
+  }, [])
+
+  useEffect(() => { loadPages() }, [loadPages])
+
+  async function switchPage(page: PageMeta) {
+    setShowPagesMenu(false)
+    if (page.id === activePage.id) return
+    if (!page.id) return
+    setPageBusy(true)
+    try {
+      const res = await fetch(`/api/build/pages/${page.id}`)
+      const data = await res.json()
+      if (!res.ok) { setError(data.error ?? "Could not open page"); return }
+      const html: string = data.page.css ? `<style>${data.page.css}</style>${data.page.html}` : data.page.html
+      // Reset the editor + history to the opened page.
+      isRestoringRef.current = true
+      currentHtmlRef.current = html
+      historyRef.current = [html]
+      histIdxRef.current = 0
+      refreshHistoryFlags()
+      setSelectedEl(null)
+      setActivePage(page)
+      setRawHtml(html)
+      setTimeout(() => { isRestoringRef.current = false }, 80)
+    } catch {
+      setError("Could not open page")
+    } finally {
+      setPageBusy(false)
+    }
+  }
+
+  async function addPage() {
+    const title = typeof window !== "undefined" ? window.prompt("New page name (e.g. About, Services)") : ""
+    if (!title || !title.trim()) return
+    setPageBusy(true)
+    setError("")
+    try {
+      const res = await fetch("/api/build/pages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: title.trim() }),
+      })
+      const data = await res.json()
+      if (!res.ok) { setError(data.error ?? "Could not add page"); return }
+      await loadPages()
+      await switchPage(data.page)
+    } catch {
+      setError("Could not add page")
+    } finally {
+      setPageBusy(false)
+    }
+  }
+
+  async function deletePage(page: PageMeta) {
+    if (page.is_homepage || !page.id) return
+    if (typeof window !== "undefined" && !window.confirm(`Delete the "${page.title}" page?`)) return
+    try {
+      await fetch(`/api/build/pages?id=${page.id}`, { method: "DELETE" })
+      if (activePage.id === page.id) {
+        const home = pages.find((p) => p.is_homepage)
+        if (home) await switchPage(home)
+      }
+      await loadPages()
+    } catch { /* ignore */ }
+  }
+
+  // Insert a themed nav that links every page (home → "/", others → "/p/slug").
+  function insertPageNav() {
+    setShowPagesMenu(false)
+    const links = pages
+      .map((p) => `<a href="${p.is_homepage ? "/" : `/p/${p.slug}`}" style="color:inherit;text-decoration:none;font-weight:500;padding:8px 12px;" data-s9-type="link">${p.title}</a>`)
+      .join("")
+    const nav = `<nav style="display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap;padding:16px 24px;border-bottom:1px solid rgba(0,0,0,0.08);" data-s9-type="section">${links}</nav>`
+    postToIframe({ type: "s9:insertSection", html: nav })
+  }
+
   // -- Publish ----------------------------------------------------------------
   async function handlePublish() {
     setError("")
@@ -288,7 +393,12 @@ export function Builder({
     })
     const res = await fetch("/api/build/publish", {
       method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ mode: "ai", html: currentHtmlRef.current || rawHtml }),
+      body: JSON.stringify({
+        mode: "ai",
+        html: currentHtmlRef.current || rawHtml,
+        pageSlug: activePage.slug,
+        pageTitle: activePage.title,
+      }),
     })
     setPublishing(false)
     if (!res.ok) { const d = await res.json().catch(() => ({})); setError(d.error ?? "Could not publish"); return }
@@ -308,6 +418,57 @@ export function Builder({
             <p className="text-sm font-semibold">Site9 Builder</p>
             <p className="text-xs text-muted-foreground">{ownerName} · {host}</p>
           </div>
+
+          {/* Pages dropdown */}
+          {hasContent && (
+            <div className="relative">
+              <button
+                onClick={() => setShowPagesMenu((v) => !v)}
+                className="flex items-center gap-1.5 rounded-lg border border-border px-2.5 py-1.5 text-xs font-medium hover:bg-accent transition-colors"
+                data-testid="pages-menu-toggle"
+                title="Pages"
+              >
+                {activePage.is_homepage ? <Home className="h-3.5 w-3.5" /> : <Files className="h-3.5 w-3.5" />}
+                <span className="max-w-[10rem] truncate">{activePage.title}</span>
+                <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+              </button>
+              {showPagesMenu && (
+                <>
+                  <button className="fixed inset-0 z-40 cursor-default" aria-hidden tabIndex={-1} onClick={() => setShowPagesMenu(false)} />
+                  <div className="absolute left-0 top-full z-50 mt-1 w-64 overflow-hidden rounded-lg border border-border bg-card shadow-lg" data-testid="pages-menu">
+                    <div className="max-h-72 overflow-y-auto py-1">
+                      {pages.map((p) => (
+                        <div key={p.id ?? p.slug} className={`flex items-center gap-1 px-1 ${activePage.id === p.id ? "bg-accent/60" : ""}`}>
+                          <button
+                            onClick={() => switchPage(p)}
+                            className="flex flex-1 items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm hover:bg-accent transition-colors"
+                            data-testid={`page-item-${p.slug}`}
+                          >
+                            {p.is_homepage ? <Home className="h-3.5 w-3.5 text-muted-foreground" /> : <Files className="h-3.5 w-3.5 text-muted-foreground" />}
+                            <span className="flex-1 truncate">{p.title}</span>
+                            {p.status === "published" && <span className="text-[9px] text-green-500">●</span>}
+                          </button>
+                          {!p.is_homepage && (
+                            <button onClick={() => deletePage(p)} title="Delete page" className="rounded-md p-1 text-muted-foreground hover:text-destructive" data-testid={`page-delete-${p.slug}`}>
+                              <Trash className="h-3.5 w-3.5" />
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                    <div className="border-t border-border p-1">
+                      <button onClick={addPage} disabled={pageBusy} className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm font-medium hover:bg-accent transition-colors" data-testid="page-add">
+                        <Plus className="h-3.5 w-3.5" /> Add page
+                      </button>
+                      <button onClick={insertPageNav} className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm hover:bg-accent transition-colors" data-testid="page-insert-nav">
+                        <LinkIcon className="h-3.5 w-3.5" /> Insert page navigation
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Undo / Redo */}

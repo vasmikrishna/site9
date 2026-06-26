@@ -65,22 +65,30 @@ export async function POST(req: Request) {
 
   // Find this tenant's existing homepage row (one homepage per tenant).
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- hand-written DB types
-  const { data: existing } = await (supabase as any)
+  // Which page is being published? Default = the site's homepage. A non-empty
+  // pageSlug (other than "home") publishes that secondary page instead.
+  const pageSlug = String(body.pageSlug ?? "").trim()
+  const pageTitle = String(body.pageTitle ?? "").trim()
+  const isHome = !pageSlug || pageSlug === "home"
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const existingQuery = (supabase as any)
     .from("custom_pages")
     .select("id")
     .eq("tenant_id", owner.tenant.id)
-    .eq("is_homepage", true)
-    .maybeSingle()
+  const { data: existing } = isHome
+    ? await existingQuery.eq("is_homepage", true).maybeSingle()
+    : await existingQuery.eq("slug", pageSlug).maybeSingle()
 
   const row = {
     tenant_id: owner.tenant.id,
-    slug: "home",
-    title: business.name,
+    slug: isHome ? "home" : pageSlug,
+    title: isHome ? business.name : (pageTitle || pageSlug),
     html,
     css,
     template,
     status: "published",
-    is_homepage: true,
+    is_homepage: isHome,
   }
 
   const write = existing?.id
