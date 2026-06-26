@@ -1,5 +1,5 @@
 /**
- * One-time Razorpay plan setup. Creates the Monthly (₹29) and Annual (₹108)
+ * One-time Razorpay plan setup. Creates the Monthly (₹199) and Annual (₹1,499)
  * subscription plans, then prints the plan IDs to paste into .env.local.
  *
  * Usage:
@@ -26,14 +26,14 @@ const PLANS = [
     envVar: "RAZORPAY_PLAN_MONTHLY_ID",
     period: "monthly" as const,
     interval: 1,
-    amount: 2900, // ₹29
+    amount: 19900, // ₹199
     name: "Site9 Pro — Monthly",
   },
   {
     envVar: "RAZORPAY_PLAN_ANNUAL_ID",
     period: "yearly" as const,
     interval: 1,
-    amount: 10800, // ₹108 (₹9/month)
+    amount: 149900, // ₹1,499
     name: "Site9 Pro — Annual",
   },
 ]

@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { DEFAULT_INTAKE_QUESTIONS } from "@/lib/intake-defaults"
-import { DEFAULT_SERVICE_TIERS } from "@/lib/stage-template-defaults"
 import type { DefaultServiceTier, IntakeQuestion, ServiceTier } from "@/types"
+
+const DEFAULT_TIERS: DefaultServiceTier[] = ["starter", "standard", "pro"]
 
 export async function GET(request: NextRequest) {
   const tier = request.nextUrl.searchParams.get("tier") as ServiceTier | null
@@ -23,7 +24,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ questions: data })
   }
 
-  if (!DEFAULT_SERVICE_TIERS.includes(tier as DefaultServiceTier)) {
+  if (!DEFAULT_TIERS.includes(tier as DefaultServiceTier)) {
     return NextResponse.json({ questions: [] })
   }
 

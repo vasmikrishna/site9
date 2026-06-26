@@ -3,13 +3,13 @@ import type { Metadata } from "next"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { ArrowRight, Check, Server, Cloud } from "lucide-react"
+import { ArrowRight, Check, X as XIcon, Server, Cloud } from "lucide-react"
 import { ThemeToggle } from "@/components/ui/theme-toggle"
 import { ThemeLogo } from "@/components/ui/theme-logo"
 
 export const metadata: Metadata = {
   title: "Pricing | Site9",
-  description: "Simple, honest pricing. Get your business online for just ₹9/month. No setup fees, cancel anytime.",
+  description: "Build your website in 5 minutes. Free forever on a subdomain, or upgrade to Pro for ₹199/month with custom domain.",
   alternates: { canonical: "/pricing" },
 }
 
@@ -29,37 +29,30 @@ const NAV_LINKS = [
   { href: "/#contact", label: "Contact" },
 ]
 
-const PRICING = [
-  {
-    name: "Starter",
-    price: "₹9",
-    period: "/month",
-    tagline: "Get your business online",
-    features: ["1 website", "Free yourbusiness.site9.in subdomain", "Mobile responsive", "Business profile", "WhatsApp button", "Contact form"],
-    available: true,
-  },
-  {
-    name: "Business",
-    price: "₹99",
-    period: "/month",
-    tagline: "Stand out and get found",
-    features: ["Everything in Starter", "Image gallery", "Google Maps", "SEO ready", "AI content generation", "Analytics", "No Site9 badge"],
-    available: false,
-  },
-  {
-    name: "Pro",
-    price: "₹999",
-    period: "/month",
-    tagline: "Your own brand and domain",
-    features: ["Everything in Business", "Custom domain (yourbusiness.com)", "Multi-page website", "Premium templates", "Priority support"],
-    available: false,
-  },
+interface Feature {
+  label: string
+  free: boolean
+  pro: boolean
+}
+
+const FEATURES: Feature[] = [
+  { label: "Website on yourname.site9.in", free: true, pro: true },
+  { label: "5 starter templates", free: true, pro: false },
+  { label: "All 100+ templates", free: false, pro: true },
+  { label: "Contact form", free: true, pro: true },
+  { label: "WhatsApp button", free: true, pro: true },
+  { label: "1 blog post", free: true, pro: false },
+  { label: "Unlimited blog posts", free: false, pro: true },
+  { label: "\"Powered by Site9\" badge", free: true, pro: false },
+  { label: "Remove Site9 badge", free: false, pro: true },
+  { label: "Custom domain (yourbusiness.com)", free: false, pro: true },
+  { label: "Google Analytics integration", free: false, pro: true },
+  { label: "Priority email support", free: false, pro: true },
 ]
 
 export default function PricingPage() {
   return (
     <div className="min-h-screen">
-      {/* Nav — same as landing page */}
       <header className="border-b border-border sticky top-0 z-50 bg-background/80 backdrop-blur">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center" data-testid="home-logo">
@@ -88,7 +81,6 @@ export default function PricingPage() {
         </div>
       </header>
 
-      {/* Self-host banner */}
       <section className="py-16 border-b border-border">
         <div className="max-w-4xl mx-auto px-6">
           <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12">
@@ -124,59 +116,115 @@ export default function PricingPage() {
         </div>
       </section>
 
-      {/* Pricing */}
       <section className="py-20">
-        <div className="max-w-6xl mx-auto px-6">
+        <div className="max-w-5xl mx-auto px-6">
           <div className="text-center mb-4">
             <Badge variant="brand" className="mb-4">Managed Hosting</Badge>
             <h1 className="text-4xl font-bold tracking-tight">Simple, honest pricing</h1>
-            <p className="text-muted-foreground mt-3 text-lg">Get online for just ₹9/month. No setup fees, cancel anytime.</p>
+            <p className="text-muted-foreground mt-3 text-lg">Two plans. No surprises. Cancel anytime.</p>
           </div>
           <p className="text-center text-sm text-muted-foreground mb-12">Prefer to self-host? It&apos;s free and always will be.</p>
-          <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto items-start">
-            {PRICING.map((plan) => (
-              <Card key={plan.name} className={plan.available ? "border-foreground shadow-lg" : ""}>
-                <CardContent className="p-6 space-y-5">
-                  <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-bold">{plan.name}</h2>
-                    {plan.available
-                      ? <Badge variant="brand" className="text-xs">Available now</Badge>
-                      : <Badge variant="outline" className="text-xs">Coming soon</Badge>}
-                  </div>
-                  <p className="text-muted-foreground text-sm">{plan.tagline}</p>
-                  <div>
-                    <span className="text-4xl font-bold">{plan.price}</span>
-                    <span className="text-muted-foreground text-sm">{plan.period}</span>
-                  </div>
-                  <div className="space-y-2">
-                    {plan.features.map((feat, i) => (
-                      <div key={i} className="flex items-center gap-2 text-sm">
-                        <Check className="h-3.5 w-3.5 text-green-500 flex-shrink-0" />
-                        {feat}
-                      </div>
-                    ))}
-                  </div>
-                  {plan.available ? (
-                    <Button asChild variant="brand" size="sm" className="w-full" data-testid={`plan-${plan.name.toLowerCase()}-cta`}>
-                      <Link href="/start">Create your website <ArrowRight className="h-3 w-3" /></Link>
-                    </Button>
-                  ) : (
-                    <Button variant="outline" size="sm" className="w-full" disabled data-testid={`plan-${plan.name.toLowerCase()}-cta`}>
-                      Coming soon
-                    </Button>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
+
+          <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto items-start">
+            {/* Free */}
+            <Card data-testid="plan-free">
+              <CardContent className="p-8 space-y-6">
+                <div>
+                  <h2 className="text-xl font-bold">Free</h2>
+                  <p className="text-sm text-muted-foreground mt-1">Get your business online</p>
+                </div>
+                <div>
+                  <span className="text-4xl font-bold">₹0</span>
+                  <span className="text-muted-foreground text-sm"> forever</span>
+                </div>
+                <Button asChild variant="outline" size="sm" className="w-full" data-testid="plan-free-cta">
+                  <Link href="/start">Start free <ArrowRight className="h-3 w-3" /></Link>
+                </Button>
+                <div className="space-y-3 pt-2">
+                  {FEATURES.filter(f => f.free).map((feat) => (
+                    <div key={feat.label} className="flex items-center gap-2 text-sm">
+                      <Check className="h-3.5 w-3.5 text-green-500 flex-shrink-0" />
+                      {feat.label}
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Pro */}
+            <Card className="border-foreground shadow-lg relative" data-testid="plan-pro">
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                <Badge variant="brand">Most popular</Badge>
+              </div>
+              <CardContent className="p-8 space-y-6">
+                <div>
+                  <h2 className="text-xl font-bold">Pro</h2>
+                  <p className="text-sm text-muted-foreground mt-1">Your own brand and domain</p>
+                </div>
+                <div>
+                  <span className="text-4xl font-bold">₹199</span>
+                  <span className="text-muted-foreground text-sm">/month</span>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    or <span className="font-medium text-foreground">₹1,499/year</span>
+                    <span className="text-green-500 text-xs ml-1">(save 37%)</span>
+                  </p>
+                </div>
+                <Button asChild variant="brand" size="sm" className="w-full" data-testid="plan-pro-cta">
+                  <Link href="/start">Get Pro <ArrowRight className="h-3 w-3" /></Link>
+                </Button>
+                <div className="space-y-3 pt-2">
+                  {FEATURES.filter(f => f.pro).map((feat) => (
+                    <div key={feat.label} className="flex items-center gap-2 text-sm">
+                      <Check className="h-3.5 w-3.5 text-green-500 flex-shrink-0" />
+                      {feat.label}
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Comparison table */}
+          <div className="mt-16 max-w-3xl mx-auto">
+            <h3 className="text-lg font-bold text-center mb-6">Feature comparison</h3>
+            <div className="border rounded-lg overflow-hidden">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b bg-muted/50">
+                    <th className="text-left py-3 px-4 font-medium">Feature</th>
+                    <th className="text-center py-3 px-4 font-medium w-24">Free</th>
+                    <th className="text-center py-3 px-4 font-medium w-24">Pro</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {FEATURES.map((feat) => (
+                    <tr key={feat.label} className="border-b last:border-b-0">
+                      <td className="py-3 px-4">{feat.label}</td>
+                      <td className="py-3 px-4 text-center">
+                        {feat.free
+                          ? <Check className="h-4 w-4 text-green-500 mx-auto" />
+                          : <XIcon className="h-4 w-4 text-muted-foreground/30 mx-auto" />
+                        }
+                      </td>
+                      <td className="py-3 px-4 text-center">
+                        {feat.pro
+                          ? <Check className="h-4 w-4 text-green-500 mx-auto" />
+                          : <XIcon className="h-4 w-4 text-muted-foreground/30 mx-auto" />
+                        }
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Footer — same as landing page */}
       <footer className="border-t border-border py-10">
         <div className="max-w-6xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4">
           <ThemeLogo className="h-9 w-auto" />
-          <p className="text-sm text-muted-foreground">One Website for Every Business. Open source on GitHub.</p>
+          <p className="text-sm text-muted-foreground">Build your website in 5 minutes. Open source on GitHub.</p>
           <div className="flex items-center gap-4">
             <a
               href="https://github.com/vasmikrishna/site9"

@@ -12,7 +12,7 @@ export default async function SuperAdminLayout({ children }: { children: React.R
     <div className="flex min-h-screen bg-muted/20">
       <aside className="w-56 shrink-0 border-r bg-background flex flex-col">
         <div className="px-5 py-4 border-b">
-          <p className="font-bold text-lg">0toX</p>
+          <p className="font-bold text-lg">Site9</p>
           <p className="text-xs text-muted-foreground">Super Admin</p>
         </div>
         <nav className="flex-1 px-3 py-4 space-y-1">

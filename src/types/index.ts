@@ -1,10 +1,6 @@
-export type UserRole = "client" | "admin" | "employee"
+export type UserRole = "admin"
 export type DefaultServiceTier = "starter" | "standard" | "pro"
 export type ServiceTier = DefaultServiceTier | (string & {})
-export type ProjectStatus = "intake" | "review" | "active" | "completed" | "cancelled"
-export type StageStatus = "pending" | "in_progress" | "completed"
-export type PaymentStatus = "pending" | "paid" | "overdue"
-export type PaymentMethod = "stripe" | "bank_transfer" | "other"
 export type QuestionType = "text" | "textarea" | "select" | "checkbox" | "file" | "industry"
 
 export interface User {
@@ -19,38 +15,6 @@ export interface User {
   bio?: string
   status?: "active" | "inactive"
 }
-
-export interface Project {
-  id: string
-  client_id: string
-  title: string
-  service_tier: ServiceTier
-  status: ProjectStatus
-  github_url?: string
-  project_links?: ProjectLink[]
-  admin_notes?: string
-  created_at: string
-  started_at?: string
-  completed_at?: string
-  client?: User
-}
-
-export interface ProjectLink {
-  id?: string
-  label: string
-  url: string
-  type?: "figma" | "sheet" | "doc" | "drive" | "website" | "other" | "file" | "folder" | "note"
-  kind?: "link" | "folder" | "doc" | "file"
-  notes?: string
-  content?: string
-  folder_id?: string
-  visible_to_client?: boolean
-  size?: number
-  mime_type?: string
-  created_at?: string
-  stage_id?: string
-}
-
 
 export interface IntakeQuestion {
   id: string
@@ -70,41 +34,6 @@ export interface IntakeResponse {
   answer: string
   file_urls?: string[]
   question?: IntakeQuestion
-}
-
-export interface Stage {
-  id: string
-  project_id: string
-  name: string
-  description?: string
-  status: StageStatus
-  visible_to_client: boolean
-  due_date?: string
-  completed_at?: string
-  sort_order: number
-  deliverable_files?: DeliverableFile[]
-}
-
-export interface DeliverableFile {
-  id: string
-  stage_id: string
-  name: string
-  url: string
-  size: number
-  uploaded_at: string
-}
-
-export interface Payment {
-  id: string
-  project_id: string
-  label: string
-  amount: number
-  status: PaymentStatus
-  method?: PaymentMethod
-  due_date?: string
-  paid_at?: string
-  stripe_payment_intent_id?: string
-  notes?: string
 }
 
 export interface PortfolioItem {
@@ -129,184 +58,6 @@ export interface Service {
   price_label: string
   features: string[]
   active: boolean
-}
-
-export interface StageTemplate {
-  id: string
-  service_tier: ServiceTier
-  name: string
-  description?: string
-  sort_order: number
-}
-
-export interface ProjectAssignment {
-  id: string
-  project_id: string
-  employee_id: string
-  assigned_by?: string
-  assigned_at: string
-  employee?: User
-}
-
-export interface AuditLog {
-  id: string
-  project_id?: string
-  user_id?: string
-  user_email: string
-  action: string
-  entity_type?: string
-  entity_id?: string
-  changes?: Record<string, { old: unknown; new: unknown }>
-  created_at: string
-}
-
-// ── Survey Types ───────────────────────────────────────────────────────────
-
-export type SurveyStatus = "draft" | "active" | "closed"
-
-export type SurveyQuestionType =
-  | "short_text"
-  | "long_text"
-  | "single_choice"
-  | "multiple_choice"
-  | "dropdown"
-  | "rating"
-  | "date"
-  | "file_upload"
-  | "number"
-  | "email"
-  | "phone"
-
-export interface Survey {
-  id: string
-  created_by: string
-  title: string
-  description?: string
-  slug: string
-  status: SurveyStatus
-  project_id?: string
-  allow_anonymous: boolean
-  collect_email: boolean
-  one_response: boolean
-  thank_you_message: string
-  created_at: string
-  updated_at: string
-  project?: Pick<Project, "id" | "title">
-  question_count?: number
-  submission_count?: number
-}
-
-export interface SurveySection {
-  id: string
-  survey_id: string
-  title?: string
-  description?: string
-  sort_order: number
-  questions?: SurveyQuestion[]
-}
-
-export interface SurveyQuestionConfig {
-  min?: number
-  max?: number
-  accept?: string
-  placeholder?: string
-}
-
-export interface SurveyQuestion {
-  id: string
-  survey_id: string
-  section_id?: string
-  type: SurveyQuestionType
-  label: string
-  description?: string
-  required: boolean
-  options?: string[]
-  config?: SurveyQuestionConfig
-  sort_order: number
-}
-
-export interface SurveySubmission {
-  id: string
-  survey_id: string
-  respondent_id?: string
-  respondent_email?: string
-  submitted_at: string
-  answers?: SurveyAnswer[]
-}
-
-export interface SurveyAnswer {
-  id: string
-  submission_id: string
-  question_id: string
-  value?: string
-  values?: string[]
-  file_urls?: string[]
-}
-
-// ── E-commerce Types ─────────────────────────────────────────────────────────
-
-export type ProductStatus = "draft" | "active" | "archived"
-export type OrderStatus = "pending" | "paid" | "fulfilled" | "cancelled" | "refunded"
-
-export interface Product {
-  id: string
-  tenant_id?: string | null
-  name: string
-  slug: string
-  description?: string
-  price: number
-  sale_price?: number | null
-  sku?: string
-  stock_quantity: number
-  manage_stock: boolean
-  status: ProductStatus
-  image_url?: string
-  images?: string[]
-  category?: string
-  sort_order: number
-  created_at: string
-  updated_at?: string
-}
-
-export interface Order {
-  id: string
-  tenant_id?: string | null
-  customer_id?: string | null
-  customer_name?: string
-  customer_email: string
-  total: number
-  currency: string
-  status: OrderStatus
-  stripe_session_id?: string
-  stripe_payment_intent_id?: string
-  notes?: string
-  paid_at?: string
-  created_at: string
-  updated_at?: string
-  items?: OrderItem[]
-}
-
-export interface OrderItem {
-  id: string
-  order_id: string
-  product_id?: string | null
-  name: string
-  price: number
-  quantity: number
-  created_at?: string
-  product?: Product
-}
-
-/** A single line item in the client-side cart (persisted to localStorage). */
-export interface CartItem {
-  product_id: string
-  slug: string
-  name: string
-  price: number
-  image_url?: string
-  quantity: number
-  stock_quantity: number
-  manage_stock: boolean
 }
 
 // ── Builder Content Management Types ────────────────────────────────────────
@@ -364,9 +115,7 @@ export interface ReferenceSite {
   created_by: string | null
   created_at: string
   updated_at: string
-  /** Which source the item came from: curated reference sites vs the larger template gallery. */
   source?: "reference" | "gallery"
-  /** Optional visual style label (e.g. "modern", "dark") — only set for gallery templates. */
   style?: string
 }
 
@@ -412,14 +161,7 @@ export interface BlogPost {
   content_json?: unknown
   cover_image_url?: string | null
   author_name?: string | null
-  tags: string[]
   status: BlogPostStatus
-  // SEO
-  meta_title?: string | null
-  meta_description?: string | null
-  og_image_url?: string | null
-  canonical_url?: string | null
-  noindex: boolean
   published_at?: string | null
   created_at: string
   updated_at?: string
@@ -456,104 +198,3 @@ export interface GalleryTemplate {
 }
 
 export type GalleryTemplateMeta = Omit<GalleryTemplate, "html" | "css">
-
-export type BookingStatus = "pending" | "confirmed" | "completed" | "cancelled"
-
-export interface Booking {
-  id: string
-  tenant_id?: string | null
-  customer_id?: string | null
-  customer_name: string
-  customer_email?: string | null
-  customer_phone?: string | null
-  service?: string | null
-  starts_at: string
-  ends_at: string
-  status: BookingStatus
-  notes?: string | null
-  created_at: string
-  updated_at?: string
-}
-
-export interface CalendarBlock {
-  id: string
-  tenant_id?: string | null
-  title: string
-  starts_at: string
-  ends_at: string
-  all_day: boolean
-  created_at: string
-}
-
-// ── Social Media Management Types ────────────────────────────────────────────
-
-export type SocialPlatform = 'facebook' | 'instagram'
-
-export type SocialAccountStatus = 'active' | 'expired' | 'revoked'
-
-export type SocialPostStatus = 'draft' | 'ready' | 'scheduled' | 'publishing' | 'published' | 'failed'
-
-export type SocialPostSource = 'manual' | 'ai'
-
-export type SocialPostTargetStatus = 'pending' | 'published' | 'failed'
-
-export interface SocialAccount {
-  id: string
-  tenant_id: string
-  platform: SocialPlatform
-  external_id: string
-  name: string
-  username: string | null
-  avatar_url: string | null
-  access_token_enc: string | null
-  token_expires_at: string | null
-  scopes: string[]
-  status: SocialAccountStatus
-  meta: Record<string, unknown>
-  created_at: string
-  updated_at: string
-}
-
-export interface SocialPost {
-  id: string
-  tenant_id: string
-  status: SocialPostStatus
-  source: SocialPostSource
-  caption: string
-  hashtags: string[]
-  media_urls: string[]
-  scheduled_at: string | null
-  published_at: string | null
-  ai_source_url: string | null
-  ai_source_title: string | null
-  error: string | null
-  created_by: string | null
-  created_at: string
-  updated_at: string
-}
-
-export interface SocialPostTarget {
-  id: string
-  post_id: string
-  social_account_id: string
-  status: SocialPostTargetStatus
-  external_post_id: string | null
-  permalink: string | null
-  error: string | null
-  published_at: string | null
-  created_at: string
-  updated_at: string
-}
-
-export interface SocialSettings {
-  tenant_id: string
-  auto_generate: boolean
-  keywords: string[]
-  niche: string | null
-  tone: string | null
-  post_count_per_run: number
-  autopublish: boolean
-  last_run_at: string | null
-  created_at: string
-  updated_at: string
-}

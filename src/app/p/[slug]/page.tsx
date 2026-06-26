@@ -1,18 +1,10 @@
 import { notFound } from "next/navigation"
 import type { Metadata } from "next"
 import type { CustomPage } from "@/types"
-import { MOCK_CUSTOM_PAGES } from "@/lib/mock-data"
 import { sanitizeHtml, sanitizeCss } from "@/lib/sanitize-html"
 import { FormHandler } from "@/components/public/form-handler"
 
-const supabaseConfigured = () =>
-  process.env.NEXT_PUBLIC_SUPABASE_URL?.startsWith("http") &&
-  !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-
 async function getPublishedPage(slug: string): Promise<CustomPage | null> {
-  if (!supabaseConfigured()) {
-    return MOCK_CUSTOM_PAGES.find((p) => p.slug === slug && p.status === "published") ?? null
-  }
   try {
     const { createClient } = await import("@/lib/supabase/server")
     const { getCurrentTenant } = await import("@/lib/tenant")

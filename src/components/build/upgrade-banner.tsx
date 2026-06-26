@@ -23,14 +23,14 @@ interface PlanCard {
 }
 
 const PLAN_CARDS: PlanCard[] = [
-  { key: "monthly", label: "Monthly", price: "₹29", per: "/month", blurb: "Billed monthly. Cancel anytime." },
-  { key: "annual", label: "Annual", price: "₹108", per: "/year", blurb: "Just ₹9/month — save 69%.", highlight: true },
+  { key: "monthly", label: "Pro — Monthly", price: "₹199", per: "/month", blurb: "Billed monthly. Cancel anytime." },
+  { key: "annual", label: "Pro — Annual", price: "₹1,499", per: "/year", blurb: "₹125/month — save 37%.", highlight: true },
 ]
 
 const PERKS = [
   "Remove the Site9 badge from your site",
-  "Custom domain & priority publishing",
-  "Unlimited AI generations & templates",
+  "Custom domain (yourbusiness.com)",
+  "All 100+ templates & unlimited blog posts",
 ]
 
 // Minimal shape of the Razorpay Checkout widget we use.

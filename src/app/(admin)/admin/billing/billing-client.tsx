@@ -25,8 +25,8 @@ interface PlanInfo {
 }
 
 const PLANS: Record<string, PlanInfo> = {
-  monthly: { label: "Monthly", price: "₹29", key: "monthly" },
-  annual: { label: "Annual", price: "₹108", key: "annual" },
+  monthly: { label: "Pro — Monthly", price: "₹199", key: "monthly" },
+  annual: { label: "Pro — Annual", price: "₹1,499", key: "annual" },
 }
 
 interface BillingClientProps {

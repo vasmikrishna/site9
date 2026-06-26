@@ -1,16 +1,8 @@
 import { notFound } from "next/navigation"
 import type { CustomPage } from "@/types"
-import { MOCK_CUSTOM_PAGES } from "@/lib/mock-data"
 import { PageEditor } from "./page-editor"
 
-const supabaseConfigured = () =>
-  process.env.NEXT_PUBLIC_SUPABASE_URL?.startsWith("http") &&
-  !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-
 async function getPage(id: string): Promise<CustomPage | null> {
-  if (!supabaseConfigured()) {
-    return MOCK_CUSTOM_PAGES.find((p) => p.id === id) ?? null
-  }
   try {
     const { createClient } = await import("@/lib/supabase/server")
     const { getCurrentTenant } = await import("@/lib/tenant")
@@ -31,5 +23,5 @@ export default async function AdminPageEditorPage({ params }: { params: Promise<
 
   if (!page) notFound()
 
-  return <PageEditor page={page} demoMode={!supabaseConfigured()} />
+  return <PageEditor page={page} />
 }

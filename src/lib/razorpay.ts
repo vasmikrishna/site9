@@ -22,7 +22,7 @@ export interface PlanConfig {
   /** Number of billing cycles to schedule the subscription for. */
   totalCount: number
   label: string
-  /** Human-readable price, e.g. "₹29/month". */
+  /** Human-readable price, e.g. "₹199/month". */
   priceLabel: string
   /** Short selling point shown on the plan card. */
   blurb: string
@@ -32,24 +32,24 @@ export const PLANS: Record<PlanKey, PlanConfig> = {
   monthly: {
     key: "monthly",
     planId: process.env.RAZORPAY_PLAN_MONTHLY_ID,
-    amount: 2900, // ₹29
+    amount: 19900, // ₹199
     period: "monthly",
     interval: 1,
-    totalCount: 120, // ~10 years of monthly cycles
-    label: "Monthly",
-    priceLabel: "₹29/month",
+    totalCount: 120,
+    label: "Pro — Monthly",
+    priceLabel: "₹199/month",
     blurb: "Billed every month. Cancel anytime.",
   },
   annual: {
     key: "annual",
     planId: process.env.RAZORPAY_PLAN_ANNUAL_ID,
-    amount: 10800, // ₹108
+    amount: 149900, // ₹1,499
     period: "yearly",
     interval: 1,
-    totalCount: 10, // 10 yearly cycles
-    label: "Annual",
-    priceLabel: "₹108/year",
-    blurb: "Just ₹9/month — save 69% vs monthly.",
+    totalCount: 10,
+    label: "Pro — Annual",
+    priceLabel: "₹1,499/year",
+    blurb: "₹125/month — save 37% vs monthly.",
   },
 }
 

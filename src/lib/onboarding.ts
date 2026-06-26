@@ -62,7 +62,7 @@ export const RESERVED_SLUGS = new Set([
   "dashboard", "mail", "smtp", "ftp", "blog", "shop", "store", "cdn", "assets",
   "static", "img", "images", "media", "files", "support", "help", "docs", "status",
   "about", "contact", "pricing", "billing", "account", "settings", "superadmin",
-  "client", "employee", "team", "dev", "staging", "test", "demo", "site9", "0tox",
+  "client", "employee", "team", "dev", "staging", "test", "demo", "site9", "site9",
   "ns1", "ns2", "mx", "email", "webmail", "portal", "secure", "my", "go",
 ])
 

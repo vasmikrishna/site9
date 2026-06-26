@@ -6,9 +6,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { defaultStageTemplatesFor, DEFAULT_SERVICE_TIERS } from "@/lib/stage-template-defaults"
 import { Plus, GripVertical, Eye, EyeOff, Trash2 } from "lucide-react"
-import type { IntakeQuestion, Service, ServiceTier, StageTemplate } from "@/types"
+import type { IntakeQuestion, Service, ServiceTier } from "@/types"
 
 const TYPES = ["text", "textarea", "select", "checkbox", "file", "industry"] as const
 
@@ -26,7 +25,6 @@ const DEFAULT_SERVICES: Service[] = [
   { id: "pro", tier: "pro", name: "Pro", tagline: "From idea to full product", description: "Full web app", price_label: "Custom pricing", features: [], active: true },
 ]
 const LOCAL_SERVICES_KEY = "site9_custom_services"
-const LOCAL_STAGE_TEMPLATES_KEY = "site9_custom_stage_templates"
 
 function slugifyService(value: string) {
   return value.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "")
@@ -45,35 +43,17 @@ function writeLocalServices(services: Service[]) {
   window.localStorage.setItem(LOCAL_SERVICES_KEY, JSON.stringify(services))
 }
 
-function readLocalStageTemplates() {
-  if (typeof window === "undefined") return []
-  try {
-    return JSON.parse(window.localStorage.getItem(LOCAL_STAGE_TEMPLATES_KEY) ?? "[]") as StageTemplate[]
-  } catch {
-    return []
-  }
-}
-
-function writeLocalStageTemplates(templates: StageTemplate[]) {
-  window.localStorage.setItem(LOCAL_STAGE_TEMPLATES_KEY, JSON.stringify(templates))
-}
-
 export default function IntakeConfigPage() {
   const supabase = createClient()
   const [activeTier, setActiveTier] = useState<ServiceTier>("starter")
   const [services, setServices] = useState<Service[]>(DEFAULT_SERVICES)
   const [questions, setQuestions] = useState<IntakeQuestion[]>([])
-  const [stageTemplates, setStageTemplates] = useState<StageTemplate[]>([])
-  const [defaultStageDraft, setDefaultStageDraft] = useState<StageTemplate[]>(() => defaultStageTemplatesFor("starter"))
   const [adding, setAdding] = useState(false)
-  const [addingStage, setAddingStage] = useState(false)
   const [addingService, setAddingService] = useState(false)
   const [form, setForm] = useState<{ label: string; type: IntakeQuestion["type"]; options: string; required: boolean }>({ label: "", type: "text", options: "", required: true })
-  const [stageForm, setStageForm] = useState({ name: "", description: "" })
   const [serviceForm, setServiceForm] = useState({ name: "", tier: "", tagline: "", description: "" })
   const [serviceError, setServiceError] = useState("")
   const [loading, setLoading] = useState(true)
-  const [templatesLoading, setTemplatesLoading] = useState(true)
 
   const loadServices = useCallback(async () => {
     const { data } = await supabase.from("services").select("*").order("name")
@@ -94,28 +74,12 @@ export default function IntakeConfigPage() {
     setLoading(false)
   }, [activeTier, supabase])
 
-  const loadStageTemplates = useCallback(async () => {
-    setTemplatesLoading(true)
-    const { data } = await supabase.from("stage_templates").select("*").eq("service_tier", activeTier).order("sort_order")
-    const remote = (data ?? []) as unknown as StageTemplate[]
-    const local = readLocalStageTemplates().filter(template => template.service_tier === activeTier)
-    setStageTemplates(remote.length ? remote : local)
-    setTemplatesLoading(false)
-  }, [activeTier, supabase])
-
   useEffect(() => {
     // The form needs to refetch when the selected tier changes.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     void loadServices()
     void loadQuestions()
-    void loadStageTemplates()
-  }, [loadQuestions, loadServices, loadStageTemplates])
-
-  useEffect(() => {
-    // Reset built-in template draft when switching default project types.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setDefaultStageDraft(defaultStageTemplatesFor(activeTier))
-  }, [activeTier])
+  }, [loadQuestions, loadServices])
 
   async function addQuestion() {
     if (!form.label) return
@@ -136,80 +100,6 @@ export default function IntakeConfigPage() {
   async function deleteQuestion(id: string) {
     await supabase.from("intake_questions").delete().eq("id", id)
     setQuestions(prev => prev.filter(q => q.id !== id))
-  }
-
-  async function addStageTemplate() {
-    if (!stageForm.name.trim()) return
-
-    if (usingDefaultStageTemplates) {
-      setDefaultStageDraft(prev => [...prev, {
-        id: `draft-${activeTier}-${Date.now()}`,
-        service_tier: activeTier,
-        name: stageForm.name.trim(),
-        description: stageForm.description.trim(),
-        sort_order: prev.length + 1,
-      }])
-      setStageForm({ name: "", description: "" })
-      setAddingStage(false)
-      return
-    }
-
-    const { data } = await supabase.from("stage_templates").insert({
-      service_tier: activeTier,
-      name: stageForm.name.trim(),
-      description: stageForm.description.trim() || null,
-      sort_order: stageTemplates.length + 1,
-    }).select().single()
-    if (data) {
-      setStageTemplates(prev => [...prev, data as unknown as StageTemplate])
-      setStageForm({ name: "", description: "" })
-      setAddingStage(false)
-      return
-    }
-
-    const localStage: StageTemplate = {
-      id: `local-stage-${activeTier}-${Date.now()}`,
-      service_tier: activeTier,
-      name: stageForm.name.trim(),
-      description: stageForm.description.trim(),
-      sort_order: stageTemplates.length + 1,
-    }
-    const localTemplates = [...readLocalStageTemplates().filter(template => template.id !== localStage.id), localStage]
-    writeLocalStageTemplates(localTemplates)
-    setStageTemplates(prev => [...prev, localStage])
-    setStageForm({ name: "", description: "" })
-    setAddingStage(false)
-  }
-
-  async function seedDefaultStageTemplates() {
-    const defaults = defaultStageDraft
-      .map((stage, index) => ({
-        service_tier: activeTier,
-        name: stage.name.trim(),
-        description: stage.description?.trim() || null,
-        sort_order: index + 1,
-      }))
-      .filter(stage => stage.name)
-    if (!defaults.length) return
-
-    const { data, error } = await supabase.from("stage_templates").insert(defaults).select().order("sort_order")
-    if (data?.length && !error) {
-      setStageTemplates(data as unknown as StageTemplate[])
-      return
-    }
-
-    const localTemplates = defaults.map((stage, index) => ({
-      id: `local-stage-${activeTier}-${Date.now()}-${index}`,
-      service_tier: stage.service_tier,
-      name: stage.name,
-      description: stage.description ?? "",
-      sort_order: stage.sort_order,
-    })) satisfies StageTemplate[]
-    writeLocalStageTemplates([
-      ...readLocalStageTemplates().filter(template => template.service_tier !== activeTier),
-      ...localTemplates,
-    ])
-    setStageTemplates(localTemplates)
   }
 
   async function addService() {
@@ -262,46 +152,11 @@ export default function IntakeConfigPage() {
     }
   }
 
-  async function updateStageTemplate(id: string, updates: Partial<StageTemplate>) {
-    if (id.startsWith("local-stage-")) {
-      const next = readLocalStageTemplates().map(stage => stage.id === id ? { ...stage, ...updates } : stage)
-      writeLocalStageTemplates(next)
-      setStageTemplates(prev => prev.map(stage => stage.id === id ? { ...stage, ...updates } : stage))
-      return
-    }
-
-    await supabase.from("stage_templates").update(updates).eq("id", id)
-    setStageTemplates(prev => prev.map(stage => stage.id === id ? { ...stage, ...updates } : stage))
-  }
-
-  async function deleteStageTemplate(id: string) {
-    if (id.startsWith("local-stage-")) {
-      const next = readLocalStageTemplates().filter(stage => stage.id !== id)
-      writeLocalStageTemplates(next)
-      setStageTemplates(prev => prev.filter(stage => stage.id !== id))
-      return
-    }
-
-    await supabase.from("stage_templates").delete().eq("id", id)
-    setStageTemplates(prev => prev.filter(stage => stage.id !== id))
-  }
-
-  function updateDefaultStageTemplate(id: string, updates: Partial<StageTemplate>) {
-    setDefaultStageDraft(prev => prev.map(stage => stage.id === id ? { ...stage, ...updates } : stage))
-  }
-
-  function deleteDefaultStageTemplate(id: string) {
-    setDefaultStageDraft(prev => prev.filter(stage => stage.id !== id))
-  }
-
-  const usingDefaultStageTemplates = !stageTemplates.length && DEFAULT_SERVICE_TIERS.includes(activeTier as never)
-  const visibleStageTemplates = usingDefaultStageTemplates ? defaultStageDraft : stageTemplates
-
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Project type configuration</h1>
-        <p className="text-muted-foreground mt-1">Configure services, intake questions, and default stage templates</p>
+        <h1 className="text-2xl font-bold">Intake question configuration</h1>
+        <p className="text-muted-foreground mt-1">Configure services and intake questions</p>
       </div>
 
       <Card>
@@ -406,58 +261,6 @@ export default function IntakeConfigPage() {
 
           {!loading && !questions.length && !adding && (
             <p className="text-sm text-muted-foreground text-center py-6">No questions for this tier yet</p>
-          )}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader className="flex-row items-center justify-between pb-2">
-          <div>
-            <CardTitle className="text-base capitalize">{activeTier} stage template</CardTitle>
-            <p className="mt-1 text-xs text-muted-foreground">Used as the default project stage flow. Projects copy these stages once, then can customize independently.</p>
-          </div>
-          <div className="flex items-center gap-2">
-            {usingDefaultStageTemplates && (
-              <Button size="sm" onClick={seedDefaultStageTemplates}>Save template</Button>
-            )}
-            <Button size="sm" variant="outline" onClick={() => setAddingStage(true)}><Plus className="h-3 w-3" /> Add stage</Button>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          {usingDefaultStageTemplates && (
-            <p className="rounded-md border border-border bg-muted/20 px-3 py-2 text-xs text-muted-foreground">
-              Editing built-in default stages. Save the template when you want these changes stored for this service type.
-            </p>
-          )}
-          {templatesLoading ? (
-            <div className="space-y-2">{[...Array(4)].map((_, i) => <div key={i} className="h-14 bg-muted rounded animate-pulse" />)}</div>
-          ) : visibleStageTemplates.map((stage, idx) => (
-            <div key={stage.id} className="grid gap-2 rounded-lg border border-border px-3 py-2.5 md:grid-cols-[auto_1fr_1.4fr_auto] md:items-center">
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <GripVertical className="h-4 w-4" />
-                <span className="text-xs w-5">{idx + 1}</span>
-              </div>
-              <Input value={stage.name} onChange={event => usingDefaultStageTemplates ? updateDefaultStageTemplate(stage.id, { name: event.target.value }) : updateStageTemplate(stage.id, { name: event.target.value })} />
-              <Input value={stage.description ?? ""} onChange={event => usingDefaultStageTemplates ? updateDefaultStageTemplate(stage.id, { description: event.target.value }) : updateStageTemplate(stage.id, { description: event.target.value })} placeholder="Description" />
-              <button onClick={() => usingDefaultStageTemplates ? deleteDefaultStageTemplate(stage.id) : deleteStageTemplate(stage.id)} className="justify-self-start text-muted-foreground hover:text-destructive md:justify-self-end">
-                <Trash2 className="h-3.5 w-3.5" />
-              </button>
-            </div>
-          ))}
-
-          {addingStage && (
-            <div className="border border-dashed border-border rounded-lg p-4 space-y-3 mt-2">
-              <div className="space-y-1.5"><Label>Stage name *</Label><Input value={stageForm.name} onChange={e => setStageForm(p => ({ ...p, name: e.target.value }))} placeholder="e.g. Discovery Call" /></div>
-              <div className="space-y-1.5"><Label>Description</Label><Input value={stageForm.description} onChange={e => setStageForm(p => ({ ...p, description: e.target.value }))} placeholder="What happens in this stage" /></div>
-              <div className="flex gap-2">
-                <Button size="sm" onClick={addStageTemplate} disabled={!stageForm.name.trim()}>Add</Button>
-                <Button size="sm" variant="ghost" onClick={() => setAddingStage(false)}>Cancel</Button>
-              </div>
-            </div>
-          )}
-
-          {!templatesLoading && !visibleStageTemplates.length && !addingStage && (
-            <p className="text-sm text-muted-foreground text-center py-6">No stage template configured for this tier yet</p>
           )}
         </CardContent>
       </Card>

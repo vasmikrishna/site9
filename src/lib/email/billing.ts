@@ -19,7 +19,7 @@ export interface PaymentFailedEmailOptions {
 
 /**
  * Send a receipt email for a successful payment / invoice.
- * Amount is in paise (e.g. 2900 = ₹29).
+ * Amount is in paise (e.g. 19900 = ₹199).
  */
 export async function sendReceiptEmail(options: ReceiptEmailOptions): Promise<boolean> {
   const amountInRupees = (options.amount / 100).toFixed(2)
@@ -37,7 +37,7 @@ export async function sendReceiptEmail(options: ReceiptEmailOptions): Promise<bo
       ${options.invoiceUrl ? `<p><a href="${options.invoiceUrl}" style="display: inline-block; background: #1B3A6B; color: #ffffff; padding: 10px 20px; text-decoration: none; border-radius: 4px; font-weight: bold; font-size: 14px;">View Invoice</a></p>` : ""}
       <p>Your subscription is now active and ready to use. Log in to your dashboard to get started:</p>
       <p><a href="${APP_URL}/build" style="display: inline-block; background: #1B3A6B; color: #ffffff; padding: 10px 20px; text-decoration: none; border-radius: 4px; font-weight: bold; font-size: 14px;">Go to Dashboard</a></p>
-      <p style="color: #6b7280; font-size: 14px; margin-top: 24px;">— The 0toX Team</p>
+      <p style="color: #6b7280; font-size: 14px; margin-top: 24px;">— The Site9 Team</p>
     </div>
   `
 
@@ -64,7 +64,7 @@ export async function sendPaymentFailedEmail(options: PaymentFailedEmailOptions)
       </p>
       <p>Please log in to your account to update your payment method:</p>
       <p><a href="${APP_URL}/build/settings" style="display: inline-block; background: #1B3A6B; color: #ffffff; padding: 10px 20px; text-decoration: none; border-radius: 4px; font-weight: bold; font-size: 14px;">Update Payment Method</a></p>
-      <p style="color: #6b7280; font-size: 14px; margin-top: 24px;">— The 0toX Team</p>
+      <p style="color: #6b7280; font-size: 14px; margin-top: 24px;">— The Site9 Team</p>
     </div>
   `
 

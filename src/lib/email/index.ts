@@ -13,7 +13,7 @@ export interface SendEmailOptions {
 export async function sendEmail(options: SendEmailOptions): Promise<boolean> {
   const provider = (process.env.EMAIL_PROVIDER || "").toLowerCase()
   const from = process.env.EMAIL_FROM || "noreply@site9.in"
-  const fromName = "0toX"
+  const fromName = "Site9"
 
   if (provider === "zeptomail") {
     const rawToken = process.env.ZEPTOMAIL_API_KEY
@@ -111,7 +111,7 @@ export async function sendProjectSubmittedEmail(to: string, clientName: string, 
       <p>Hi ${clientName},</p>
       <p>Thanks for submitting <strong>${projectTitle}</strong>. We've received your requirements and will review them within 24 hours.</p>
       <p>You can track your project here: <a href="${APP_URL}/client/projects/${projectId}">View project</a></p>
-      <p>— The 0toX team</p>
+      <p>— The Site9 team</p>
     `,
   })
 }
@@ -124,7 +124,7 @@ export async function sendStageCompletedEmail(to: string, clientName: string, pr
       <p>Hi ${clientName},</p>
       <p>We've completed the <strong>${stageName}</strong> stage for <strong>${projectTitle}</strong>.</p>
       <p>Log in to view your project and download any deliverables: <a href="${APP_URL}/client/projects/${projectId}">View project</a></p>
-      <p>— The 0toX team</p>
+      <p>— The Site9 team</p>
     `,
   })
 }
@@ -138,7 +138,7 @@ export async function sendPaymentDueEmail(to: string, clientName: string, projec
       <p>A payment is due for <strong>${projectTitle}</strong>:</p>
       <p><strong>${paymentLabel} — $${amount.toFixed(2)}</strong></p>
       <p>Pay now: <a href="${APP_URL}/client/projects/${projectId}">View project & pay</a></p>
-      <p>— The 0toX team</p>
+      <p>— The Site9 team</p>
     `,
   })
 }
@@ -152,7 +152,7 @@ export async function sendPaymentReceivedEmail(to: string, clientName: string, p
       <p>We've received your payment for <strong>${projectTitle}</strong>:</p>
       <p><strong>${paymentLabel} — $${amount.toFixed(2)}</strong></p>
       <p>Thank you!</p>
-      <p>— The 0toX team</p>
+      <p>— The Site9 team</p>
     `,
   })
 }
@@ -228,7 +228,7 @@ export async function notifyProjectStatusChange(projectId: string, oldStatus: st
           </div>
           <p>You can track the progress of your project on your dashboard:</p>
           <p><a href="${APP_URL}/client/projects/${projectId}" style="display: inline-block; background: #1B3A6B; color: #ffffff; padding: 10px 20px; text-decoration: none; border-radius: 4px; font-weight: bold; font-size: 14px;">View Project</a></p>
-          <p>— The 0toX Team</p>
+          <p>— The Site9 Team</p>
         </div>
       `
       await sendEmail({
@@ -252,7 +252,7 @@ export async function notifyProjectStatusChange(projectId: string, oldStatus: st
             </div>
             <p>Please log in to the portal to review any updates:</p>
             <p><a href="${APP_URL}/employee/projects/${projectId}" style="display: inline-block; background: #1B3A6B; color: #ffffff; padding: 10px 20px; text-decoration: none; border-radius: 4px; font-weight: bold; font-size: 14px;">View Project</a></p>
-            <p>— 0toX System</p>
+            <p>— Site9 System</p>
           </div>
         `
         await sendEmail({

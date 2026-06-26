@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { ArrowRight, Check, Mail, GitPullRequest, BookOpen, Code2 } from "lucide-react"
-import { MOCK_CUSTOM_PAGES } from "@/lib/mock-data"
 import type { CustomPage } from "@/types"
 import { sanitizeHtml, sanitizeCss } from "@/lib/sanitize-html"
 import { FEATURES } from "@/lib/features"
@@ -49,9 +48,7 @@ const fetchHomepageOverride = (slug: string) =>
 
 async function getHomepageOverride(): Promise<CustomPage | null> {
   if (!FEATURES.pageBuilder) return null
-  if (!supabaseConfigured()) {
-    return MOCK_CUSTOM_PAGES.find((p) => p.is_homepage && p.status === "published") ?? null
-  }
+  if (!supabaseConfigured()) return null
   try {
     const { getTenantSlug } = await import("@/lib/tenant")
     const slug = await getTenantSlug()

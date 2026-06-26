@@ -20,7 +20,7 @@ export default async function SuperAdminDashboard() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Platform Overview</h1>
-          <p className="text-muted-foreground mt-1">All tenants on 0toX</p>
+          <p className="text-muted-foreground mt-1">All tenants on Site9</p>
         </div>
         <Button asChild variant="brand">
           <Link href="/superadmin/tenants/new"><Plus className="h-4 w-4" /> New Tenant</Link>

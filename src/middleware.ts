@@ -75,37 +75,26 @@ async function getSessionFromRequest(req: NextRequest) {
   }
 }
 
-function dashboardFor(role: string) {
-  if (role === "admin") return "/admin/dashboard"
-  if (role === "employee") return "/employee/dashboard"
-  return "/client/dashboard"
-}
-
 async function extractTenantSlug(req: NextRequest): Promise<string> {
   const host = req.headers.get("host") ?? "localhost"
   const cleanHost = host.split(":")[0]
 
-  // Production subdomain: soqall.site9.in → "soqall"
   if (cleanHost.endsWith(`.${BASE_DOMAIN}`)) {
     return cleanHost.slice(0, cleanHost.length - BASE_DOMAIN.length - 1)
   }
 
-  // Local subdomain testing: soqall.localhost → "soqall"
   if (cleanHost.endsWith(".localhost") && cleanHost !== "localhost") {
     return cleanHost.slice(0, cleanHost.lastIndexOf(".localhost"))
   }
 
-  // Custom domain: mybusiness.com → look up tenant
   if (cleanHost !== "localhost" && cleanHost !== "127.0.0.1" && cleanHost !== BASE_DOMAIN) {
     const tenant = await getTenantByCustomDomain(cleanHost)
     if (tenant) return tenant.slug
   }
 
-  // Dev cookie set by the login page tenant-switcher
   const devTenant = req.cookies.get("dev_tenant")?.value
   if (devTenant) return devTenant
 
-  // Final fallback: TENANT_SLUG env or default
   return process.env.TENANT_SLUG ?? "site9"
 }
 
@@ -114,7 +103,6 @@ export async function middleware(req: NextRequest) {
   const session = await getSessionFromRequest(req)
   const tenantSlug = await extractTenantSlug(req)
 
-  // Build response with tenant slug header so server components & API routes can read it
   const res = NextResponse.next({
     request: {
       headers: new Headers({
@@ -125,24 +113,13 @@ export async function middleware(req: NextRequest) {
   })
   res.headers.set("x-tenant-slug", tenantSlug)
 
-  // Hidden features: block their routes (code/data stay in place — see lib/features.ts)
-  if (!FEATURES.ecommerce && (path.startsWith("/admin/products") || path.startsWith("/admin/orders") || path.startsWith("/shop"))) {
-    return NextResponse.redirect(new URL(path.startsWith("/admin") ? "/admin/dashboard" : "/", req.url))
-  }
   if (!FEATURES.pageBuilder && (path.startsWith("/admin/pages") || path.startsWith("/p/"))) {
-    return NextResponse.redirect(new URL(path.startsWith("/admin") ? "/admin/dashboard" : "/", req.url))
-  }
-  if (!FEATURES.bookings && (path.startsWith("/admin/bookings") || path.startsWith("/book"))) {
     return NextResponse.redirect(new URL(path.startsWith("/admin") ? "/admin/dashboard" : "/", req.url))
   }
   if (!FEATURES.blog && (path.startsWith("/admin/blog") || path.startsWith("/blog"))) {
     return NextResponse.redirect(new URL(path.startsWith("/admin") ? "/admin/dashboard" : "/", req.url))
   }
-  if (!FEATURES.social && path.startsWith("/admin/social")) {
-    return NextResponse.redirect(new URL("/admin/dashboard", req.url))
-  }
 
-  // Superadmin: only the platform admin email can access
   if (path.startsWith("/superadmin")) {
     const SUPER_ADMIN_EMAIL = process.env.ADMIN_EMAIL
     if (!session || session.email !== SUPER_ADMIN_EMAIL) {
@@ -150,18 +127,11 @@ export async function middleware(req: NextRequest) {
     }
   }
 
-  const isProtected =
-    path.startsWith("/client") ||
-    path.startsWith("/admin") ||
-    path.startsWith("/employee")
+  const isProtected = path.startsWith("/admin")
 
-  // Tenant isolation: if the session belongs to a different tenant than the
-  // current subdomain, treat as unauthenticated on protected routes.
-  // The platform super-admin (id === "admin") is exempt — they can access any tenant.
   if (session && isProtected && session.tenant_id && session.id !== "admin") {
     const currentTenantId = await getTenantIdForSlug(tenantSlug)
     if (currentTenantId && session.tenant_id !== currentTenantId) {
-      // Clear the stale session cookie so /login doesn't redirect back here (infinite loop)
       const redirect = NextResponse.redirect(new URL("/login", req.url))
       const cookieDomain =
         process.env.NODE_ENV === "production" ? `.${BASE_DOMAIN}` : undefined
@@ -180,19 +150,11 @@ export async function middleware(req: NextRequest) {
   }
 
   if (session && (path === "/login" || path === "/register")) {
-    return NextResponse.redirect(new URL(dashboardFor(session.role), req.url))
+    return NextResponse.redirect(new URL("/admin/dashboard", req.url))
   }
 
   if (session && path.startsWith("/admin") && session.role !== "admin") {
-    return NextResponse.redirect(new URL(dashboardFor(session.role), req.url))
-  }
-
-  if (session && path.startsWith("/employee") && session.role !== "employee") {
-    return NextResponse.redirect(new URL(dashboardFor(session.role), req.url))
-  }
-
-  if (session && path.startsWith("/client") && session.role !== "client") {
-    return NextResponse.redirect(new URL(dashboardFor(session.role), req.url))
+    return NextResponse.redirect(new URL("/admin/dashboard", req.url))
   }
 
   return res
@@ -200,29 +162,19 @@ export async function middleware(req: NextRequest) {
 
 export const config = {
   matcher: [
-    // The landing route resolves a per-tenant homepage override, so it needs the
-    // x-tenant-slug header too — without this, a subdomain's root renders the
-    // default tenant instead of the owner's published site.
     "/",
-    "/client/:path*",
     "/admin/:path*",
-    "/employee/:path*",
     "/superadmin/:path*",
     "/login",
     "/register",
     "/api/:path*",
-    "/s/:path*",
-    "/shop/:path*",
     "/p/:path*",
-    // SEO: sitemap and robots need x-tenant-slug to resolve per-tenant output
     "/sitemap.xml",
     "/robots.txt",
-    // Public pages that need tenant context for metadata
     "/about",
     "/services",
     "/work/:path*",
     "/contact",
-    "/book",
     "/pricing",
     "/open-source",
     "/templates/:path*",

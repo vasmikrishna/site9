@@ -66,12 +66,6 @@ export async function POST(request: Request) {
   const content_json = body.content_json ?? null
   const cover_image_url = typeof body.cover_image_url === "string" ? body.cover_image_url : null
   const author_name = typeof body.author_name === "string" ? body.author_name : null
-  const tags = Array.isArray(body.tags) ? body.tags : []
-  const meta_title = typeof body.meta_title === "string" ? body.meta_title : null
-  const meta_description = typeof body.meta_description === "string" ? body.meta_description : null
-  const og_image_url = typeof body.og_image_url === "string" ? body.og_image_url : null
-  const canonical_url = typeof body.canonical_url === "string" ? body.canonical_url : null
-  const noindex = typeof body.noindex === "boolean" ? body.noindex : false
   const status = body.status === "published" ? "published" : "draft"
 
   const published_at = status === "published" ? new Date().toISOString() : null
@@ -84,13 +78,7 @@ export async function POST(request: Request) {
     content_json,
     cover_image_url,
     author_name,
-    tags,
     status,
-    meta_title,
-    meta_description,
-    og_image_url,
-    canonical_url,
-    noindex,
     published_at,
   }
 

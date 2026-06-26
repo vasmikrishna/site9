@@ -3,11 +3,6 @@ import { getSession } from "@/lib/session"
 import { createClient } from "@/lib/supabase/server"
 import { getCurrentTenant } from "@/lib/tenant"
 import { getTemplate } from "@/lib/page-templates"
-import { MOCK_CUSTOM_PAGES } from "@/lib/mock-data"
-
-const supabaseConfigured = () =>
-  process.env.NEXT_PUBLIC_SUPABASE_URL?.startsWith("http") &&
-  !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
 function slugify(value: string): string {
   return value
@@ -22,10 +17,6 @@ export async function GET() {
   const session = await getSession()
   if (session?.role !== "admin") {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 })
-  }
-
-  if (!supabaseConfigured()) {
-    return NextResponse.json({ pages: MOCK_CUSTOM_PAGES })
   }
 
   const supabase = createClient()
@@ -90,19 +81,6 @@ export async function POST(request: Request) {
     template: tplName,
     status: "draft" as const,
     is_homepage: false,
-  }
-
-  if (!supabaseConfigured()) {
-    const now = new Date().toISOString()
-    return NextResponse.json({
-      page: {
-        id: `local-${Date.now()}`,
-        tenant_id: null,
-        ...record,
-        created_at: now,
-        updated_at: now,
-      },
-    })
   }
 
   const supabase = createClient()

@@ -176,7 +176,7 @@ export default function LoginPage() {
       <div className="min-h-screen flex items-center justify-center bg-background px-4">
         <div className="w-full max-w-sm space-y-4">
           <div className="text-center space-y-1 mb-6">
-            <Link href="/" className="text-2xl font-bold tracking-tight">0toX</Link>
+            <Link href="/" className="text-2xl font-bold tracking-tight">Site9</Link>
             <p className="text-muted-foreground text-sm">Choose a workspace to continue</p>
           </div>
 
@@ -262,7 +262,7 @@ export default function LoginPage() {
         )}
 
         <div className="text-center space-y-1">
-          <Link href="/" className="text-2xl font-bold tracking-tight">0toX</Link>
+          <Link href="/" className="text-2xl font-bold tracking-tight">Site9</Link>
           <p className="text-muted-foreground text-sm">Sign in to your account</p>
         </div>
 

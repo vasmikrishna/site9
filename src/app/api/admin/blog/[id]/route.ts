@@ -71,12 +71,6 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   if (body.content_json !== undefined) update.content_json = body.content_json
   if (typeof body.cover_image_url === "string") update.cover_image_url = body.cover_image_url
   if (typeof body.author_name === "string") update.author_name = body.author_name
-  if (Array.isArray(body.tags)) update.tags = body.tags
-  if (typeof body.meta_title === "string") update.meta_title = body.meta_title
-  if (typeof body.meta_description === "string") update.meta_description = body.meta_description
-  if (typeof body.og_image_url === "string") update.og_image_url = body.og_image_url
-  if (typeof body.canonical_url === "string") update.canonical_url = body.canonical_url
-  if (typeof body.noindex === "boolean") update.noindex = body.noindex
   if (typeof body.status === "string") {
     if (!STATUSES.includes(body.status as BlogPostStatus)) {
       return NextResponse.json({ error: "Invalid status" }, { status: 400 })

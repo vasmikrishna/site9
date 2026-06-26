@@ -5,12 +5,10 @@ import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Select } from "@/components/ui/select"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
 import { BlogEditor } from "@/components/admin/blog-editor"
-import { Loader2, ChevronDown } from "lucide-react"
-import { cn } from "@/lib/utils"
+import { Loader2 } from "lucide-react"
 import type { BlogPost } from "@/types"
 
 function slugify(value: string): string {
@@ -36,17 +34,9 @@ export function BlogForm({ mode, id }: BlogFormProps) {
     content_json: undefined,
     cover_image_url: "",
     author_name: "",
-    tags: [],
     status: "draft",
-    meta_title: "",
-    meta_description: "",
-    og_image_url: "",
-    canonical_url: "",
-    noindex: false,
   })
   const [slugDirty, setSlugDirty] = useState(false)
-  const [tagInput, setTagInput] = useState("")
-  const [seoOpen, setSeoOpen] = useState(false)
   const [saving, setSaving] = useState(false)
   const [loading, setLoading] = useState(mode === "edit")
   const [error, setError] = useState("")
@@ -118,13 +108,7 @@ export function BlogForm({ mode, id }: BlogFormProps) {
         content_json: post.content_json,
         cover_image_url: post.cover_image_url || null,
         author_name: post.author_name || null,
-        tags: post.tags || [],
         status: post.status || "draft",
-        meta_title: post.meta_title || null,
-        meta_description: post.meta_description || null,
-        og_image_url: post.og_image_url || null,
-        canonical_url: post.canonical_url || null,
-        noindex: post.noindex || false,
       }
 
       const res = await fetch(
@@ -230,48 +214,6 @@ export function BlogForm({ mode, id }: BlogFormProps) {
             />
           </div>
 
-          {/* Tags */}
-          <div>
-            <Label htmlFor="blog-field-tags" className="mb-2 block">Tags</Label>
-            <div className="space-y-2">
-              <Input
-                id="blog-field-tags"
-                data-testid="blog-field-tags"
-                placeholder="Enter tags separated by commas"
-                value={tagInput}
-                onChange={e => setTagInput(e.target.value)}
-                onBlur={() => {
-                  if (tagInput.trim()) {
-                    const newTags = tagInput
-                      .split(",")
-                      .map(t => t.trim())
-                      .filter(Boolean)
-                    setPost(p => ({ ...p, tags: [...(p.tags || []), ...newTags] }))
-                    setTagInput("")
-                  }
-                }}
-              />
-              {post.tags && post.tags.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {post.tags.map((tag, i) => (
-                    <span
-                      key={i}
-                      className="inline-flex items-center gap-1 rounded-full bg-muted px-3 py-1 text-sm"
-                    >
-                      {tag}
-                      <button
-                        onClick={() => setPost(p => ({ ...p, tags: p.tags?.filter((_, idx) => idx !== i) }))}
-                        className="text-muted-foreground hover:text-foreground"
-                      >
-                        ×
-                      </button>
-                    </span>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-
           {/* Cover Image */}
           <div>
             <Label htmlFor="blog-field-cover_image" className="mb-2 block">Cover Image</Label>
@@ -328,89 +270,6 @@ export function BlogForm({ mode, id }: BlogFormProps) {
             onChange={(html, json) => setPost(p => ({ ...p, content_html: html, content_json: json }))}
           />
         </CardContent>
-      </Card>
-
-      {/* SEO Section */}
-      <Card>
-        <CardHeader>
-          <button
-            onClick={() => setSeoOpen(!seoOpen)}
-            className="flex items-center justify-between w-full hover:text-foreground transition-colors"
-            type="button"
-          >
-            <CardTitle>SEO Settings</CardTitle>
-            <ChevronDown
-              className={cn("h-5 w-5 text-muted-foreground transition-transform", seoOpen && "rotate-180")}
-            />
-          </button>
-        </CardHeader>
-        {seoOpen && (
-          <CardContent className="space-y-4 border-t border-border pt-6">
-            {/* Meta Title */}
-            <div>
-              <Label htmlFor="blog-seo-meta_title" className="mb-2 block">Meta Title</Label>
-              <Input
-                id="blog-seo-meta_title"
-                data-testid="blog-seo-meta_title"
-                placeholder="For search engines"
-                value={post.meta_title || ""}
-                onChange={e => setPost(p => ({ ...p, meta_title: e.target.value }))}
-              />
-            </div>
-
-            {/* Meta Description */}
-            <div>
-              <Label htmlFor="blog-seo-meta_description" className="mb-2 block">Meta Description</Label>
-              <Textarea
-                id="blog-seo-meta_description"
-                data-testid="blog-seo-meta_description"
-                placeholder="Summary for search engines and social media"
-                value={post.meta_description || ""}
-                onChange={e => setPost(p => ({ ...p, meta_description: e.target.value }))}
-                rows={2}
-              />
-            </div>
-
-            {/* OG Image */}
-            <div>
-              <Label htmlFor="blog-seo-og_image_url" className="mb-2 block">Open Graph Image URL</Label>
-              <Input
-                id="blog-seo-og_image_url"
-                data-testid="blog-seo-og_image_url"
-                placeholder="https://..."
-                value={post.og_image_url || ""}
-                onChange={e => setPost(p => ({ ...p, og_image_url: e.target.value }))}
-              />
-            </div>
-
-            {/* Canonical URL */}
-            <div>
-              <Label htmlFor="blog-seo-canonical_url" className="mb-2 block">Canonical URL</Label>
-              <Input
-                id="blog-seo-canonical_url"
-                data-testid="blog-seo-canonical_url"
-                placeholder="https://..."
-                value={post.canonical_url || ""}
-                onChange={e => setPost(p => ({ ...p, canonical_url: e.target.value }))}
-              />
-            </div>
-
-            {/* No Index */}
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                id="blog-seo-noindex"
-                data-testid="blog-seo-noindex"
-                checked={post.noindex || false}
-                onChange={e => setPost(p => ({ ...p, noindex: e.target.checked }))}
-                className="h-4 w-4 rounded border border-border"
-              />
-              <Label htmlFor="blog-seo-noindex" className="cursor-pointer">
-                Hide from search engines (noindex)
-              </Label>
-            </div>
-          </CardContent>
-        )}
       </Card>
 
       {/* Action Buttons */}

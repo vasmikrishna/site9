@@ -49,7 +49,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
           ${enquiry.message}
         </blockquote>
         <div style="margin-top: 30px; border-top: 1px solid #e5e7eb; padding-top: 16px; font-size: 12px; color: #9ca3af;">
-          — The 0toX Team
+          — The Site9 Team
         </div>
       </div>
     `
