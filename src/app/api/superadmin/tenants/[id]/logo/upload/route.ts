@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { getSession } from "@/lib/session"
 import { uploadToR2, isR2Configured } from "@/lib/r2"
+export const dynamic = "force-dynamic"
 
 export const runtime = "nodejs"
 

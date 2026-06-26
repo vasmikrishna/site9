@@ -3,6 +3,8 @@ import { getSession } from "@/lib/session"
 import { createClient } from "@/lib/supabase/server"
 import { getCurrentTenant } from "@/lib/tenant"
 
+export const dynamic = "force-dynamic"
+
 const supabaseConfigured = () =>
   process.env.NEXT_PUBLIC_SUPABASE_URL?.startsWith("http") &&
   !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY

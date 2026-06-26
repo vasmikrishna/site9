@@ -3,6 +3,7 @@ import { getOwnerContext } from "@/lib/build-owner"
 import { createClient } from "@/lib/supabase/server"
 import { DEFAULT_REFERENCE_SITES } from "@/lib/default-reference-sites"
 import type { ReferenceSite } from "@/types"
+export const dynamic = "force-dynamic"
 
 interface GalleryRow {
   id: string

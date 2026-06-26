@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { getOwnerContext } from "@/lib/build-owner"
 import { createClient } from "@/lib/supabase/server"
+export const dynamic = "force-dynamic"
 
 export async function GET() {
   const owner = await getOwnerContext()

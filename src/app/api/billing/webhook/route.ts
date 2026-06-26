@@ -6,6 +6,7 @@ import {
   updateSubscriptionByRazorpayId,
 } from "@/lib/subscription"
 import { sendReceiptEmail, sendPaymentFailedEmail } from "@/lib/email/billing"
+export const dynamic = "force-dynamic"
 
 /**
  * POST /api/billing/webhook

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { slugify, validateSlug, subdomainHost } from "@/lib/onboarding"
+export const dynamic = "force-dynamic"
 
 /**
  * GET /api/onboarding/check-subdomain?slug=mybiz

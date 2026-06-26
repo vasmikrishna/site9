@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
+export const dynamic = "force-dynamic"
 
 const META_COLUMNS = "id,name,slug,description,category,industry,style,preview_url,tags,sort_order,status,featured,created_at,updated_at"
 

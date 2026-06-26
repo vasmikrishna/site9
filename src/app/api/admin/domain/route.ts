@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { getSession } from "@/lib/session"
 import {
+export const dynamic = "force-dynamic"
   isVercelConfigured,
   addDomainToProject,
   removeDomainFromProject,

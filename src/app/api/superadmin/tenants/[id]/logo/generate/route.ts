@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { getSession } from "@/lib/session"
 import { getTenantById } from "@/lib/tenant"
 import { generateLogoOptions, isLogoAiConfigured } from "@/lib/logo-generate"
+export const dynamic = "force-dynamic"
 
 export const runtime = "nodejs"
 export const maxDuration = 120

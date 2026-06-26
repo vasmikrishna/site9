@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { getOwnerContext } from "@/lib/build-owner"
 import { createClient } from "@/lib/supabase/server"
 import { DEFAULT_PALETTES } from "@/lib/default-palettes"
+export const dynamic = "force-dynamic"
 
 export async function GET(req: Request) {
   const owner = await getOwnerContext()

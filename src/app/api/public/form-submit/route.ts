@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { getTenantSlug, getTenantBySlug } from "@/lib/tenant"
 import { sendEmail } from "@/lib/email"
+export const dynamic = "force-dynamic"
 
 export const runtime = "nodejs"
 

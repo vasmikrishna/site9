@@ -3,6 +3,7 @@ import { getSession } from "@/lib/session"
 import { createClient } from "@/lib/supabase/server"
 import { getCurrentTenant } from "@/lib/tenant"
 import { getTemplate } from "@/lib/page-templates"
+export const dynamic = "force-dynamic"
 
 function slugify(value: string): string {
   return value

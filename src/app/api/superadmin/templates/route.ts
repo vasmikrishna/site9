@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { getSession } from "@/lib/session"
 import { createClient } from "@/lib/supabase/server"
+export const dynamic = "force-dynamic"
 
 const SUPER_ADMIN_EMAIL = process.env.ADMIN_EMAIL
 

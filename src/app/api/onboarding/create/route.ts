@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { createSession } from "@/lib/session"
 import { createClient } from "@/lib/supabase/server"
 import { slugify, validateSlug } from "@/lib/onboarding"
+export const dynamic = "force-dynamic"
 
 /**
  * POST /api/onboarding/create

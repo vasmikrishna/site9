@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server"
 import { getSiteSettings, s } from "@/lib/site-settings"
 import { sendEmail } from "@/lib/email"
 import { getCurrentTenant } from "@/lib/tenant"
+export const dynamic = "force-dynamic"
 
 export async function POST(req: Request) {
   try {

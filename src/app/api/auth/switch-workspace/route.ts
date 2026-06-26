@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { getSession, createSession } from "@/lib/session"
 import { createClient } from "@/lib/supabase/server"
+export const dynamic = "force-dynamic"
 
 export async function POST(req: Request) {
   const session = await getSession()

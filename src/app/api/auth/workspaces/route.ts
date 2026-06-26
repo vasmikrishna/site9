@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { getSession } from "@/lib/session"
 import { getWorkspacesForEmail } from "@/lib/workspaces"
+export const dynamic = "force-dynamic"
 
 // Returns all workspaces (tenants) the current user belongs to
 export async function GET() {

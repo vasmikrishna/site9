@@ -6,6 +6,7 @@ import { renderBusinessTemplate, getBusinessTemplate } from "@/lib/business-temp
 import { splitAiHtml } from "@/lib/ai-website-prompt"
 import { stripEditorMarkers } from "@/lib/curated-templates"
 import { subdomainHost, type BusinessDetails } from "@/lib/onboarding"
+export const dynamic = "force-dynamic"
 
 /**
  * POST /api/build/publish
