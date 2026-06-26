@@ -67,7 +67,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
 
           {/* Metric tiles */}
           <div className="grid grid-cols-3 gap-3 sm:gap-6 mt-8 max-w-2xl">
-            {(project.metrics ?? []).map((m, i) => (
+            {project.metrics.map((m, i) => (
               <div key={i} className="bg-white/10 backdrop-blur rounded-lg p-4 border border-white/15">
                 <div className="text-2xl sm:text-3xl font-bold">{m.value}</div>
                 <div className="text-xs text-white/70 mt-1">{m.label}</div>

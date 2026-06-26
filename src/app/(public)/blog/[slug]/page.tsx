@@ -2,6 +2,7 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import type { Metadata } from "next"
 import { ArrowLeft } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
 import { getSiteSettings } from "@/lib/site-settings"
 import { getCurrentTenant, getTenantSlug } from "@/lib/tenant"
 import { getCanonicalOrigin, buildArticleJsonLd } from "@/lib/seo"
@@ -43,20 +44,22 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const tenant = await getCurrentTenant().catch(() => null)
   const tenantSlug = await getTenantSlug()
   const origin = getCanonicalOrigin(tenant, tenantSlug)
-  const canonicalUrl = `${origin}/blog/${slug}`
-  const title = post.title
-  const description = post.excerpt || ""
+  const canonicalUrl = post.canonical_url || `${origin}/blog/${slug}`
+  const title = post.meta_title || post.title
+  const description = post.meta_description || post.excerpt || ""
+  const image = post.og_image_url || post.cover_image_url
 
   return {
     title,
     description,
     alternates: { canonical: canonicalUrl },
+    ...(post.noindex && { robots: { index: false, follow: false } }),
     openGraph: {
       title,
       description,
       type: "article",
       url: canonicalUrl,
-      ...(post.cover_image_url ? { images: [{ url: post.cover_image_url, alt: title }] } : {}),
+      ...(image ? { images: [{ url: image, alt: title }] } : {}),
     },
   }
 }
@@ -72,13 +75,13 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
   const origin = getCanonicalOrigin(tenant, tenantSlug)
   const publisherName = settings.site_name ?? tenant?.name ?? "Site9"
   const publisherLogo = tenant?.logo_url
-  const canonicalUrl = `${origin}/blog/${slug}`
+  const canonicalUrl = post.canonical_url || `${origin}/blog/${slug}`
 
   const jsonLd = buildArticleJsonLd({
     url: canonicalUrl,
     headline: post.title,
-    description: post.excerpt,
-    image: post.cover_image_url,
+    description: post.meta_description || post.excerpt,
+    image: post.og_image_url || post.cover_image_url,
     authorName: post.author_name,
     publisherName,
     publisherLogo,
@@ -145,6 +148,26 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
               </time>
             )}
           </div>
+
+          {/* Tags */}
+          {post.tags && Array.isArray(post.tags) && post.tags.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-8">
+              {post.tags.map((tag: string) => (
+                <Badge
+                  key={tag}
+                  variant="outline"
+                  className="text-xs"
+                  style={{
+                    borderColor: "var(--site-accent)",
+                    color: "var(--site-accent)",
+                  }}
+                  data-testid={`blog-tag-${tag}`}
+                >
+                  {tag}
+                </Badge>
+              ))}
+            </div>
+          )}
 
           {/* Content */}
           <div
