@@ -25,10 +25,10 @@ interface LogoOption { url: string; svg: string; style?: string }
 type WizardStep = 1 | 2 | 3 | 4 | 5
 
 const STEP_LABELS = [
-  "Choose a Style",
-  "Your Logo",
-  "Pick Colors",
   "Business Details",
+  "Brand Colors",
+  "Your Logo",
+  "Style & Assets",
   "Generate",
 ]
 
@@ -63,7 +63,9 @@ export function OnboardingWizard({ initialDetails, onComplete }: OnboardingWizar
   const [logoStyle, setLogoStyle] = useState<string>(LOGO_STYLES[0]?.id ?? "")
   const [logoOptions, setLogoOptions] = useState<LogoOption[]>([])
   const [brandAssets, setBrandAssets] = useState<BrandAsset[]>([])
+  const [uploadingAsset, setUploadingAsset] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
+  const assetFileRef = useRef<HTMLInputElement>(null)
 
   // Step 3: Colors
   const [palettes, setPalettes] = useState<ColorPalette[]>([])
@@ -119,25 +121,14 @@ export function OnboardingWizard({ initialDetails, onComplete }: OnboardingWizar
   }, [])
 
   // ── Initial load ──────────────────────────────────────────────────────────
-  useEffect(() => { fetchReferenceSites() }, [fetchReferenceSites])
   useEffect(() => { fetchBrandAssets() }, [fetchBrandAssets])
 
   // ── Step navigation ──────────────────────────────────────────────────────
 
   async function goToStep(next: WizardStep) {
     await saveProgress()
-    if (next === 1) fetchReferenceSites()
-    if (next === 3) {
-      fetchPalettes()
-      if (logoUrl && !extractingColors) {
-        setExtractingColors(true)
-        try {
-          const extracted = await extractColorsFromImage(logoUrl)
-          setCustomColors(extracted)
-        } catch { /* use defaults */ }
-        finally { setExtractingColors(false) }
-      }
-    }
+    if (next === 2) fetchPalettes()
+    if (next === 4) fetchReferenceSites()
     setStep(next)
   }
 
@@ -219,6 +210,48 @@ export function OnboardingWizard({ initialDetails, onComplete }: OnboardingWizar
       setLogoOptions(data.options ?? [])
     } catch { setError("Could not generate logo") }
     finally { setGeneratingLogo(false) }
+  }
+
+  async function handleGenerateAllLogos() {
+    setGeneratingLogo(true)
+    setError("")
+    setLogoOptions([])
+    try {
+      const res = await fetch("/api/build/generate-logo", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          businessName: name || initialDetails.name,
+          category,
+          colors: { primary: customColors.primary, accent: customColors.accent },
+          style: "all",
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) { setError(data.error ?? "Logo generation failed"); return }
+      setLogoOptions(data.options ?? [])
+    } catch { setError("Could not generate logos") }
+    finally { setGeneratingLogo(false) }
+  }
+
+  async function handleAssetUpload(file: File) {
+    setUploadingAsset(true)
+    setError("")
+    try {
+      const fd = new FormData()
+      fd.append("file", file)
+      const res = await fetch("/api/build/upload", { method: "POST", body: fd })
+      const data = await res.json()
+      if (!res.ok) { setError(data.error ?? "Upload failed"); return }
+      await fetch("/api/build/assets", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: data.url, kind: "photo", label: file.name }),
+      })
+        .then(r => r.json())
+        .then(d => { if (d.assets) setBrandAssets(d.assets) })
+    } catch { setError("Upload failed") }
+    finally { setUploadingAsset(false) }
   }
 
   // Owner picks one of the generated options.
@@ -338,388 +371,13 @@ export function OnboardingWizard({ initialDetails, onComplete }: OnboardingWizar
             </p>
           )}
 
-          {/* Step 1: Reference Sites */}
+          {/* Step 1: Business Details */}
           {step === 1 && (
-            <div className="space-y-6" data-testid="wizard-step-1">
-              <div className="text-center">
-                <h1 className="text-2xl font-bold tracking-tight">Choose a style you like</h1>
-                <p className="mt-1 text-muted-foreground">
-                  Browse our full library of website templates. Pick any one you like — we&apos;ll match its look and feel.
-                </p>
-              </div>
-              {loadingRefs ? (
-                <div className="flex justify-center py-12">
-                  <div className="h-8 w-8 animate-spin rounded-full border-2 border-brand/30 border-t-brand" />
-                </div>
-              ) : referenceSites.length === 0 ? (
-                <div className="text-center py-12 text-muted-foreground">
-                  <Globe className="h-10 w-10 mx-auto mb-3" />
-                  <p>No templates available yet.</p>
-                  <p className="text-sm mt-1">You can skip this step and let AI choose a style.</p>
-                </div>
-              ) : (
-                <>
-                  {/* Industry filter — keeps the full template library browsable */}
-                  {industryOptions.length > 1 && (
-                    <div className="flex flex-wrap justify-center gap-2" data-testid="ref-industry-filter">
-                      <button
-                        type="button"
-                        onClick={() => setIndustryFilter("all")}
-                        className={`rounded-full border px-3 py-1 text-xs font-medium capitalize transition-colors ${
-                          industryFilter === "all"
-                            ? "border-brand bg-brand text-background"
-                            : "border-border text-muted-foreground hover:border-brand/60 hover:text-foreground"
-                        }`}
-                        data-testid="ref-industry-all"
-                      >
-                        All ({referenceSites.length})
-                      </button>
-                      {industryOptions.map(({ value, count }) => (
-                        <button
-                          key={value}
-                          type="button"
-                          onClick={() => setIndustryFilter(value)}
-                          className={`rounded-full border px-3 py-1 text-xs font-medium capitalize transition-colors ${
-                            industryFilter === value
-                              ? "border-brand bg-brand text-background"
-                              : "border-border text-muted-foreground hover:border-brand/60 hover:text-foreground"
-                          }`}
-                          data-testid={`ref-industry-${value}`}
-                        >
-                          {value} ({count})
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                  <div className="grid gap-4 sm:grid-cols-2">
-                  {visibleSites.map((site) => (
-                    <button
-                      key={site.id}
-                      type="button"
-                      onClick={() => setSelectedRef(selectedRef === site.id ? null : site.id)}
-                      className={`overflow-hidden rounded-xl border text-left transition-all ${
-                        selectedRef === site.id
-                          ? "border-brand ring-2 ring-brand/40"
-                          : "border-border hover:border-brand/60"
-                      }`}
-                      data-testid={`ref-site-${site.id}`}
-                    >
-                      <div className="relative aspect-video bg-white overflow-hidden">
-                        {/* Gallery templates ship a screenshot — render it as a lightweight image so
-                            the library can show 100+ items without mounting that many live iframes.
-                            Curated reference sites keep their live (scaled) preview. */}
-                        {site.source === "gallery" && site.thumbnail_url ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
-                            src={site.thumbnail_url}
-                            alt={site.name}
-                            loading="lazy"
-                            className="h-full w-full object-cover object-top"
-                            data-testid={`ref-preview-${site.id}`}
-                          />
-                        ) : site.html ? (
-                          <div className="absolute inset-0">
-                            <iframe
-                              title={site.name}
-                              srcDoc={`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=1280"><style>body{margin:0;font-family:system-ui,sans-serif;overflow:hidden;}${site.css ?? ""}</style></head><body>${site.html}</body></html>`}
-                              sandbox=""
-                              className="pointer-events-none absolute top-0 left-0 border-0"
-                              style={{ width: "1280px", height: "960px", transform: "scale(0.35)", transformOrigin: "top left" }}
-                              data-testid={`ref-preview-${site.id}`}
-                            />
-                          </div>
-                        ) : site.thumbnail_url ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={site.thumbnail_url} alt={site.name} loading="lazy" className="h-full w-full object-cover" />
-                        ) : (
-                          <div className="h-full w-full flex items-center justify-center">
-                            <Globe className="h-8 w-8 text-muted-foreground" />
-                          </div>
-                        )}
-                        {selectedRef === site.id && (
-                          <span className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-brand text-background">
-                            <Check className="h-4 w-4" />
-                          </span>
-                        )}
-                      </div>
-                      <div className="p-3">
-                        <div className="flex items-center justify-between">
-                          <p className="font-semibold text-sm">{site.name}</p>
-                          <button
-                            type="button"
-                            onClick={(e) => { e.stopPropagation(); setPreviewSite(site) }}
-                            className="text-xs text-brand hover:underline flex items-center gap-1"
-                            data-testid={`preview-ref-${site.id}`}
-                          >
-                            <Eye className="h-3 w-3" /> Preview
-                          </button>
-                        </div>
-                        <p className="text-xs text-muted-foreground mt-0.5">{site.description}</p>
-                      </div>
-                    </button>
-                  ))}
-                  </div>
-                  {visibleSites.length === 0 && (
-                    <p className="text-center py-8 text-sm text-muted-foreground">
-                      No templates in this category. Try another filter.
-                    </p>
-                  )}
-                </>
-              )}
-
-              {/* Preview dialog */}
-              <Dialog open={!!previewSite} onOpenChange={(open) => !open && setPreviewSite(null)}>
-                <DialogContent className="max-w-4xl h-[80vh] p-0 gap-0 overflow-hidden flex flex-col">
-                  <DialogTitle className="shrink-0 px-4 py-3 border-b text-sm font-semibold">
-                    {previewSite?.name}
-                  </DialogTitle>
-                  {previewSite && (
-                    <iframe
-                      title="Reference site preview"
-                      srcDoc={previewSite.html.startsWith("<!") ? previewSite.html : `<!doctype html><html><head><meta charset="utf-8"><style>body{margin:0;font-family:system-ui,sans-serif;}${previewSite.css}</style></head><body>${previewSite.html}</body></html>`}
-                      sandbox=""
-                      className="w-full flex-1 min-h-0 bg-white"
-                      data-testid="wizard-ref-preview"
-                    />
-                  )}
-                </DialogContent>
-              </Dialog>
-            </div>
-          )}
-
-          {/* Step 2: Logo */}
-          {step === 2 && (
-            <div className="space-y-6 max-w-lg mx-auto" data-testid="wizard-step-2">
-              <div className="text-center">
-                <h1 className="text-2xl font-bold tracking-tight">Your Logo</h1>
-                <p className="mt-1 text-muted-foreground">
-                  Pick a style and let AI design a few options — or upload your own.
-                </p>
-              </div>
-
-              {logoUrl && (
-                <div className="flex justify-center">
-                  <div className="relative rounded-xl border bg-white p-6">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={logoUrl} alt="Your logo" className="max-h-24 max-w-[200px] object-contain" data-testid="selected-logo" />
-                    <span className="absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-brand text-white">
-                      <Check className="h-4 w-4" />
-                    </span>
-                  </div>
-                </div>
-              )}
-
-              {/* Style picker ------------------------------------------------ */}
-              <div>
-                <Label className="text-sm font-semibold">Logo style</Label>
-                <div className="mt-2 flex flex-wrap gap-2" data-testid="logo-style-picker">
-                  {LOGO_STYLES.map((s) => {
-                    const active = logoStyle === s.id
-                    return (
-                      <button
-                        key={s.id}
-                        type="button"
-                        onClick={() => setLogoStyle(s.id)}
-                        data-testid={`logo-style-${s.id}`}
-                        aria-pressed={active}
-                        className={`rounded-lg border px-3 py-2 text-left transition-colors ${active ? "border-brand bg-brand/5 ring-1 ring-brand" : "hover:border-brand/60"}`}
-                      >
-                        <p className="text-sm font-medium leading-tight">{s.label}</p>
-                        <p className="text-[11px] text-muted-foreground leading-tight">{s.description}</p>
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-
-              <div className="grid gap-3 sm:grid-cols-2">
-                <Button
-                  onClick={handleGenerateLogo}
-                  disabled={generatingLogo}
-                  className="h-11"
-                  data-testid="generate-logo-btn"
-                >
-                  {generatingLogo
-                    ? <><div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" /> Designing…</>
-                    : <><Wand2 className="mr-2 h-4 w-4" /> {logoOptions.length || logoUrl ? "Generate new options" : "Generate 2 options"}</>}
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => fileRef.current?.click()}
-                  disabled={uploadingLogo}
-                  className="h-11"
-                  data-testid="upload-logo-btn"
-                >
-                  {uploadingLogo
-                    ? <><div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-brand/30 border-t-brand" /> Uploading…</>
-                    : <><Upload className="mr-2 h-4 w-4" /> Upload my logo</>}
-                </Button>
-              </div>
-
-              {/* Generated options to pick from ------------------------------ */}
-              {logoOptions.length > 0 && (
-                <div className="space-y-2" data-testid="logo-options">
-                  <p className="text-sm font-semibold">Pick the one you like</p>
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    {logoOptions.map((opt, i) => (
-                      <button
-                        key={opt.url}
-                        type="button"
-                        onClick={() => pickLogoOption(opt)}
-                        data-testid={`logo-option-${i}`}
-                        className="group flex items-center justify-center rounded-xl border bg-white p-6 transition-colors hover:border-brand hover:ring-1 hover:ring-brand"
-                      >
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={opt.url} alt={`Logo option ${i + 1}`} className="max-h-20 max-w-full object-contain" />
-                      </button>
-                    ))}
-                  </div>
-                  <p className="text-xs text-muted-foreground">Picking one saves it to your brand assets below.</p>
-                </div>
-              )}
-
-              {/* Brand asset library — the owner's saved logos --------------- */}
-              {brandAssets.length > 0 && (
-                <div className="space-y-2" data-testid="brand-assets">
-                  <div className="flex items-center gap-2">
-                    <ImageIcon className="h-4 w-4 text-muted-foreground" />
-                    <p className="text-sm font-semibold">Your brand assets</p>
-                    <Badge variant="outline" className="ml-auto">{brandAssets.length}</Badge>
-                  </div>
-                  <div className="flex flex-wrap gap-3">
-                    {brandAssets.map((asset) => (
-                      <div
-                        key={asset.id}
-                        className={`relative rounded-lg border bg-white p-3 ${logoUrl === asset.url ? "border-brand ring-1 ring-brand" : ""}`}
-                      >
-                        <button
-                          type="button"
-                          onClick={() => reuseBrandAsset(asset)}
-                          title="Use this logo"
-                          data-testid={`brand-asset-${asset.id}`}
-                          className="block"
-                        >
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img src={asset.url} alt="Saved logo" className="h-14 w-14 object-contain" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => deleteBrandAsset(asset.id)}
-                          title="Delete"
-                          data-testid={`brand-asset-delete-${asset.id}`}
-                          className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full border bg-background text-muted-foreground hover:text-destructive"
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <input
-                ref={fileRef}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={(e) => { const f = e.target.files?.[0]; if (f) handleLogoUpload(f) }}
-                data-testid="logo-file-input"
-              />
-            </div>
-          )}
-
-          {/* Step 3: Colors */}
-          {step === 3 && (
-            <div className="space-y-6" data-testid="wizard-step-3">
-              <div className="text-center">
-                <h1 className="text-2xl font-bold tracking-tight">Pick your colors</h1>
-                <p className="mt-1 text-muted-foreground">
-                  {logoUrl
-                    ? "We extracted colors from your logo. Adjust or pick a palette below."
-                    : "Choose a color palette for your website."}
-                </p>
-              </div>
-
-              {extractingColors && (
-                <div className="flex justify-center py-4">
-                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-brand/30 border-t-brand" />
-                </div>
-              )}
-
-              {/* Current selection */}
-              <Card>
-                <CardContent className="p-4 space-y-3">
-                  <p className="text-sm font-semibold">Your palette</p>
-                  <div className="flex gap-1 rounded-lg overflow-hidden">
-                    {(["primary", "secondary", "accent", "background", "text", "muted"] as const).map((key) => (
-                      <div key={key} className="h-12 flex-1" style={{ backgroundColor: customColors[key] }} title={`${key}: ${customColors[key]}`} />
-                    ))}
-                  </div>
-                  <div className="grid grid-cols-3 gap-3">
-                    {(["primary", "secondary", "accent", "background", "text", "muted"] as const).map((key) => (
-                      <div key={key} className="flex items-center gap-2">
-                        <input
-                          type="color"
-                          value={customColors[key]}
-                          onChange={(e) => setCustomColors((prev) => ({ ...prev, [key]: e.target.value }))}
-                          className="h-7 w-7 shrink-0 cursor-pointer rounded border border-border"
-                          data-testid={`wizard-color-${key}`}
-                        />
-                        <div className="min-w-0">
-                          <p className="text-[10px] text-muted-foreground capitalize">{key}</p>
-                          <p className="text-[10px] font-mono">{customColors[key]}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Palette presets */}
-              {loadingPalettes ? (
-                <div className="flex justify-center py-8">
-                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-brand/30 border-t-brand" />
-                </div>
-              ) : palettes.length > 0 && (
-                <div>
-                  <p className="text-sm font-semibold mb-3">Or choose a preset</p>
-                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                    {palettes.map((palette) => (
-                      <button
-                        key={palette.id}
-                        type="button"
-                        onClick={() => {
-                          setSelectedPaletteId(palette.id)
-                          setCustomColors(palette.colors)
-                        }}
-                        className={`rounded-xl border p-3 text-left transition-all ${
-                          selectedPaletteId === palette.id
-                            ? "border-brand ring-2 ring-brand/40"
-                            : "border-border hover:border-brand/60"
-                        }`}
-                        data-testid={`palette-preset-${palette.id}`}
-                      >
-                        <p className="text-sm font-medium mb-2">{palette.name}</p>
-                        <div className="flex gap-0.5 rounded overflow-hidden">
-                          {(["primary", "secondary", "accent", "background", "text", "muted"] as const).map((key) => (
-                            <div key={key} className="h-8 flex-1" style={{ backgroundColor: palette.colors[key] }} />
-                          ))}
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Step 4: Business Details */}
-          {step === 4 && (
-            <div className="space-y-6 max-w-lg mx-auto" data-testid="wizard-step-4">
+            <div className="space-y-6 max-w-lg mx-auto" data-testid="wizard-step-1">
               <div className="text-center">
                 <h1 className="text-2xl font-bold tracking-tight">Tell us about your business</h1>
                 <p className="mt-1 text-muted-foreground">
-                  This info will be used to generate your website content.
+                  This info drives your logo, colors, and website content.
                 </p>
               </div>
 
@@ -780,6 +438,469 @@ export function OnboardingWizard({ initialDetails, onComplete }: OnboardingWizar
                   <Input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="123 Main St, City" data-testid="wizard-address" />
                 </div>
               </div>
+            </div>
+          )}
+
+          {/* Step 2: Brand Colors */}
+          {step === 2 && (
+            <div className="space-y-6" data-testid="wizard-step-2">
+              <div className="text-center">
+                <h1 className="text-2xl font-bold tracking-tight">Pick your brand colors</h1>
+                <p className="mt-1 text-muted-foreground">
+                  These colors will be used in your logo and throughout your website.
+                </p>
+              </div>
+
+              {/* Current selection */}
+              <Card>
+                <CardContent className="p-4 space-y-3">
+                  <p className="text-sm font-semibold">Your palette</p>
+                  <div className="flex gap-1 rounded-lg overflow-hidden">
+                    {(["primary", "secondary", "accent", "background", "text", "muted"] as const).map((key) => (
+                      <div key={key} className="h-12 flex-1" style={{ backgroundColor: customColors[key] }} title={`${key}: ${customColors[key]}`} />
+                    ))}
+                  </div>
+                  <div className="grid grid-cols-3 gap-3">
+                    {(["primary", "secondary", "accent", "background", "text", "muted"] as const).map((key) => (
+                      <div key={key} className="flex items-center gap-2">
+                        <input
+                          type="color"
+                          value={customColors[key]}
+                          onChange={(e) => setCustomColors((prev) => ({ ...prev, [key]: e.target.value }))}
+                          className="h-7 w-7 shrink-0 cursor-pointer rounded border border-border"
+                          data-testid={`wizard-color-${key}`}
+                        />
+                        <div className="min-w-0">
+                          <p className="text-[10px] text-muted-foreground capitalize">{key}</p>
+                          <p className="text-[10px] font-mono">{customColors[key]}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Live preview card */}
+              <Card>
+                <CardContent className="p-4 space-y-2">
+                  <p className="text-sm font-semibold">Preview</p>
+                  <div className="rounded-lg overflow-hidden border" style={{ backgroundColor: customColors.background }}>
+                    <div className="px-4 py-3 flex items-center gap-2" style={{ backgroundColor: customColors.primary }}>
+                      <div className="h-4 w-4 rounded-full" style={{ backgroundColor: customColors.accent }} />
+                      <span className="text-xs font-medium" style={{ color: customColors.background }}>{name || "Your Business"}</span>
+                    </div>
+                    <div className="p-4 space-y-2">
+                      <p className="text-sm font-bold" style={{ color: customColors.text }}>Welcome to {name || "your site"}</p>
+                      <p className="text-xs" style={{ color: customColors.muted }}>This is how your text will look on your website.</p>
+                      <div className="flex gap-2">
+                        <span className="text-xs px-3 py-1.5 rounded-full font-medium" style={{ backgroundColor: customColors.accent, color: customColors.background }}>
+                          Primary Button
+                        </span>
+                        <span className="text-xs px-3 py-1.5 rounded-full font-medium border" style={{ borderColor: customColors.primary, color: customColors.primary }}>
+                          Secondary
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Palette presets */}
+              {loadingPalettes ? (
+                <div className="flex justify-center py-8">
+                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-brand/30 border-t-brand" />
+                </div>
+              ) : palettes.length > 0 && (
+                <div>
+                  <p className="text-sm font-semibold mb-3">Or choose a preset</p>
+                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    {palettes.map((palette) => (
+                      <button
+                        key={palette.id}
+                        type="button"
+                        onClick={() => {
+                          setSelectedPaletteId(palette.id)
+                          setCustomColors(palette.colors)
+                        }}
+                        className={`rounded-xl border p-3 text-left transition-all ${
+                          selectedPaletteId === palette.id
+                            ? "border-brand ring-2 ring-brand/40"
+                            : "border-border hover:border-brand/60"
+                        }`}
+                        data-testid={`palette-preset-${palette.id}`}
+                      >
+                        <p className="text-sm font-medium mb-2">{palette.name}</p>
+                        <div className="flex gap-0.5 rounded overflow-hidden">
+                          {(["primary", "secondary", "accent", "background", "text", "muted"] as const).map((key) => (
+                            <div key={key} className="h-8 flex-1" style={{ backgroundColor: palette.colors[key] }} />
+                          ))}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Step 3: Logo — generate all types at once */}
+          {step === 3 && (
+            <div className="space-y-6 max-w-2xl mx-auto" data-testid="wizard-step-3">
+              <div className="text-center">
+                <h1 className="text-2xl font-bold tracking-tight">Your Logo</h1>
+                <p className="mt-1 text-muted-foreground">
+                  Generate all logo styles at once using your brand colors, then pick your favorite — or upload your own.
+                </p>
+              </div>
+
+              {logoUrl && (
+                <div className="flex justify-center">
+                  <div className="relative rounded-xl border bg-white p-6">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={logoUrl} alt="Your logo" className="max-h-24 max-w-[200px] object-contain" data-testid="selected-logo" />
+                    <span className="absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-brand text-white">
+                      <Check className="h-4 w-4" />
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {/* Color preview strip */}
+              <div className="flex items-center gap-3 rounded-lg border p-3 bg-muted/30">
+                <Palette className="h-4 w-4 text-muted-foreground shrink-0" />
+                <span className="text-xs text-muted-foreground">Using your brand colors:</span>
+                <div className="flex gap-0.5 rounded overflow-hidden">
+                  <div className="h-5 w-8" style={{ backgroundColor: customColors.primary }} title="Primary" />
+                  <div className="h-5 w-8" style={{ backgroundColor: customColors.accent }} title="Accent" />
+                  <div className="h-5 w-8" style={{ backgroundColor: customColors.secondary }} title="Secondary" />
+                </div>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <Button
+                  onClick={handleGenerateAllLogos}
+                  disabled={generatingLogo || !name.trim()}
+                  className="h-11"
+                  data-testid="generate-logo-btn"
+                >
+                  {generatingLogo
+                    ? <><div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" /> Designing all styles…</>
+                    : <><Wand2 className="mr-2 h-4 w-4" /> {logoOptions.length || logoUrl ? "Regenerate all styles" : "Generate all logo styles"}</>}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => fileRef.current?.click()}
+                  disabled={uploadingLogo}
+                  className="h-11"
+                  data-testid="upload-logo-btn"
+                >
+                  {uploadingLogo
+                    ? <><div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-brand/30 border-t-brand" /> Uploading…</>
+                    : <><Upload className="mr-2 h-4 w-4" /> Upload my logo</>}
+                </Button>
+              </div>
+
+              {/* Or generate a specific style */}
+              {!generatingLogo && logoOptions.length === 0 && (
+                <div>
+                  <p className="text-xs text-muted-foreground mb-2">Or generate a specific style:</p>
+                  <div className="flex flex-wrap gap-2" data-testid="logo-style-picker">
+                    {LOGO_STYLES.map((s) => (
+                      <button
+                        key={s.id}
+                        type="button"
+                        onClick={() => { setLogoStyle(s.id); handleGenerateLogo() }}
+                        data-testid={`logo-style-${s.id}`}
+                        className="rounded-lg border px-3 py-2 text-left transition-colors hover:border-brand/60"
+                      >
+                        <p className="text-xs font-medium leading-tight">{s.label}</p>
+                        <p className="text-[10px] text-muted-foreground leading-tight">{s.description}</p>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Generated options — show style label for each */}
+              {logoOptions.length > 0 && (
+                <div className="space-y-3" data-testid="logo-options">
+                  <p className="text-sm font-semibold">Pick the one you like</p>
+                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    {logoOptions.map((opt, i) => {
+                      const styleLabel = LOGO_STYLES.find(s => s.id === opt.style)?.label
+                      return (
+                        <button
+                          key={opt.url}
+                          type="button"
+                          onClick={() => pickLogoOption(opt)}
+                          data-testid={`logo-option-${i}`}
+                          className={`group flex flex-col items-center justify-center rounded-xl border bg-white p-6 transition-colors hover:border-brand hover:ring-1 hover:ring-brand ${logoUrl === opt.url ? "border-brand ring-2 ring-brand/40" : ""}`}
+                        >
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={opt.url} alt={`Logo option ${i + 1}`} className="max-h-20 max-w-full object-contain" />
+                          {styleLabel && (
+                            <span className="mt-2 text-[10px] text-muted-foreground font-medium uppercase tracking-wider">{styleLabel}</span>
+                          )}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Brand asset library */}
+              {brandAssets.filter(a => a.kind === "logo").length > 0 && (
+                <div className="space-y-2" data-testid="brand-assets">
+                  <div className="flex items-center gap-2">
+                    <ImageIcon className="h-4 w-4 text-muted-foreground" />
+                    <p className="text-sm font-semibold">Your saved logos</p>
+                    <Badge variant="outline" className="ml-auto">{brandAssets.filter(a => a.kind === "logo").length}</Badge>
+                  </div>
+                  <div className="flex flex-wrap gap-3">
+                    {brandAssets.filter(a => a.kind === "logo").map((asset) => (
+                      <div
+                        key={asset.id}
+                        className={`relative rounded-lg border bg-white p-3 ${logoUrl === asset.url ? "border-brand ring-1 ring-brand" : ""}`}
+                      >
+                        <button
+                          type="button"
+                          onClick={() => reuseBrandAsset(asset)}
+                          title="Use this logo"
+                          data-testid={`brand-asset-${asset.id}`}
+                          className="block"
+                        >
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={asset.url} alt="Saved logo" className="h-14 w-14 object-contain" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => deleteBrandAsset(asset.id)}
+                          title="Delete"
+                          data-testid={`brand-asset-delete-${asset.id}`}
+                          className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full border bg-background text-muted-foreground hover:text-destructive"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <input
+                ref={fileRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => { const f = e.target.files?.[0]; if (f) handleLogoUpload(f) }}
+                data-testid="logo-file-input"
+              />
+            </div>
+          )}
+
+          {/* Step 4: Style Reference + Asset Upload */}
+          {step === 4 && (
+            <div className="space-y-6" data-testid="wizard-step-4">
+              <div className="text-center">
+                <h1 className="text-2xl font-bold tracking-tight">Style &amp; Assets</h1>
+                <p className="mt-1 text-muted-foreground">
+                  Pick a style you like, and upload any images you want on your website.
+                </p>
+              </div>
+
+              {/* Asset Upload Section */}
+              <Card>
+                <CardContent className="p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Upload className="h-4 w-4 text-muted-foreground" />
+                      <p className="text-sm font-semibold">Your Images</p>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => assetFileRef.current?.click()}
+                      disabled={uploadingAsset}
+                      data-testid="upload-asset-btn"
+                    >
+                      {uploadingAsset
+                        ? <><div className="mr-1.5 h-3 w-3 animate-spin rounded-full border-2 border-brand/30 border-t-brand" /> Uploading…</>
+                        : <><Upload className="mr-1.5 h-3 w-3" /> Upload photos</>}
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Upload photos of your business, products, team, etc. These will be available in the editor to add to your website.
+                  </p>
+                  {brandAssets.filter(a => a.kind === "photo").length > 0 && (
+                    <div className="grid grid-cols-4 sm:grid-cols-6 gap-2" data-testid="photo-assets">
+                      {brandAssets.filter(a => a.kind === "photo").map((asset) => (
+                        <div key={asset.id} className="relative group">
+                          <div className="aspect-square rounded-lg border overflow-hidden bg-muted">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={asset.url} alt={asset.label ?? "Uploaded"} className="h-full w-full object-cover" />
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => deleteBrandAsset(asset.id)}
+                            title="Delete"
+                            data-testid={`photo-delete-${asset.id}`}
+                            className="absolute -top-1.5 -right-1.5 hidden group-hover:flex h-5 w-5 items-center justify-center rounded-full border bg-background text-muted-foreground hover:text-destructive"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <input
+                    ref={assetFileRef}
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    className="hidden"
+                    onChange={(e) => {
+                      const files = e.target.files
+                      if (files) Array.from(files).forEach(f => handleAssetUpload(f))
+                    }}
+                    data-testid="asset-file-input"
+                  />
+                </CardContent>
+              </Card>
+
+              {/* Style Reference Section */}
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <Globe className="h-4 w-4 text-muted-foreground" />
+                  <p className="text-sm font-semibold">Choose a style reference</p>
+                  <span className="text-xs text-muted-foreground">(optional)</span>
+                </div>
+                {loadingRefs ? (
+                  <div className="flex justify-center py-12">
+                    <div className="h-8 w-8 animate-spin rounded-full border-2 border-brand/30 border-t-brand" />
+                  </div>
+                ) : referenceSites.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <Globe className="h-8 w-8 mx-auto mb-2" />
+                    <p className="text-sm">No templates available. AI will choose a style.</p>
+                  </div>
+                ) : (
+                  <>
+                    {industryOptions.length > 1 && (
+                      <div className="flex flex-wrap justify-center gap-2 mb-4" data-testid="ref-industry-filter">
+                        <button
+                          type="button"
+                          onClick={() => setIndustryFilter("all")}
+                          className={`rounded-full border px-3 py-1 text-xs font-medium capitalize transition-colors ${
+                            industryFilter === "all"
+                              ? "border-brand bg-brand text-background"
+                              : "border-border text-muted-foreground hover:border-brand/60 hover:text-foreground"
+                          }`}
+                          data-testid="ref-industry-all"
+                        >
+                          All ({referenceSites.length})
+                        </button>
+                        {industryOptions.map(({ value, count }) => (
+                          <button
+                            key={value}
+                            type="button"
+                            onClick={() => setIndustryFilter(value)}
+                            className={`rounded-full border px-3 py-1 text-xs font-medium capitalize transition-colors ${
+                              industryFilter === value
+                                ? "border-brand bg-brand text-background"
+                                : "border-border text-muted-foreground hover:border-brand/60 hover:text-foreground"
+                            }`}
+                            data-testid={`ref-industry-${value}`}
+                          >
+                            {value} ({count})
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      {visibleSites.map((site) => (
+                        <button
+                          key={site.id}
+                          type="button"
+                          onClick={() => setSelectedRef(selectedRef === site.id ? null : site.id)}
+                          className={`overflow-hidden rounded-xl border text-left transition-all ${
+                            selectedRef === site.id
+                              ? "border-brand ring-2 ring-brand/40"
+                              : "border-border hover:border-brand/60"
+                          }`}
+                          data-testid={`ref-site-${site.id}`}
+                        >
+                          <div className="relative aspect-video bg-white overflow-hidden">
+                            {site.source === "gallery" && site.thumbnail_url ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img src={site.thumbnail_url} alt={site.name} loading="lazy" className="h-full w-full object-cover object-top" data-testid={`ref-preview-${site.id}`} />
+                            ) : site.html ? (
+                              <div className="absolute inset-0">
+                                <iframe
+                                  title={site.name}
+                                  srcDoc={`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=1280"><style>body{margin:0;font-family:system-ui,sans-serif;overflow:hidden;}${site.css ?? ""}</style></head><body>${site.html}</body></html>`}
+                                  sandbox=""
+                                  className="pointer-events-none absolute top-0 left-0 border-0"
+                                  style={{ width: "1280px", height: "960px", transform: "scale(0.35)", transformOrigin: "top left" }}
+                                  data-testid={`ref-preview-${site.id}`}
+                                />
+                              </div>
+                            ) : site.thumbnail_url ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img src={site.thumbnail_url} alt={site.name} loading="lazy" className="h-full w-full object-cover" />
+                            ) : (
+                              <div className="h-full w-full flex items-center justify-center">
+                                <Globe className="h-8 w-8 text-muted-foreground" />
+                              </div>
+                            )}
+                            {selectedRef === site.id && (
+                              <span className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-brand text-background">
+                                <Check className="h-4 w-4" />
+                              </span>
+                            )}
+                          </div>
+                          <div className="p-3">
+                            <div className="flex items-center justify-between">
+                              <p className="font-semibold text-sm">{site.name}</p>
+                              <button
+                                type="button"
+                                onClick={(e) => { e.stopPropagation(); setPreviewSite(site) }}
+                                className="text-xs text-brand hover:underline flex items-center gap-1"
+                                data-testid={`preview-ref-${site.id}`}
+                              >
+                                <Eye className="h-3 w-3" /> Preview
+                              </button>
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-0.5">{site.description}</p>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                    {visibleSites.length === 0 && (
+                      <p className="text-center py-8 text-sm text-muted-foreground">
+                        No templates in this category. Try another filter.
+                      </p>
+                    )}
+                  </>
+                )}
+              </div>
+
+              {/* Preview dialog */}
+              <Dialog open={!!previewSite} onOpenChange={(open) => !open && setPreviewSite(null)}>
+                <DialogContent className="max-w-4xl h-[80vh] p-0 gap-0 overflow-hidden flex flex-col">
+                  <DialogTitle className="shrink-0 px-4 py-3 border-b text-sm font-semibold">
+                    {previewSite?.name}
+                  </DialogTitle>
+                  {previewSite && (
+                    <iframe
+                      title="Reference site preview"
+                      srcDoc={previewSite.html.startsWith("<!") ? previewSite.html : `<!doctype html><html><head><meta charset="utf-8"><style>body{margin:0;font-family:system-ui,sans-serif;}${previewSite.css}</style></head><body>${previewSite.html}</body></html>`}
+                      sandbox=""
+                      className="w-full flex-1 min-h-0 bg-white"
+                      data-testid="wizard-ref-preview"
+                    />
+                  )}
+                </DialogContent>
+              </Dialog>
             </div>
           )}
 
@@ -880,11 +1001,11 @@ export function OnboardingWizard({ initialDetails, onComplete }: OnboardingWizar
           {step < 5 ? (
             <Button
               variant="brand"
-              disabled={step === 4 && (!name.trim() || !about.trim())}
+              disabled={step === 1 && (!name.trim() || !about.trim())}
               onClick={() => goToStep((step + 1) as WizardStep)}
               data-testid="wizard-next"
             >
-              {step === 1 && !selectedRef ? "Skip" : "Next"} <ArrowRight className="h-4 w-4" />
+              {step === 4 && !selectedRef ? "Skip" : "Next"} <ArrowRight className="h-4 w-4" />
             </Button>
           ) : (
             <div /> // Generate button is in the content area for step 5

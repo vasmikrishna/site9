@@ -153,10 +153,34 @@ export async function generateLogoOptions(input: GenerateLogosInput): Promise<Lo
   const businessName = (input.businessName || "Business").trim()
   const category = (input.category || "business").trim()
   const colors = input.colors ?? { primary: "#1B3A6B", accent: "#FF6B35" }
+  const ai = new GoogleGenAI({ apiKey: geminiKey })
+
+  // "all" mode: generate one logo per style (5 options, one per style type)
+  if (input.style === "all") {
+    const { LOGO_STYLES } = await import("@/lib/logo-styles")
+    const settled = await Promise.allSettled(
+      LOGO_STYLES.map((s, i) =>
+        generateOne(
+          ai,
+          input.tenantId,
+          buildPrompt(businessName, category, colors, s.prompt, i, LOGO_STYLES.length),
+          s.id,
+        )
+      )
+    )
+    const options = settled
+      .filter((r): r is PromiseFulfilledResult<LogoOption> => r.status === "fulfilled")
+      .map(r => r.value)
+    if (options.length === 0) {
+      const firstErr = settled.find(r => r.status === "rejected") as PromiseRejectedResult | undefined
+      throw new Error(String(firstErr?.reason?.message ?? firstErr?.reason ?? "unknown"))
+    }
+    return options
+  }
+
   const style = getLogoStyle(input.style)
   const count = Math.min(Math.max(Number(input.count) || DEFAULT_LOGO_COUNT, 1), MAX_COUNT)
 
-  const ai = new GoogleGenAI({ apiKey: geminiKey })
   const settled = await Promise.allSettled(
     Array.from({ length: count }, (_, i) =>
       generateOne(

@@ -14,6 +14,7 @@ import { SectionLibrary } from "@/components/build/section-library"
 import { TemplateBrowser } from "@/components/build/template-browser"
 import { UpgradeBanner } from "@/components/build/upgrade-banner"
 import { BlogPanel } from "@/components/build/blog-panel"
+import { AssetLibrary } from "@/components/build/asset-library"
 import { scopeSectionCss, wrapSectionHtml, getScopeClass } from "@/lib/section-css"
 import type { BusinessDetails } from "@/lib/onboarding"
 import type { SectionTemplate } from "@/types"
@@ -54,6 +55,7 @@ export function Builder({
   const [showSectionLib, setShowSectionLib] = useState(false)
   const [showTemplateBrowser, setShowTemplateBrowser] = useState(false)
   const [showBlogPanel, setShowBlogPanel] = useState(false)
+  const [showAssetLib, setShowAssetLib] = useState(false)
 
   const iframeRef = useRef<HTMLIFrameElement>(null)
   const htmlResolveRef = useRef<((h: string) => void) | null>(null)
@@ -203,7 +205,7 @@ export function Builder({
 
         <div className="flex items-center gap-2">
           <button
-            onClick={() => { setShowTemplateBrowser(!showTemplateBrowser); if (!showTemplateBrowser) { setShowSectionLib(false); setShowBlogPanel(false) } }}
+            onClick={() => { setShowTemplateBrowser(!showTemplateBrowser); if (!showTemplateBrowser) { setShowSectionLib(false); setShowBlogPanel(false); setShowAssetLib(false) } }}
             className={`rounded-md p-1.5 transition-colors ${showTemplateBrowser ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground"}`}
             title="Browse Templates"
             data-testid="toggle-template-browser"
@@ -212,7 +214,7 @@ export function Builder({
           </button>
           {hasContent && (
             <button
-              onClick={() => { setShowSectionLib(!showSectionLib); if (!showSectionLib) { setShowTemplateBrowser(false); setShowBlogPanel(false) } }}
+              onClick={() => { setShowSectionLib(!showSectionLib); if (!showSectionLib) { setShowTemplateBrowser(false); setShowBlogPanel(false); setShowAssetLib(false) } }}
               className={`rounded-md p-1.5 transition-colors ${showSectionLib ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground"}`}
               title="Section Library"
               data-testid="toggle-section-lib"
@@ -220,8 +222,18 @@ export function Builder({
               <LayoutGrid className="h-4 w-4" />
             </button>
           )}
+          {hasContent && (
+            <button
+              onClick={() => { setShowAssetLib(!showAssetLib); if (!showAssetLib) { setShowTemplateBrowser(false); setShowSectionLib(false); setShowBlogPanel(false) } }}
+              className={`rounded-md p-1.5 transition-colors ${showAssetLib ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground"}`}
+              title="My Assets"
+              data-testid="toggle-asset-lib"
+            >
+              <ImageIcon className="h-4 w-4" />
+            </button>
+          )}
           <button
-            onClick={() => { setShowBlogPanel(!showBlogPanel); if (!showBlogPanel) { setShowTemplateBrowser(false); setShowSectionLib(false) } }}
+            onClick={() => { setShowBlogPanel(!showBlogPanel); if (!showBlogPanel) { setShowTemplateBrowser(false); setShowSectionLib(false); setShowAssetLib(false) } }}
             className={`rounded-md p-1.5 transition-colors ${showBlogPanel ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground"}`}
             title="Blog"
             data-testid="toggle-blog-panel"
@@ -263,8 +275,22 @@ export function Builder({
           </div>
         )}
 
+        {/* Asset library sidebar */}
+        {hasContent && showAssetLib && !showTemplateBrowser && !showSectionLib && !showBlogPanel && (
+          <div className="w-64 shrink-0 border-r border-border bg-card overflow-y-auto">
+            <AssetLibrary onInsertImage={(url) => {
+              if (selectedEl?.s9Type === "image") {
+                handleUpdateAttr(selectedEl.editKey, "src", url)
+              } else {
+                postToIframe({ type: "s9:insertSection", html: `<div style="padding:24px;text-align:center;" data-s9-type="section"><img src="${url}" alt="" style="max-width:100%;border-radius:12px;" data-s9-type="image" loading="lazy" /></div>` })
+              }
+              setShowAssetLib(false)
+            }} />
+          </div>
+        )}
+
         {/* Blog panel sidebar */}
-        {showBlogPanel && !showTemplateBrowser && !showSectionLib && (
+        {showBlogPanel && !showTemplateBrowser && !showSectionLib && !showAssetLib && (
           <div className="w-72 shrink-0 border-r border-border bg-card flex flex-col">
             <BlogPanel host={host} />
           </div>

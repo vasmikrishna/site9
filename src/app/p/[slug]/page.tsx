@@ -2,6 +2,7 @@ import { notFound } from "next/navigation"
 import type { Metadata } from "next"
 import type { CustomPage } from "@/types"
 import { sanitizeHtml, sanitizeCss } from "@/lib/sanitize-html"
+import { SCROLL_REVEAL_CSS, SCROLL_REVEAL_SCRIPT } from "@/lib/scroll-reveal"
 import { FormHandler } from "@/components/public/form-handler"
 
 async function getPublishedPage(slug: string): Promise<CustomPage | null> {
@@ -43,7 +44,9 @@ export default async function CustomPublicPage({ params }: { params: Promise<{ s
   return (
     <FormHandler>
       <style dangerouslySetInnerHTML={{ __html: sanitizeCss(page.css) }} />
+      <style dangerouslySetInnerHTML={{ __html: SCROLL_REVEAL_CSS }} />
       <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(page.html) }} />
+      <script dangerouslySetInnerHTML={{ __html: SCROLL_REVEAL_SCRIPT }} />
     </FormHandler>
   )
 }

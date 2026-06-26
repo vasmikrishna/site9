@@ -7,19 +7,23 @@
 import { createClient } from "@/lib/supabase/server"
 import type { Tenant } from "@/lib/tenant"
 
+export type AssetKind = "logo" | "photo" | "icon"
+
 export interface BrandAsset {
   id: string
   /** Absolute or app-relative URL to the stored file. */
   url: string
-  kind: "logo"
+  kind: AssetKind
   /** Logo style preset id, when generated (see lib/logo-styles). */
   style?: string
+  /** Optional label the owner gave the asset. */
+  label?: string
   /** ISO timestamp the asset was added. */
   createdAt: string
 }
 
 /** Cap so the settings JSON never grows unbounded. Oldest fall off. */
-const MAX_ASSETS = 40
+const MAX_ASSETS = 100
 
 export function listBrandAssets(tenant: Tenant): BrandAsset[] {
   const raw = (tenant.settings as Record<string, unknown> | undefined)?.brand_assets
@@ -42,7 +46,7 @@ async function writeBrandAssets(tenant: Tenant, assets: BrandAsset[]): Promise<v
 
 export async function addBrandAsset(
   tenant: Tenant,
-  input: { url: string; kind?: "logo"; style?: string; createdAt: string }
+  input: { url: string; kind?: AssetKind; style?: string; label?: string; createdAt: string }
 ): Promise<{ asset: BrandAsset; assets: BrandAsset[] }> {
   const existing = listBrandAssets(tenant)
   // De-dupe by url so re-saving the same pick doesn't pile up.
@@ -52,6 +56,7 @@ export async function addBrandAsset(
     url: input.url,
     kind: input.kind ?? "logo",
     style: input.style,
+    label: input.label,
     createdAt: input.createdAt,
   }
   const assets = [asset, ...deduped].slice(0, MAX_ASSETS)

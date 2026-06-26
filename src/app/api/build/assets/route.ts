@@ -25,11 +25,16 @@ export async function POST(req: Request) {
   const url = typeof body.url === "string" ? body.url.trim() : ""
   if (!url) return NextResponse.json({ error: "url is required" }, { status: 400 })
 
+  const kind = body.kind === "photo" ? "photo" as const
+    : body.kind === "icon" ? "icon" as const
+    : "logo" as const
+
   try {
     const { asset, assets } = await addBrandAsset(owner.tenant, {
       url,
-      kind: "logo",
+      kind,
       style: typeof body.style === "string" ? body.style : undefined,
+      label: typeof body.label === "string" ? body.label : undefined,
       createdAt: new Date().toISOString(),
     })
     return NextResponse.json({ asset, assets })

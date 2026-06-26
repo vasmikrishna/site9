@@ -48,6 +48,14 @@ export function sanitizeHtml(input: string | null | undefined): string {
  */
 export function sanitizeCss(input: string | null | undefined): string {
   if (!input) return ""
+  let css = input
   // Prevent closing the style element early; strip any HTML tags from CSS.
-  return input.replace(/<\/?\s*style/gi, "").replace(/<[^>]*>/g, "")
+  css = css.replace(/<\/?\s*style/gi, "").replace(/<[^>]*>/g, "")
+  // Strip dangerous CSS functions (expression, -moz-binding, behavior, url with data/js)
+  css = css.replace(/expression\s*\(/gi, "blocked(")
+  css = css.replace(/-moz-binding\s*:/gi, "_moz-binding:")
+  css = css.replace(/behavior\s*:/gi, "_behavior:")
+  css = css.replace(/url\s*\(\s*['"]?\s*javascript:/gi, "url(blocked:")
+  css = css.replace(/url\s*\(\s*['"]?\s*data:text\/html/gi, "url(blocked:")
+  return css
 }
