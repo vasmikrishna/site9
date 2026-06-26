@@ -119,14 +119,6 @@ const PRICING = [
   },
 ]
 
-const NAV_LINKS = [
-  { href: "#services", label: "Features" },
-  { href: "#pricing", label: "Pricing" },
-  { href: "/templates", label: "Templates" },
-  { href: "#about", label: "About" },
-  { href: "#contact", label: "Contact" },
-]
-
 export default async function LandingPage() {
   const homepageOverride = await getHomepageOverride()
   if (homepageOverride) {
@@ -139,36 +131,7 @@ export default async function LandingPage() {
   }
 
   return (
-    <div className="min-h-screen">
-      {/* Nav */}
-      <header className="border-b border-border sticky top-0 z-50 bg-background/80 backdrop-blur">
-        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center" data-testid="home-logo">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/site9-logo.png" alt="Site9 — One Website for Every Business" className="h-10 w-auto" />
-          </Link>
-          <nav className="hidden md:flex items-center gap-6">
-            {NAV_LINKS.map(link => (
-              <a key={link.href} href={link.href} className="text-sm text-muted-foreground hover:text-foreground transition-colors">{link.label}</a>
-            ))}
-          </nav>
-          <div className="flex items-center gap-3">
-            <a
-              href="https://github.com/vasmikrishna/site9"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-muted-foreground hover:text-foreground transition-colors"
-              data-testid="nav-github-link"
-              aria-label="GitHub repository"
-            >
-              <GitHubIcon className="h-5 w-5" />
-            </a>
-            <Button asChild variant="ghost" size="sm"><Link href="/login">Sign in</Link></Button>
-            <Button asChild variant="brand" size="sm"><Link href="/start">Get started</Link></Button>
-          </div>
-        </div>
-      </header>
-
+    <>
       {/* Hero */}
       <section className="max-w-6xl mx-auto px-6 pt-24 pb-20 text-center">
         <div className="flex items-center justify-center gap-3 mb-6">
@@ -418,33 +381,6 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t border-border py-10">
-        <div className="max-w-6xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/site9-logo.png" alt="Site9 — One Website for Every Business" className="h-9 w-auto" />
-          <p className="text-sm text-muted-foreground">One Website for Every Business. Open source on GitHub.</p>
-          <div className="flex items-center gap-4">
-            <a
-              href="https://github.com/vasmikrishna/site9"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-muted-foreground hover:text-foreground transition-colors"
-              data-testid="footer-github-link"
-              aria-label="GitHub repository"
-            >
-              <GitHubIcon className="h-4 w-4" />
-            </a>
-            <a
-              href="mailto:hello@site9.in"
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
-              hello@site9.in
-            </a>
-            <Link href="/login" className="text-sm text-muted-foreground hover:text-foreground">Sign in</Link>
-          </div>
-        </div>
-      </footer>
-    </div>
+    </>
   )
 }
