@@ -4,7 +4,7 @@ import { uploadToR2, isR2Configured } from "@/lib/r2"
 
 export const runtime = "nodejs"
 
-const SUPER_ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? "admin@0tox.com"
+const SUPER_ADMIN_EMAIL = process.env.ADMIN_EMAIL
 const MAX_SIZE = 5 * 1024 * 1024 // 5 MB
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/svg+xml"]
 

@@ -14,11 +14,10 @@ export async function POST(req: Request) {
   // user(s) once their credentials check out (migration 017 adds the column).
   const phoneToStore = typeof phone === "string" ? phone.trim() : ""
 
-  const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? "admin@0tox.com"
-  const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? "Admin@0tox2026"
+  const ADMIN_EMAIL = process.env.ADMIN_EMAIL
+  const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD
 
-  // Super-admin hardcoded account
-  if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
+  if (ADMIN_EMAIL && ADMIN_PASSWORD && email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
     const slug = await getTenantSlug()
     const tenant = await getTenantBySlug(slug)
     await createSession({ id: "admin", email, name: "Admin", role: "admin", tenant_id: tenant?.id ?? "" })

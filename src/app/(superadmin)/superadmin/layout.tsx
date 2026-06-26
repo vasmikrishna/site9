@@ -5,7 +5,7 @@ import { LayoutDashboard, Building2, LayoutGrid, LayoutTemplate, Globe, Palette,
 
 export default async function SuperAdminLayout({ children }: { children: React.ReactNode }) {
   const session = await getSession()
-  const SUPER_ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? "admin@0tox.com"
+  const SUPER_ADMIN_EMAIL = process.env.ADMIN_EMAIL
   if (!session || session.email !== SUPER_ADMIN_EMAIL) redirect("/login")
 
   return (

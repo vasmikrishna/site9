@@ -27,14 +27,14 @@ const PLANS = [
     period: "monthly" as const,
     interval: 1,
     amount: 2900, // ₹29
-    name: "0tox Pro — Monthly",
+    name: "Site9 Pro — Monthly",
   },
   {
     envVar: "RAZORPAY_PLAN_ANNUAL_ID",
     period: "yearly" as const,
     interval: 1,
     amount: 10800, // ₹108 (₹9/month)
-    name: "0tox Pro — Annual",
+    name: "Site9 Pro — Annual",
   },
 ]
 

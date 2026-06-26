@@ -28,9 +28,9 @@ function getSubdomainSlug(): string | null {
 }
 
 function getDevTenantCookie() {
-  if (typeof document === "undefined") return "0tox"
+  if (typeof document === "undefined") return "site9"
   const match = document.cookie.match(/(?:^|;\s*)dev_tenant=([^;]+)/)
-  return match?.[1] ?? "0tox"
+  return match?.[1] ?? "site9"
 }
 
 function dashboardFor(role: string, onboardingComplete?: boolean, superadmin?: boolean) {
@@ -59,7 +59,7 @@ export default function LoginPage() {
   const [subdomainSlug, setSubdomainSlug] = useState<string | null>(null)
   const [tenantName, setTenantName] = useState("")
   const [allTenants, setAllTenants] = useState<{ id: string; name: string; slug: string }[]>([])
-  const [activeTenant, setActiveTenant] = useState("0tox")
+  const [activeTenant, setActiveTenant] = useState("site9")
   const [switchingTenant, setSwitchingTenant] = useState(false)
   const [showPicker, setShowPicker] = useState(false)
   const [tenantReady, setTenantReady] = useState(false)

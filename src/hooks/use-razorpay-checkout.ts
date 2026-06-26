@@ -70,8 +70,8 @@ export function useRazorpayCheckout() {
       const checkout = new Razorpay({
         key: params.keyId,
         subscription_id: params.subscriptionId,
-        name: params.name ?? "0tox",
-        description: params.description ?? "0tox subscription",
+        name: params.name ?? "site9",
+        description: params.description ?? "Site9 subscription",
         prefill: params.email ? { email: params.email } : undefined,
         theme: { color: "#6d28d9" },
         handler: async (resp) => {

@@ -6,7 +6,7 @@ import { generateLogoOptions, isLogoAiConfigured } from "@/lib/logo-generate"
 export const runtime = "nodejs"
 export const maxDuration = 120
 
-const SUPER_ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? "admin@0tox.com"
+const SUPER_ADMIN_EMAIL = process.env.ADMIN_EMAIL
 
 async function assertSuperAdmin() {
   const session = await getSession()

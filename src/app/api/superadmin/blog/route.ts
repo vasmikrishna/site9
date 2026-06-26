@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import { getSession } from "@/lib/session"
 import { createClient } from "@/lib/supabase/server"
 
-const SUPER_ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? "admin@0tox.com"
+const SUPER_ADMIN_EMAIL = process.env.ADMIN_EMAIL
 
 async function assertSuperAdmin() {
   const session = await getSession()

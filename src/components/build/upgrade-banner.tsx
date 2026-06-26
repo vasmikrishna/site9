@@ -28,7 +28,7 @@ const PLAN_CARDS: PlanCard[] = [
 ]
 
 const PERKS = [
-  "Remove the 0tox badge from your site",
+  "Remove the Site9 badge from your site",
   "Custom domain & priority publishing",
   "Unlimited AI generations & templates",
 ]
@@ -122,7 +122,7 @@ export function UpgradeBanner({ subscribed }: { subscribed: boolean }) {
       const checkout = new Razorpay({
         key: data.keyId,
         subscription_id: data.subscriptionId,
-        name: data.name ?? "0tox",
+        name: data.name ?? "site9",
         description: `${data.planLabel} plan — ${data.priceLabel}`,
         prefill: { email: data.email },
         theme: { color: "#6d28d9" },

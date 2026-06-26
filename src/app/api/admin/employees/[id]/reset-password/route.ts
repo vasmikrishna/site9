@@ -45,7 +45,7 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
   if (process.env.RESEND_API_KEY) {
     try {
       const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? ""
-      const fromEmail = process.env.RESEND_FROM_EMAIL ?? "noreply@0tox.com"
+      const fromEmail = process.env.RESEND_FROM_EMAIL ?? "noreply@site9.in"
       await fetch("https://api.resend.com/emails", {
         method: "POST",
         headers: {

@@ -19,10 +19,10 @@ export interface Tenant {
   created_at: string
 }
 
-/** Get the tenant slug set by middleware (falls back to env or "0tox") */
+/** Get the tenant slug set by middleware (falls back to env or "site9") */
 export async function getTenantSlug(): Promise<string> {
   const h = await headers()
-  return h.get("x-tenant-slug") ?? process.env.TENANT_SLUG ?? "0tox"
+  return h.get("x-tenant-slug") ?? process.env.TENANT_SLUG ?? "site9"
 }
 
 /** Resolve tenant by slug — cached per request via React cache() */

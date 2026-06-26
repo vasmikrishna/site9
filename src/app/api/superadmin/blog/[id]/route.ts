@@ -3,7 +3,7 @@ import { getSession } from "@/lib/session"
 import { createClient } from "@/lib/supabase/server"
 import type { BlogPostStatus } from "@/types"
 
-const SUPER_ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? "admin@0tox.com"
+const SUPER_ADMIN_EMAIL = process.env.ADMIN_EMAIL
 
 async function assertSuperAdmin() {
   const session = await getSession()

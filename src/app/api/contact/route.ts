@@ -43,7 +43,7 @@ export async function POST(req: Request) {
     // 2. Email forward
     try {
       const settings = await getSiteSettings()
-      const to = process.env.ADMIN_EMAIL || s(settings, "contact_email") || "hello@0tox.com"
+      const to = process.env.ADMIN_EMAIL || s(settings, "contact_email") || "hello@site9.in"
 
       const serviceLabel = {
         it: "IT Support & Infrastructure",

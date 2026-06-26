@@ -133,7 +133,7 @@ export async function POST(request: Request) {
   if (invitedClient && process.env.RESEND_API_KEY) {
     try {
       const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? ""
-      const fromEmail = process.env.RESEND_FROM_EMAIL ?? "noreply@0tox.com"
+      const fromEmail = process.env.RESEND_FROM_EMAIL ?? "noreply@site9.in"
       const html = `
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px;">
           <h2 style="color: #1B3A6B;">You've been added to a project at 0toX</h2>

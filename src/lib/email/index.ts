@@ -12,7 +12,7 @@ export interface SendEmailOptions {
 
 export async function sendEmail(options: SendEmailOptions): Promise<boolean> {
   const provider = (process.env.EMAIL_PROVIDER || "").toLowerCase()
-  const from = process.env.EMAIL_FROM || "noreply@0tox.com"
+  const from = process.env.EMAIL_FROM || "noreply@site9.in"
   const fromName = "0toX"
 
   if (provider === "zeptomail") {

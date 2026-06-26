@@ -1,9 +1,10 @@
 import { SignJWT, jwtVerify } from "jose"
 import { cookies } from "next/headers"
 
-const SECRET = new TextEncoder().encode(
-  process.env.SESSION_SECRET ?? "fallback-dev-secret-change-in-production"
-)
+if (!process.env.SESSION_SECRET) {
+  throw new Error("SESSION_SECRET environment variable is required")
+}
+const SECRET = new TextEncoder().encode(process.env.SESSION_SECRET)
 const COOKIE = "session"
 
 // In production the session cookie is scoped to the parent domain (".site9.in")

@@ -41,7 +41,7 @@ export async function GET(req: Request) {
     const tenant = await getTenantBySlug(slug)
     if (!tenant) return NextResponse.redirect(`${origin}/login?error=tenant_not_found`)
 
-    const adminEmail = process.env.ADMIN_EMAIL ?? "admin@0tox.com"
+    const adminEmail = process.env.ADMIN_EMAIL
     if (googleUser.email === adminEmail) {
       await createSession({ id: "admin", email: googleUser.email, name: googleUser.name ?? "Admin", role: "admin", tenant_id: tenant.id })
       return NextResponse.redirect(`${origin}/admin/dashboard`)

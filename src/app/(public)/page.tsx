@@ -3,12 +3,20 @@ import { unstable_cache } from "next/cache"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { ArrowRight, Check, Mail } from "lucide-react"
+import { ArrowRight, Check, Mail, GitPullRequest, BookOpen, Code2 } from "lucide-react"
 import { MOCK_PORTFOLIO, MOCK_CUSTOM_PAGES } from "@/lib/mock-data"
-import type { CustomPage } from "@/types"
+import type { CustomPage, PortfolioItem } from "@/types"
 import { sanitizeHtml, sanitizeCss } from "@/lib/sanitize-html"
 import { FEATURES } from "@/lib/features"
 import { FormHandler } from "@/components/public/form-handler"
+
+function GitHubIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
+      <path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" />
+    </svg>
+  )
+}
 
 const supabaseConfigured = () =>
   process.env.NEXT_PUBLIC_SUPABASE_URL?.startsWith("http") &&
@@ -44,7 +52,7 @@ async function getHomepageOverride(): Promise<CustomPage | null> {
   try {
     const { getTenantSlug } = await import("@/lib/tenant")
     const slug = await getTenantSlug()
-    if (slug === "0tox" || !slug) return null
+    if (slug === "site9" || !slug) return null
     return await fetchHomepageOverride(slug)
   } catch {
     return null
@@ -164,6 +172,16 @@ export default async function LandingPage() {
             ))}
           </nav>
           <div className="flex items-center gap-3">
+            <a
+              href="https://github.com/vasmikrishna/site9"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-muted-foreground hover:text-foreground transition-colors"
+              data-testid="nav-github-link"
+              aria-label="GitHub repository"
+            >
+              <GitHubIcon className="h-5 w-5" />
+            </a>
             <Button asChild variant="ghost" size="sm"><Link href="/login">Sign in</Link></Button>
             <Button asChild variant="brand" size="sm"><Link href="/start">Get started</Link></Button>
           </div>
@@ -172,7 +190,10 @@ export default async function LandingPage() {
 
       {/* Hero */}
       <section className="max-w-6xl mx-auto px-6 pt-24 pb-20 text-center">
-        <Badge variant="outline" className="mb-6">A website for every business</Badge>
+        <div className="flex items-center justify-center gap-3 mb-6">
+          <Badge variant="outline">A website for every business</Badge>
+          <Badge variant="brand">Open Source</Badge>
+        </div>
         <h1 className="text-5xl md:text-7xl font-bold tracking-tight leading-[1.05]">
           One Website for Every Business
         </h1>
@@ -291,7 +312,7 @@ export default async function LandingPage() {
               <p className="text-muted-foreground mt-2">Real businesses already online — like cafe.site9.in, salon.site9.in, and photographer.site9.in</p>
             </div>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {portfolio.map((item: any) => (
+              {portfolio.map((item: PortfolioItem) => (
                 <Card key={item.id} className="overflow-hidden group hover:border-foreground/30 transition-colors">
                   <div className="aspect-video bg-muted overflow-hidden">
                     <img src={item.image_url} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
@@ -308,9 +329,9 @@ export default async function LandingPage() {
                         </a>
                       )}
                     </div>
-                    {item.tags?.length > 0 && (
+                    {item.tags && item.tags.length > 0 && (
                       <div className="flex flex-wrap gap-1.5 mt-3">
-                        {item.tags.map((tag: string) => <Badge key={tag} variant="outline" className="text-xs">{tag}</Badge>)}
+                        {item.tags.map((tag) => <Badge key={tag} variant="outline" className="text-xs">{tag}</Badge>)}
                       </div>
                     )}
                   </CardContent>
@@ -376,8 +397,66 @@ export default async function LandingPage() {
         </div>
       </section>
 
+      {/* Open Source */}
+      <section id="open-source" className="py-20">
+        <div className="max-w-5xl mx-auto px-6">
+          <div className="text-center mb-12">
+            <Badge variant="brand" className="mb-4">Open Source</Badge>
+            <h2 className="text-3xl font-bold">Built in the open</h2>
+            <p className="text-muted-foreground mt-2 max-w-2xl mx-auto">
+              Site9 is fully open source. Browse the code, report issues, suggest features, or contribute directly. Every business deserves great software — and great software is built together.
+            </p>
+          </div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+            <Card>
+              <CardContent className="p-6 space-y-3">
+                <Code2 className="h-6 w-6 text-muted-foreground" />
+                <h3 className="font-semibold">Templates</h3>
+                <p className="text-sm text-muted-foreground">
+                  Design and contribute website templates for different industries.
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-6 space-y-3">
+                <GitPullRequest className="h-6 w-6 text-muted-foreground" />
+                <h3 className="font-semibold">Features</h3>
+                <p className="text-sm text-muted-foreground">
+                  Build new features — SEO tools, analytics, integrations, and more.
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-6 space-y-3">
+                <Check className="h-6 w-6 text-green-500" />
+                <h3 className="font-semibold">Bug fixes</h3>
+                <p className="text-sm text-muted-foreground">
+                  Find and fix bugs to make Site9 more reliable for everyone.
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-6 space-y-3">
+                <BookOpen className="h-6 w-6 text-muted-foreground" />
+                <h3 className="font-semibold">Documentation</h3>
+                <p className="text-sm text-muted-foreground">
+                  Improve guides, tutorials, and API docs to help others get started.
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+          <div className="text-center">
+            <Button asChild variant="outline" size="lg" data-testid="open-source-cta">
+              <a href="https://github.com/vasmikrishna/site9" target="_blank" rel="noopener noreferrer">
+                <GitHubIcon className="h-4 w-4" /> View on GitHub <ArrowRight className="h-4 w-4" />
+              </a>
+            </Button>
+          </div>
+        </div>
+      </section>
+
       {/* Contact */}
-      <section id="contact" className="py-20">
+      <section id="contact" className="bg-muted/40 py-20">
         <div className="max-w-3xl mx-auto px-6 text-center space-y-6">
           <h2 className="text-3xl font-bold">Get in touch</h2>
           <p className="text-muted-foreground text-lg">
@@ -402,8 +481,18 @@ export default async function LandingPage() {
         <div className="max-w-6xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/site9-logo.png" alt="Site9 — One Website for Every Business" className="h-9 w-auto" />
-          <p className="text-sm text-muted-foreground">One Website for Every Business.</p>
+          <p className="text-sm text-muted-foreground">One Website for Every Business. Open source on GitHub.</p>
           <div className="flex items-center gap-4">
+            <a
+              href="https://github.com/vasmikrishna/site9"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-muted-foreground hover:text-foreground transition-colors"
+              data-testid="footer-github-link"
+              aria-label="GitHub repository"
+            >
+              <GitHubIcon className="h-4 w-4" />
+            </a>
             <a
               href="mailto:hello@site9.in"
               className="text-sm text-muted-foreground hover:text-foreground transition-colors"

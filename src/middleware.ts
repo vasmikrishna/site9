@@ -3,9 +3,10 @@ import { jwtVerify } from "jose"
 import { createClient } from "@supabase/supabase-js"
 import { FEATURES } from "@/lib/features"
 
-const SECRET = new TextEncoder().encode(
-  process.env.SESSION_SECRET ?? "fallback-dev-secret-change-in-production"
-)
+if (!process.env.SESSION_SECRET) {
+  throw new Error("SESSION_SECRET environment variable is required")
+}
+const SECRET = new TextEncoder().encode(process.env.SESSION_SECRET)
 const BASE_DOMAIN = process.env.NEXT_PUBLIC_BASE_DOMAIN ?? "site9.in"
 
 const tenantCache = new Map<string, { id: string; ts: number }>()
@@ -105,7 +106,7 @@ async function extractTenantSlug(req: NextRequest): Promise<string> {
   if (devTenant) return devTenant
 
   // Final fallback: TENANT_SLUG env or default
-  return process.env.TENANT_SLUG ?? "0tox"
+  return process.env.TENANT_SLUG ?? "site9"
 }
 
 export async function middleware(req: NextRequest) {
@@ -143,7 +144,7 @@ export async function middleware(req: NextRequest) {
 
   // Superadmin: only the platform admin email can access
   if (path.startsWith("/superadmin")) {
-    const SUPER_ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? "admin@0tox.com"
+    const SUPER_ADMIN_EMAIL = process.env.ADMIN_EMAIL
     if (!session || session.email !== SUPER_ADMIN_EMAIL) {
       return NextResponse.redirect(new URL("/login", req.url))
     }

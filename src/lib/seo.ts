@@ -7,14 +7,14 @@ export function getCanonicalOrigin(tenant: Tenant | null, slug: string): string 
   if (tenant?.custom_domain && tenant.domain_verified) {
     return `https://${tenant.custom_domain}`
   }
-  if (slug && slug !== "0tox") {
+  if (slug && slug !== "site9") {
     return `https://${slug}.${BASE_DOMAIN}`
   }
   return `https://${BASE_DOMAIN}`
 }
 
 export function isMainSite(slug: string): boolean {
-  return !slug || slug === "0tox"
+  return !slug || slug === "site9"
 }
 
 export function buildLocalBusinessJsonLd(

@@ -3,7 +3,7 @@
 import * as React from "react"
 import type { CartItem } from "@/types"
 
-const STORAGE_KEY = "0tox_cart"
+const STORAGE_KEY = "site9_cart"
 
 interface CartContextValue {
   items: CartItem[]
