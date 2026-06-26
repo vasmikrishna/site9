@@ -10,6 +10,7 @@ import { sanitizeHtml, sanitizeCss } from "@/lib/sanitize-html"
 import { FEATURES } from "@/lib/features"
 import { FormHandler } from "@/components/public/form-handler"
 import { TemplateCarousel } from "@/components/public/template-carousel"
+import { ThemeToggle } from "@/components/ui/theme-toggle"
 
 function GitHubIcon({ className }: { className?: string }) {
   return (
@@ -94,6 +95,7 @@ export default async function LandingPage() {
             ))}
           </nav>
           <div className="flex items-center gap-3">
+            <ThemeToggle />
             <a
               href="https://github.com/vasmikrishna/site9"
               target="_blank"

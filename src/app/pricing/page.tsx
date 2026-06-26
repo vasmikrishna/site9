@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { ArrowRight, Check, Server, Cloud } from "lucide-react"
+import { ThemeToggle } from "@/components/ui/theme-toggle"
 
 export const metadata: Metadata = {
   title: "Pricing | Site9",
@@ -70,6 +71,7 @@ export default function PricingPage() {
             ))}
           </nav>
           <div className="flex items-center gap-3">
+            <ThemeToggle />
             <a
               href="https://github.com/vasmikrishna/site9"
               target="_blank"

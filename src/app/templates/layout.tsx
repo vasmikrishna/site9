@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import { ThemeToggle } from "@/components/ui/theme-toggle"
 
 function GitHubIcon({ className }: { className?: string }) {
   return (
@@ -34,6 +35,7 @@ export default function TemplatesLayout({ children }: { children: React.ReactNod
             ))}
           </nav>
           <div className="flex items-center gap-3">
+            <ThemeToggle />
             <a
               href="https://github.com/vasmikrishna/site9"
               target="_blank"

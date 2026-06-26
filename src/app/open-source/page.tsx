@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { ArrowRight, Check, Code2, GitPullRequest, BookOpen, Users, Shield, Heart } from "lucide-react"
 import { Contributors } from "@/components/public/contributors"
+import { ThemeToggle } from "@/components/ui/theme-toggle"
 
 export const metadata: Metadata = {
   title: "Open Source | Site9",
@@ -77,6 +78,7 @@ export default function OpenSourcePage() {
             ))}
           </nav>
           <div className="flex items-center gap-3">
+            <ThemeToggle />
             <a
               href="https://github.com/vasmikrishna/site9"
               target="_blank"
