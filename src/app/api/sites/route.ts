@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { getSession, createSession } from "@/lib/session"
-import { getSitesForEmail, createSiteForEmail } from "@/lib/sites"
+import { getSitesForEmail, createSiteForEmail, getAccountQuota, PLAN_LABELS } from "@/lib/sites"
 export const dynamic = "force-dynamic"
 
 /** GET /api/sites — list the sites this account owns. */
@@ -19,6 +19,18 @@ export async function POST(req: Request) {
   if (!session || session.id === "admin") {
     return NextResponse.json({ error: "Not signed in" }, { status: 401 })
   }
+  // Enforce the account's site quota.
+  const quota = await getAccountQuota(session.email)
+  if (quota.used >= quota.limit) {
+    return NextResponse.json({
+      error: `Your ${PLAN_LABELS[quota.plan]} plan allows ${quota.limit} site${quota.limit === 1 ? "" : "s"}. Upgrade to add more.`,
+      upgrade: true,
+      plan: quota.plan,
+      used: quota.used,
+      limit: quota.limit,
+    }, { status: 402 })
+  }
+
   const body = await req.json().catch(() => ({}))
   const name = String(body.name ?? "").trim() || "My Site"
 

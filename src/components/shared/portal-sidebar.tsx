@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils"
 import { FEATURES } from "@/lib/features"
 import { ThemeToggle } from "@/components/ui/theme-toggle"
 import {
-  LayoutDashboard, Mail, LogOut, ChevronRight,
+  LayoutDashboard, Mail, LogOut, ChevronRight, ChevronLeft, Pencil,
   ChevronsUpDown, Check, LayoutTemplate, Globe,
   Newspaper, Receipt, Menu, X,
   FolderKanban, Plus, ShoppingCart, CalendarClock,
@@ -68,9 +68,12 @@ interface PortalSidebarProps {
   role: "client" | "admin" | "employee"
   userName: string
   userEmail: string
+  /** The site currently being managed (shown as a context header). */
+  siteName?: string | null
+  siteHost?: string | null
 }
 
-export function PortalSidebar({ role, userName, userEmail }: PortalSidebarProps) {
+export function PortalSidebar({ role, userName, userEmail, siteName, siteHost }: PortalSidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
   const hiddenHrefs: string[] = [
@@ -100,12 +103,9 @@ export function PortalSidebar({ role, userName, userEmail }: PortalSidebarProps)
   const [switching, setSwitching] = useState<string | null>(null)
   const activeWs = workspaces.find(w => w.active)
 
-  useEffect(() => {
-    fetch("/api/auth/workspaces")
-      .then(r => r.json())
-      .then(d => { if (d.workspaces?.length > 1) setWorkspaces(d.workspaces) })
-      .catch(() => {})
-  }, [])
+  // Site switching now lives on the "My Sites" dashboard, so the legacy
+  // in-sidebar workspace switcher stays empty (the site-context header + "All
+  // sites" link replace it).
 
   async function switchWorkspace(tenantId: string) {
     setSwitching(tenantId)
@@ -237,6 +237,25 @@ export function PortalSidebar({ role, userName, userEmail }: PortalSidebarProps)
               ))}
             </div>
           )}
+        </div>
+      ) : siteName ? (
+        <div className="border-b border-border p-4">
+          <Link
+            href="/dashboard"
+            className="mb-3 inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+            data-testid="sidebar-all-sites"
+          >
+            <ChevronLeft className="h-3 w-3" /> All sites
+          </Link>
+          <p className="truncate text-base font-bold leading-tight" title={siteName}>{siteName}</p>
+          {siteHost && <p className="truncate text-xs text-muted-foreground font-mono">{siteHost}</p>}
+          <Link
+            href="/build"
+            className="mt-3 flex items-center justify-center gap-1.5 rounded-lg bg-foreground px-3 py-1.5 text-xs font-medium text-background hover:opacity-90 transition-opacity"
+            data-testid="sidebar-edit-builder"
+          >
+            <Pencil className="h-3.5 w-3.5" /> Edit in builder
+          </Link>
         </div>
       ) : (
         <div className="p-6 border-b border-border">

@@ -8,16 +8,20 @@ import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
 import { ThemeToggle } from "@/components/ui/theme-toggle"
 import {
-  Plus, ExternalLink, Pencil, Settings2, Globe, LogOut, Sparkles, CheckCircle2, Clock,
+  Plus, ExternalLink, Pencil, Settings2, Globe, LogOut, Sparkles, CheckCircle2, Clock, Crown, Lock,
 } from "lucide-react"
-import type { AccountSite } from "@/lib/sites"
+import type { AccountSite, AccountPlan } from "@/lib/sites"
+
+const PLAN_LABELS: Record<AccountPlan, string> = { free: "Free", pro: "Pro", business: "Business" }
 
 export function SitesDashboard({
-  sites, userName, userEmail,
+  sites, userName, userEmail, plan, limit,
 }: {
   sites: AccountSite[]
   userName: string
   userEmail: string
+  plan: AccountPlan
+  limit: number
 }) {
   const router = useRouter()
   const [creating, setCreating] = useState(false)
@@ -25,6 +29,13 @@ export function SitesDashboard({
   const [newName, setNewName] = useState("")
   const [busyId, setBusyId] = useState<string | null>(null)
   const [error, setError] = useState("")
+
+  const atLimit = sites.length >= limit
+
+  // Upgrades run through a site's existing billing (Razorpay). Use the first site.
+  function goUpgrade() {
+    if (sites[0]) openSite(sites[0].id, "/admin/billing")
+  }
 
   async function createSite() {
     setError("")
@@ -36,7 +47,11 @@ export function SitesDashboard({
         body: JSON.stringify({ name: newName.trim() || "My Site" }),
       })
       const data = await res.json()
-      if (!res.ok) { setError(data.error ?? "Could not create site"); return }
+      if (!res.ok) {
+        setError(data.error ?? "Could not create site")
+        if (data.upgrade) { setShowNew(false); goUpgrade() }
+        return
+      }
       router.push("/build")
     } catch {
       setError("Could not create site")
@@ -46,7 +61,7 @@ export function SitesDashboard({
   }
 
   // Switch the active site, then go to the chosen destination.
-  async function openSite(tenantId: string, dest: "/build" | "/admin/dashboard") {
+  async function openSite(tenantId: string, dest: string) {
     setBusyId(tenantId)
     try {
       await fetch("/api/sites/switch", {
@@ -93,16 +108,31 @@ export function SitesDashboard({
 
       {/* Body */}
       <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
-        <div className="mb-6 flex items-center justify-between">
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1 className="text-2xl font-bold tracking-tight">My sites</h1>
-            <p className="text-sm text-muted-foreground">
-              {sites.length === 0 ? "Create your first site to get started." : `${sites.length} site${sites.length === 1 ? "" : "s"}`}
-            </p>
+            <div className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
+              <span className="inline-flex items-center gap-1 rounded-full border border-border px-2 py-0.5 text-xs font-medium">
+                <Crown className="h-3 w-3 text-amber-500" /> {PLAN_LABELS[plan]} plan
+              </span>
+              <span data-testid="site-usage">{sites.length} of {limit} site{limit === 1 ? "" : "s"} used</span>
+            </div>
           </div>
-          <Button variant="brand" onClick={() => { setNewName(""); setShowNew(true) }} data-testid="new-site-btn">
-            <Plus className="h-4 w-4" /> New site
-          </Button>
+          <div className="flex items-center gap-2">
+            {atLimit && plan !== "business" && (
+              <Button variant="outline" onClick={goUpgrade} data-testid="upgrade-btn">
+                <Crown className="h-4 w-4" /> Upgrade
+              </Button>
+            )}
+            <Button
+              variant="brand"
+              disabled={atLimit}
+              onClick={() => { if (atLimit) { goUpgrade(); return } setNewName(""); setShowNew(true) }}
+              data-testid="new-site-btn"
+            >
+              {atLimit ? <><Lock className="h-4 w-4" /> Limit reached</> : <><Plus className="h-4 w-4" /> New site</>}
+            </Button>
+          </div>
         </div>
 
         {error && (

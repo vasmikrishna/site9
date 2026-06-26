@@ -3,6 +3,8 @@ import { getSession } from "@/lib/session"
 import { PortalSidebar } from "@/components/shared/portal-sidebar"
 import { UpgradeBanner } from "@/components/build/upgrade-banner"
 import { getSubscriptionStatus } from "@/lib/subscription"
+import { getTenantById } from "@/lib/tenant"
+import { subdomainHost } from "@/lib/onboarding"
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const session = await getSession()
@@ -10,6 +12,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   if (session.role !== "admin") redirect("/dashboard")
   // No active site selected yet → send them to pick/create one.
   if (session.id !== "admin" && !session.tenant_id) redirect("/dashboard")
+
+  // The site currently being managed (for the sidebar's site-context header).
+  const activeTenant = session.tenant_id ? await getTenantById(session.tenant_id) : null
+  const siteName = activeTenant?.name ?? null
+  const siteHost = activeTenant ? subdomainHost(activeTenant.slug) : null
 
   // Super-admin (env login, id="admin") has no tenant — skip the upsell for them.
   const subscribed =
@@ -19,7 +26,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   return (
     <div className="flex min-h-screen">
-      <PortalSidebar role="admin" userName={session.name} userEmail={session.email} />
+      <PortalSidebar role="admin" userName={session.name} userEmail={session.email} siteName={siteName} siteHost={siteHost} />
       <main className="flex-1 overflow-auto pt-14 md:pt-0">
         <UpgradeBanner subscribed={subscribed} />
         <div className="max-w-6xl mx-auto p-4 sm:p-6 md:p-8">{children}</div>

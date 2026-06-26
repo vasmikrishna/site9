@@ -1,5 +1,11 @@
 import { createClient } from "@/lib/supabase/server"
 import { subdomainHost, slugify } from "@/lib/onboarding"
+import { isSubscriptionActive } from "@/lib/subscription"
+
+/** Account plans and the number of sites each one allows. */
+export type AccountPlan = "free" | "pro" | "business"
+export const PLAN_SITE_LIMITS: Record<AccountPlan, number> = { free: 1, pro: 5, business: 20 }
+export const PLAN_LABELS: Record<AccountPlan, string> = { free: "Free", pro: "Pro", business: "Business" }
 
 /**
  * Account → sites model.
@@ -74,6 +80,38 @@ export async function accountOwnsTenant(email: string, tenantId: string): Promis
     .in("owner_user_id", ids)
     .maybeSingle()
   return !!data
+}
+
+/**
+ * The account's plan. 'business' is a stored super-admin override; otherwise
+ * an active subscription on any owned site upgrades the account to 'pro'.
+ */
+export async function getAccountPlan(email: string): Promise<AccountPlan> {
+  const ids = await getAccountUserIds(email)
+  if (ids.length === 0) return "free"
+  const supabase = createClient()
+
+  // Super-admin override stored on the account row.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: users } = await (supabase as any).from("users").select("plan").in("id", ids)
+  if ((users ?? []).some((u: { plan?: string }) => u.plan === "business")) return "business"
+
+  // Otherwise: any active site subscription ⇒ Pro.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: tenants } = await (supabase as any).from("tenants").select("id").in("owner_user_id", ids)
+  const tenantIds = (tenants ?? []).map((t: { id: string }) => t.id)
+  if (tenantIds.length === 0) return "free"
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: subs } = await (supabase as any).from("subscriptions").select("*").in("tenant_id", tenantIds)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  if ((subs ?? []).some((s: any) => isSubscriptionActive(s))) return "pro"
+  return "free"
+}
+
+/** Plan + how many sites are used vs allowed, for the dashboard + quota gate. */
+export async function getAccountQuota(email: string): Promise<{ plan: AccountPlan; used: number; limit: number }> {
+  const [plan, sites] = await Promise.all([getAccountPlan(email), getSitesForEmail(email)])
+  return { plan, used: sites.length, limit: PLAN_SITE_LIMITS[plan] }
 }
 
 /** Generate a subdomain slug that isn't already taken. */
