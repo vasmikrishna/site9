@@ -8,8 +8,10 @@ import {
   ArrowRight, Send, Wand2, Upload, ImageIcon, MousePointerClick,
   ExternalLink, Sparkles, Link2, Trash2, Monitor, Tablet, Smartphone,
   LayoutGrid, LayoutTemplate, ChevronUp, ChevronDown, Search, FileText,
+  Undo2, Redo2, AlignLeft, AlignCenter, AlignRight, Minus, Plus,
 } from "lucide-react"
 import { EDITOR_OVERLAY_CSS, EDITOR_SCRIPT } from "@/lib/editor-inject"
+import { GenerationLoader } from "@/components/build/generation-loader"
 import { SectionLibrary } from "@/components/build/section-library"
 import { TemplateBrowser } from "@/components/build/template-browser"
 import { UpgradeBanner } from "@/components/build/upgrade-banner"
@@ -19,6 +21,12 @@ import { scopeSectionCss, wrapSectionHtml, getScopeClass } from "@/lib/section-c
 import type { BusinessDetails } from "@/lib/onboarding"
 import type { SectionTemplate } from "@/types"
 
+interface BoxMetrics {
+  pt: number; pr: number; pb: number; pl: number
+  mt: number; mr: number; mb: number; ml: number
+  ta: string
+}
+
 interface SelectedElement {
   editKey: string
   content: string
@@ -26,6 +34,7 @@ interface SelectedElement {
   s9Type: "text" | "image" | "link" | "section"
   href?: string
   rect?: { width: number; height: number }
+  box?: BoxMetrics
 }
 
 type Viewport = "desktop" | "tablet" | "mobile"
@@ -56,12 +65,66 @@ export function Builder({
   const [showTemplateBrowser, setShowTemplateBrowser] = useState(false)
   const [showBlogPanel, setShowBlogPanel] = useState(false)
   const [showAssetLib, setShowAssetLib] = useState(false)
+  const [canUndo, setCanUndo] = useState(false)
+  const [canRedo, setCanRedo] = useState(false)
 
   const iframeRef = useRef<HTMLIFrameElement>(null)
   const htmlResolveRef = useRef<((h: string) => void) | null>(null)
   const promptRef = useRef<HTMLInputElement>(null)
   const draftTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const lastSavedRef = useRef<string>("")
+
+  // -- Undo/redo history -------------------------------------------------------
+  // `currentHtmlRef` always holds the latest HTML (including inline edits made
+  // inside the iframe, which don't flow through React state). History snapshots
+  // are taken from it so undo/redo and publish stay accurate.
+  const currentHtmlRef = useRef<string>(initialHtml ?? "")
+  const historyRef = useRef<string[]>(initialHtml && initialHtml.length > 100 ? [initialHtml] : [])
+  const histIdxRef = useRef<number>(initialHtml && initialHtml.length > 100 ? 0 : -1)
+  const isRestoringRef = useRef(false)
+  const commitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  // Where the next section-library insert should land (set by the in-iframe "+").
+  const insertAnchorRef = useRef<string | null>(null)
+
+  function refreshHistoryFlags() {
+    setCanUndo(histIdxRef.current > 0)
+    setCanRedo(histIdxRef.current < historyRef.current.length - 1)
+  }
+
+  /** Push a new snapshot, truncating any redo branch. No-op if unchanged. */
+  const commitHistory = useCallback((html: string) => {
+    if (!html || html.length < 50) return
+    if (historyRef.current[histIdxRef.current] === html) return
+    historyRef.current = historyRef.current.slice(0, histIdxRef.current + 1)
+    historyRef.current.push(html)
+    // Cap history depth to keep memory bounded.
+    if (historyRef.current.length > 50) historyRef.current.shift()
+    histIdxRef.current = historyRef.current.length - 1
+    currentHtmlRef.current = html
+    refreshHistoryFlags()
+  }, [])
+
+  const restoreSnapshot = useCallback((html: string) => {
+    isRestoringRef.current = true
+    currentHtmlRef.current = html
+    setSelectedEl(null)
+    setRawHtml(html)
+    refreshHistoryFlags()
+    // Allow the iframe to re-render before accepting new change events.
+    setTimeout(() => { isRestoringRef.current = false }, 80)
+  }, [])
+
+  const undo = useCallback(() => {
+    if (histIdxRef.current <= 0) return
+    histIdxRef.current -= 1
+    restoreSnapshot(historyRef.current[histIdxRef.current])
+  }, [restoreSnapshot])
+
+  const redo = useCallback(() => {
+    if (histIdxRef.current >= historyRef.current.length - 1) return
+    histIdxRef.current += 1
+    restoreSnapshot(historyRef.current[histIdxRef.current])
+  }, [restoreSnapshot])
 
   const hasContent = rawHtml.length > 100
 
@@ -97,19 +160,47 @@ export function Builder({
         : d.s9Type === "link" ? "link" as const
         : d.s9Type === "section" ? "section" as const
         : "text" as const
-      setSelectedEl({ editKey: d.editKey, content: d.content, tagName: d.tagName, s9Type, href: d.href || "", rect: d.rect })
+      setSelectedEl({ editKey: d.editKey, content: d.content, tagName: d.tagName, s9Type, href: d.href || "", rect: d.rect, box: d.box })
     } else if (d.type === "s9:deselect" || d.type === "s9:deleted") {
       setSelectedEl(null)
     } else if (d.type === "s9:html") {
       htmlResolveRef.current?.(d.html)
       htmlResolveRef.current = null
+    } else if (d.type === "s9:changed" && typeof d.html === "string") {
+      // Inline edit happened in the iframe. Track it and debounce a snapshot.
+      if (isRestoringRef.current) return
+      currentHtmlRef.current = d.html
+      try { localStorage.setItem("s9_draft_html", d.html) } catch { /* quota */ }
+      if (commitTimerRef.current) clearTimeout(commitTimerRef.current)
+      commitTimerRef.current = setTimeout(() => commitHistory(d.html), 600)
+    } else if (d.type === "s9:insertRequest") {
+      // The in-iframe "+" between sections was clicked.
+      insertAnchorRef.current = d.afterEditKey ?? null
+      setShowTemplateBrowser(false); setShowBlogPanel(false); setShowAssetLib(false)
+      setShowSectionLib(true)
     }
-  }, [])
+  }, [commitHistory])
 
   useEffect(() => {
     window.addEventListener("message", handleMessage)
     return () => window.removeEventListener("message", handleMessage)
   }, [handleMessage])
+
+  // Keyboard shortcuts: ⌘/Ctrl+Z = undo, ⌘/Ctrl+Shift+Z (or Ctrl+Y) = redo.
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      const target = e.target as HTMLElement | null
+      const typing = target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable)
+      if (typing) return
+      const mod = e.metaKey || e.ctrlKey
+      if (!mod) return
+      const key = e.key.toLowerCase()
+      if (key === "z" && !e.shiftKey) { e.preventDefault(); undo() }
+      else if ((key === "z" && e.shiftKey) || key === "y") { e.preventDefault(); redo() }
+    }
+    window.addEventListener("keydown", onKey)
+    return () => window.removeEventListener("keydown", onKey)
+  }, [undo, redo])
 
   function postToIframe(msg: Record<string, unknown>) {
     iframeRef.current?.contentWindow?.postMessage(msg, "*")
@@ -119,12 +210,14 @@ export function Builder({
   function buildSrcDoc(fullHtml: string): string {
     let doc = fullHtml
     if (doc.includes("</head>")) {
-      doc = doc.replace("</head>", `<style>${EDITOR_OVERLAY_CSS}</style></head>`)
+      doc = doc.replace("</head>", `<style id="s9-overlay">${EDITOR_OVERLAY_CSS}</style></head>`)
+    } else {
+      doc = `<style id="s9-overlay">${EDITOR_OVERLAY_CSS}</style>` + doc
     }
     if (doc.includes("</body>")) {
-      doc = doc.replace("</body>", `<script>${EDITOR_SCRIPT}</script></body>`)
+      doc = doc.replace("</body>", `<script id="s9-script">${EDITOR_SCRIPT}</script></body>`)
     } else {
-      doc += `<script>${EDITOR_SCRIPT}</script>`
+      doc += `<script id="s9-script">${EDITOR_SCRIPT}</script>`
     }
     return doc
   }
@@ -140,11 +233,12 @@ export function Builder({
       const res = await fetch("/api/build/ai", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: text, currentHtml: hasContent ? rawHtml : undefined }),
+        body: JSON.stringify({ prompt: text, currentHtml: hasContent ? (currentHtmlRef.current || rawHtml) : undefined }),
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) { setError(data.error ?? "Generation failed"); return }
       setRawHtml(data.html)
+      commitHistory(data.html)
       setPrompt("")
       setPublished(false)
     } catch {
@@ -161,7 +255,8 @@ export function Builder({
     const wrappedHtml = wrapSectionHtml(section.html, section.id)
     const scopedCss = scopeSectionCss(section.css, scopeClass)
     if (scopedCss) postToIframe({ type: "s9:addCss", css: scopedCss })
-    postToIframe({ type: "s9:insertSection", html: wrappedHtml })
+    postToIframe({ type: "s9:insertSection", html: wrappedHtml, afterEditKey: insertAnchorRef.current ?? undefined })
+    insertAnchorRef.current = null
     setShowSectionLib(false)
   }
 
@@ -179,6 +274,9 @@ export function Builder({
   function handleDelete(editKey: string) {
     postToIframe({ type: "s9:delete", editKey })
   }
+  function handleSetStyle(editKey: string, prop: string, value: string) {
+    postToIframe({ type: "s9:setStyle", editKey, prop, value })
+  }
 
   // -- Publish ----------------------------------------------------------------
   async function handlePublish() {
@@ -190,7 +288,7 @@ export function Builder({
     })
     const res = await fetch("/api/build/publish", {
       method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ mode: "ai", html: rawHtml }),
+      body: JSON.stringify({ mode: "ai", html: currentHtmlRef.current || rawHtml }),
     })
     setPublishing(false)
     if (!res.ok) { const d = await res.json().catch(() => ({})); setError(d.error ?? "Could not publish"); return }
@@ -211,6 +309,30 @@ export function Builder({
             <p className="text-xs text-muted-foreground">{ownerName} · {host}</p>
           </div>
         </div>
+
+        {/* Undo / Redo */}
+        {hasContent && (
+          <div className="flex items-center gap-1 rounded-lg border border-border p-0.5">
+            <button
+              onClick={undo}
+              disabled={!canUndo}
+              className="rounded-md p-1.5 text-muted-foreground transition-colors hover:text-foreground disabled:opacity-30 disabled:hover:text-muted-foreground"
+              title="Undo (⌘Z)"
+              data-testid="builder-undo"
+            >
+              <Undo2 className="h-4 w-4" />
+            </button>
+            <button
+              onClick={redo}
+              disabled={!canRedo}
+              className="rounded-md p-1.5 text-muted-foreground transition-colors hover:text-foreground disabled:opacity-30 disabled:hover:text-muted-foreground"
+              title="Redo (⌘⇧Z)"
+              data-testid="builder-redo"
+            >
+              <Redo2 className="h-4 w-4" />
+            </button>
+          </div>
+        )}
 
         {/* Viewport toggle */}
         {hasContent && (
@@ -287,6 +409,7 @@ export function Builder({
             <TemplateBrowser onSelect={(html, css) => {
               const combined = css ? `<style>${css}</style>${html}` : html
               setRawHtml(combined)
+              commitHistory(combined)
               setShowTemplateBrowser(false)
               setSelectedEl(null)
             }} />
@@ -348,11 +471,7 @@ export function Builder({
             </div>
           ) : generating ? (
             <div className="flex-1 flex items-center justify-center">
-              <div className="text-center">
-                <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-2 border-brand/30 border-t-brand" />
-                <p className="text-sm font-medium">{hasContent ? "Updating…" : "Creating your website…"}</p>
-                <p className="mt-1 text-xs text-muted-foreground">This usually takes 15–45 seconds</p>
-              </div>
+              <GenerationLoader mode={hasContent ? "update" : "create"} />
             </div>
           ) : (
             <div className="w-full h-full flex justify-center" style={{ padding: viewport !== "desktop" ? "1rem" : 0 }}>
@@ -385,6 +504,7 @@ export function Builder({
                 onUpdateAttr={handleUpdateAttr}
                 onDelete={handleDelete}
                 onMoveSection={handleMoveSection}
+                onSetStyle={handleSetStyle}
                 businessName={initialDetails.name ?? ""}
               />
             ) : (
@@ -417,13 +537,14 @@ export function Builder({
 // ---------------------------------------------------------------------------
 
 function ElementEditor({
-  selected, onUpdate, onUpdateAttr, onDelete, onMoveSection, businessName,
+  selected, onUpdate, onUpdateAttr, onDelete, onMoveSection, onSetStyle, businessName,
 }: {
   selected: SelectedElement
   onUpdate: (key: string, content: string) => void
   onUpdateAttr: (key: string, attr: string, val: string) => void
   onDelete: (key: string) => void
   onMoveSection: (key: string, direction: "up" | "down") => void
+  onSetStyle: (key: string, prop: string, val: string) => void
   businessName: string
 }) {
   const [editValue, setEditValue] = useState(selected.content)
@@ -541,6 +662,9 @@ function ElementEditor({
         </div>
       )}
 
+      {/* Spacing & alignment — for all element types */}
+      <SpacingControls selected={selected} onSetStyle={onSetStyle} />
+
       {/* AI Rewrite — for all types */}
       <div className="border-t border-border pt-3">
         <p className="mb-1.5 text-xs font-medium text-muted-foreground">AI Edit</p>
@@ -548,6 +672,107 @@ function ElementEditor({
         <Button size="sm" variant="outline" className="mt-2 w-full" loading={aiLoading} disabled={!aiInstruction.trim()} onClick={aiRewrite}>
           <Wand2 className="h-3.5 w-3.5" /> Rewrite with AI
         </Button>
+      </div>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Spacing & alignment controls (padding, margin, text alignment)
+// ---------------------------------------------------------------------------
+
+function SpacingControls({
+  selected, onSetStyle,
+}: {
+  selected: SelectedElement
+  onSetStyle: (key: string, prop: string, val: string) => void
+}) {
+  const box = selected.box
+  // Treat padding/margin as uniform; seed from the dominant (top) value.
+  const [pad, setPad] = useState<number>(box?.pt ?? 0)
+  const [mar, setMar] = useState<number>(box?.mt ?? 0)
+  const [align, setAlign] = useState<string>(box?.ta ?? "left")
+
+  function applyPad(next: number) {
+    const v = Math.max(0, Math.min(160, next))
+    setPad(v)
+    onSetStyle(selected.editKey, "padding", `${v}px`)
+  }
+  function applyMar(next: number) {
+    const v = Math.max(0, Math.min(160, next))
+    setMar(v)
+    onSetStyle(selected.editKey, "margin-top", `${v}px`)
+    onSetStyle(selected.editKey, "margin-bottom", `${v}px`)
+  }
+  function applyAlign(val: string) {
+    setAlign(val)
+    onSetStyle(selected.editKey, "text-align", val)
+  }
+
+  return (
+    <div className="border-t border-border pt-3" data-testid="spacing-controls">
+      <p className="mb-2 text-xs font-medium text-muted-foreground">Spacing &amp; Layout</p>
+
+      {/* Alignment */}
+      <div className="mb-3">
+        <p className="mb-1 text-[10px] text-muted-foreground">Align</p>
+        <div className="flex gap-1 rounded-lg border border-border p-0.5">
+          {([["left", AlignLeft], ["center", AlignCenter], ["right", AlignRight]] as const).map(([val, Icon]) => (
+            <button
+              key={val}
+              type="button"
+              onClick={() => applyAlign(val)}
+              className={`flex-1 rounded-md py-1.5 flex items-center justify-center transition-colors ${
+                align === val ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground"
+              }`}
+              data-testid={`align-${val}`}
+              title={`Align ${val}`}
+            >
+              <Icon className="h-3.5 w-3.5" />
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Padding */}
+      <Stepper label="Padding" value={pad} onChange={applyPad} testid="padding" />
+      {/* Margin */}
+      <Stepper label="Vertical margin" value={mar} onChange={applyMar} testid="margin" />
+    </div>
+  )
+}
+
+function Stepper({
+  label, value, onChange, testid,
+}: {
+  label: string
+  value: number
+  onChange: (v: number) => void
+  testid: string
+}) {
+  return (
+    <div className="mb-2 flex items-center justify-between gap-2">
+      <span className="text-[10px] text-muted-foreground">{label}</span>
+      <div className="flex items-center gap-1">
+        <button
+          type="button"
+          onClick={() => onChange(value - 4)}
+          className="flex h-6 w-6 items-center justify-center rounded-md border border-border text-muted-foreground hover:text-foreground"
+          data-testid={`${testid}-minus`}
+          title="Decrease"
+        >
+          <Minus className="h-3 w-3" />
+        </button>
+        <span className="w-10 text-center text-xs font-mono tabular-nums" data-testid={`${testid}-value`}>{value}px</span>
+        <button
+          type="button"
+          onClick={() => onChange(value + 4)}
+          className="flex h-6 w-6 items-center justify-center rounded-md border border-border text-muted-foreground hover:text-foreground"
+          data-testid={`${testid}-plus`}
+          title="Increase"
+        >
+          <Plus className="h-3 w-3" />
+        </button>
       </div>
     </div>
   )

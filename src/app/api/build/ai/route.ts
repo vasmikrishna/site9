@@ -52,22 +52,36 @@ On every text element and image that the user might want to edit, add these attr
 
 This lets the user click-to-edit in the visual editor. Cover all headings, paragraphs, images, and feature cards.
 
-PREMIUM CSS TECHNIQUES (use these throughout):
-- Hero: Use a large bold heading (clamp(2.5rem, 5vw, 4.5rem)), generous padding (120px+ top/bottom), and a subtle radial-gradient glow behind key elements
-- Navigation: Sticky header with backdrop-filter: blur(12px) and background: rgba(255,255,255,0.8) (or dark equivalent). Add a thin bottom border that only appears on scroll via a CSS-only trick: border-bottom: 1px solid transparent; transition: border-color 0.3s;
-- Typography: Use system font stack: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif. Headings should use font-weight: 700-800, letter-spacing: -0.02em for that premium feel. Use clamp() for fluid font sizing.
-- Shadows: Stack multiple shadows for depth: box-shadow: 0 1px 2px rgba(0,0,0,0.05), 0 4px 12px rgba(0,0,0,0.08), 0 12px 32px rgba(0,0,0,0.04);
-- Cards: Use border-radius: 16px or 20px, subtle borders (1px solid rgba(0,0,0,0.06)), and hover effects: transform: translateY(-2px); box-shadow elevation increase; transition: all 0.3s ease;
-- Gradients: Use gradient text for key headings: background: linear-gradient(135deg, color1, color2); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-- Glow effects: Add a blurred pseudo-element or div behind hero images or CTA sections: filter: blur(60px); opacity: 0.3; with a radial gradient
-- Section spacing: Use 100px-140px padding between major sections for breathing room
-- Bento grid layouts: For features/services, use CSS Grid with variable-size cards: grid-template-columns: repeat(3, 1fr); with first card spanning 2 columns when 5+ items
-- Buttons: Primary with slight gradient, border-radius: 9999px (pill shape), padding: 14px 28px, font-weight: 600. Hover: slight scale(1.02) and shadow increase
-- Color usage: Use the provided palette colors as CSS custom properties (--color-primary, --color-accent, etc.) for consistency
-- Images: Always add border-radius: 12px or 16px, use aspect-ratio for consistent sizing, add loading="lazy"
-- Animations: Add @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } } and apply animation: fadeInUp 0.6s ease forwards to hero content. Add @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } } for subtle floating effects on decorative elements.
-- Scroll reveal: Add the class "s9-reveal" to sections that should animate in on scroll. They start hidden with opacity: 0; transform: translateY(24px); transition: opacity 0.7s ease, transform 0.7s ease; and become visible when .s9-visible is added.
-- Footer: Match the hero's dark background, use a 4-column grid on desktop, include social SVG icons
+DESIGN SYSTEM (define these :root tokens first, then use them everywhere — never hardcode raw values twice):
+- Colors: --color-primary, --color-accent, --color-bg, --color-text, --color-muted, --color-border from the palette
+- Spacing scale (8px base): --s1:8px --s2:16px --s3:24px --s4:32px --s6:48px --s8:64px --s12:96px --s16:128px. Section vertical padding MUST use var(--s16) on desktop, var(--s12) on mobile.
+- Radii: --r-sm:8px --r-md:12px --r-lg:20px --r-pill:9999px
+- Elevation: --shadow-sm: 0 1px 2px rgba(0,0,0,.04), 0 1px 3px rgba(0,0,0,.06); --shadow-md: 0 4px 12px rgba(0,0,0,.06), 0 12px 32px rgba(0,0,0,.05); --shadow-lg: 0 8px 24px rgba(0,0,0,.08), 0 24px 64px rgba(0,0,0,.08)
+- Type: font stack -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif. Headings font-weight 700-800, letter-spacing -0.025em, line-height 1.05-1.15. Body line-height 1.6, color a slightly muted text (not pure black). Eyebrow labels above section headings: uppercase, font-size 13px, letter-spacing 0.08em, color var(--color-accent), font-weight 600.
+
+SECTION BLUEPRINTS (build each section to this exact spec):
+
+NAVIGATION — Fixed top, height 64px, max-width 1200px inner container. background: rgba(bg,0.7); backdrop-filter: blur(16px) saturate(180%); border-bottom: 1px solid rgba(border,0.6). Left: logo (height 28-32px). Center/right: 3-5 text links (font-size 14px, font-weight 500, color muted, hover→full text color, transition 0.2s). Far right: ONE pill CTA button (filled accent, padding 10px 20px, border-radius var(--r-pill), font-weight 600, font-size 14px). On mobile: hide links, show a checkbox-hack hamburger.
+
+HERO — Min 88vh, centered content, max-width 760px text column. Above the fold: small eyebrow label, then H1 clamp(2.75rem, 6vw, 4.75rem) font-weight 800 letter-spacing -0.03em. Make ONE key phrase in the H1 gradient text (linear-gradient(135deg, primary, accent), -webkit-background-clip:text, -webkit-text-fill-color:transparent). Subhead: clamp(1.05rem,2vw,1.3rem), color muted, max-width 600px, margin-top var(--s3). CTA row var(--s6) top: primary pill button + secondary ghost button (transparent, 1px border). Below CTAs: a small social-proof line (e.g. "Trusted by 2,000+ teams") in 13px muted. Behind everything: a fixed-position radial-gradient glow blob — position:absolute; width:600px;height:600px; background:radial-gradient(circle, accent 0%, transparent 70%); filter:blur(80px); opacity:0.25; z-index:0; top:-100px. Hero content z-index:1. Add a product mockup / dashboard image below the CTAs with border-radius var(--r-lg), var(--shadow-lg), and a subtle 1px border.
+
+FEATURES / SERVICES — Section eyebrow + centered H2 (clamp(2rem,4vw,3rem)) + one-line muted subhead, max-width 600px centered. Then a bento grid: grid-template-columns: repeat(3,1fr); gap var(--s4). When 5+ items, the FIRST card spans 2 columns and 2 rows (feature it). Each card: padding var(--s4), border-radius var(--r-lg), border 1px solid var(--color-border), background subtle (bg or 2% tint), var(--shadow-sm). Card has: an icon in a 44px rounded-square tinted-accent chip at top, then a bold 18-20px title, then 14px muted description. Hover: transform: translateY(-4px); box-shadow var(--shadow-md); border-color tinted-accent; transition all 0.25s ease.
+
+PRICING (only if relevant) — 3 tiers in a row, equal height. Middle/recommended tier: scale(1.04), accent border 2px, a small "Most Popular" pill badge overlapping the top edge, var(--shadow-lg). Other tiers: 1px border, var(--shadow-sm). Each card: tier name, big price (clamp(2.5rem,5vw,3.5rem) font-weight 800) with /mo in muted, a checklist of features (custom checkmark SVG in accent, NOT bullets), and a full-width pill CTA at the bottom. Equal padding var(--s6) var(--s4).
+
+TESTIMONIALS / SOCIAL PROOF — Either a logo strip (grayscale company logos at opacity 0.5, hover→1) OR a 2-3 column quote grid. Quote cards: large quote mark or just generous padding, the quote in 16-18px, then avatar (40px circle) + name + role row at bottom. border-radius var(--r-lg), subtle border.
+
+CTA BAND — Full-width section before footer with a contrasting dark or gradient background (linear-gradient(135deg, primary, accent)), white text, centered H2, subhead, and one white pill button. Add the same blurred glow blob for depth.
+
+FOOTER — Dark background (near-black or primary-dark), padding var(--s12) top. 4-column grid on desktop: column 1 = logo + one-line tagline + social SVG icons; columns 2-4 = link lists with a bold 13px uppercase muted heading each. Bottom bar: 1px top border rgba(white,0.1), copyright line 13px muted, left-aligned.
+
+CROSS-CUTTING POLISH:
+- Buttons: pill shape var(--r-pill), padding 14px 28px, font-weight 600. Primary = filled accent (add a subtle linear-gradient and var(--shadow-md)); hover: transform: translateY(-1px) scale(1.01) + stronger shadow. Secondary = transparent with 1px border.
+- Images: border-radius var(--r-md) or var(--r-lg), aspect-ratio for consistency, loading="lazy", object-fit:cover.
+- Every section: max-width 1200px inner container, margin 0 auto, padding-inline var(--s3).
+- Animations: @keyframes fadeInUp { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} } on hero content (stagger with animation-delay 0.1s/0.2s/0.3s). @keyframes float for hero mockup/decorative blobs.
+- Scroll reveal: add class "s9-reveal" to every major section below the hero — start opacity:0; transform:translateY(24px); transition: opacity 0.7s ease, transform 0.7s ease; reveal when .s9-visible is added.
+- Consistency is premium: reuse the SAME radii, shadows, and spacing tokens in every section. Mismatched corner radii and ad-hoc spacing is what makes a site look templated.
 
 RESPONSIVE DESIGN:
 - Mobile-first: Base styles for mobile, @media (min-width: 768px) for tablet, @media (min-width: 1024px) for desktop

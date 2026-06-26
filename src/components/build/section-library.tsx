@@ -37,6 +37,47 @@ const TYPE_LABELS: Record<SectionType, string> = {
   contact: "Contact",
 }
 
+/**
+ * Renders a real, scaled-down live preview of the section so users see the
+ * actual themed component (not just a name). Falls back to a stored image,
+ * then to an icon placeholder.
+ */
+function SectionPreview({ section }: { section: SectionTemplate }) {
+  if (section.preview_url) {
+    return (
+      <div className="aspect-video w-full overflow-hidden bg-muted">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={section.preview_url} alt="" loading="lazy" className="h-full w-full object-cover object-top" />
+      </div>
+    )
+  }
+
+  if (section.html) {
+    const doc = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=1280">`
+      + `<style>body{margin:0;font-family:system-ui,sans-serif;overflow:hidden;}${section.css ?? ""}</style>`
+      + `</head><body>${section.html}</body></html>`
+    return (
+      <div className="relative aspect-video w-full overflow-hidden bg-white">
+        <iframe
+          title={section.name}
+          srcDoc={doc}
+          sandbox=""
+          tabIndex={-1}
+          aria-hidden="true"
+          className="pointer-events-none absolute left-0 top-0 origin-top-left border-0"
+          style={{ width: "1280px", height: "900px", transform: "scale(0.182)" }}
+        />
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex aspect-video w-full items-center justify-center bg-muted">
+      <LayoutGrid className="h-5 w-5 text-muted-foreground" />
+    </div>
+  )
+}
+
 interface SectionLibraryProps {
   onInsert: (section: SectionTemplate) => void
 }
@@ -129,19 +170,16 @@ export function SectionLibrary({ onInsert }: SectionLibraryProps) {
                           key={section.id}
                           type="button"
                           onClick={() => onInsert(section)}
-                          className="w-full rounded-lg border border-border bg-card p-2 text-left hover:border-brand/60 hover:bg-accent/50 transition-colors"
+                          className="group w-full overflow-hidden rounded-lg border border-border bg-card text-left hover:border-brand hover:ring-1 hover:ring-brand/40 transition-all"
                           data-testid={`insert-section-${section.id}`}
                         >
-                          {section.preview_url && (
-                            <div className="aspect-video rounded bg-muted mb-1.5 overflow-hidden">
-                              {/* eslint-disable-next-line @next/next/no-img-element */}
-                              <img src={section.preview_url} alt="" className="h-full w-full object-cover" />
-                            </div>
-                          )}
-                          <p className="text-xs font-medium">{section.name}</p>
-                          {section.description && (
-                            <p className="text-[10px] text-muted-foreground mt-0.5 line-clamp-2">{section.description}</p>
-                          )}
+                          <SectionPreview section={section} />
+                          <div className="p-2">
+                            <p className="text-xs font-medium">{section.name}</p>
+                            {section.description && (
+                              <p className="text-[10px] text-muted-foreground mt-0.5 line-clamp-2">{section.description}</p>
+                            )}
+                          </div>
                         </button>
                       ))}
                     </div>

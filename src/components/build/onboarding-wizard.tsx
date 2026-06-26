@@ -10,17 +10,28 @@ import { Badge } from "@/components/ui/badge"
 import {
   ArrowLeft, ArrowRight, Check, Upload, Wand2, Sparkles,
   Globe, Palette, ImageIcon, Building2, Eye, Trash2,
+  UtensilsCrossed, Scissors, Camera, Briefcase, ShoppingBag,
+  type LucideIcon,
 } from "lucide-react"
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
 import { CATEGORIES } from "@/lib/curated-templates"
 import { extractColorsFromImage } from "@/lib/color-extract"
 import { LOGO_STYLES } from "@/lib/logo-styles"
+import { EXPERIMENTAL_PALETTES } from "@/lib/experimental-palettes"
+import { GenerationLoader } from "@/components/build/generation-loader"
 import type { BusinessDetails } from "@/lib/onboarding"
 import type { BrandAsset } from "@/lib/build-assets"
 import type { ReferenceSite, ColorPalette, ColorPaletteColors } from "@/types"
 
 /** A freshly generated, not-yet-chosen logo option. */
 interface LogoOption { url: string; svg: string; style?: string }
+
+/** Maps a category's lucide icon name to its component (no emoji). */
+const CATEGORY_ICONS: Record<string, LucideIcon> = {
+  UtensilsCrossed, Scissors, Camera, Briefcase, ShoppingBag, Globe,
+}
+
+type PaletteMode = "standard" | "experimental"
 
 type WizardStep = 1 | 2 | 3 | 4 | 5
 
@@ -73,6 +84,7 @@ export function OnboardingWizard({ initialDetails, onComplete }: OnboardingWizar
   const [customColors, setCustomColors] = useState<ColorPaletteColors>(initialDetails.custom_colors ?? DEFAULT_COLORS)
   const [loadingPalettes, setLoadingPalettes] = useState(false)
   const [extractingColors, setExtractingColors] = useState(false)
+  const [paletteMode, setPaletteMode] = useState<PaletteMode>("standard")
 
   // Step 4: Business details
   const [name, setName] = useState(initialDetails.name ?? "")
@@ -393,21 +405,25 @@ export function OnboardingWizard({ initialDetails, onComplete }: OnboardingWizar
                 <div>
                   <Label>Category</Label>
                   <div className="grid grid-cols-3 gap-2 mt-1">
-                    {CATEGORIES.map((cat) => (
-                      <button
-                        key={cat.key}
-                        type="button"
-                        onClick={() => setCategory(cat.key)}
-                        className={`rounded-lg border px-3 py-2 text-left text-sm transition-all ${
-                          category === cat.key
-                            ? "border-brand bg-brand/5 font-medium"
-                            : "border-border hover:border-brand/60"
-                        }`}
-                        data-testid={`wizard-cat-${cat.key}`}
-                      >
-                        <span className="mr-1.5">{cat.icon}</span>{cat.label}
-                      </button>
-                    ))}
+                    {CATEGORIES.map((cat) => {
+                      const Icon = CATEGORY_ICONS[cat.icon] ?? Globe
+                      return (
+                        <button
+                          key={cat.key}
+                          type="button"
+                          onClick={() => setCategory(cat.key)}
+                          className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-left text-sm transition-all ${
+                            category === cat.key
+                              ? "border-brand bg-brand/5 font-medium"
+                              : "border-border hover:border-brand/60"
+                          }`}
+                          data-testid={`wizard-cat-${cat.key}`}
+                        >
+                          <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
+                          <span>{cat.label}</span>
+                        </button>
+                      )
+                    })}
                   </div>
                 </div>
                 <div>
@@ -505,16 +521,54 @@ export function OnboardingWizard({ initialDetails, onComplete }: OnboardingWizar
                 </CardContent>
               </Card>
 
-              {/* Palette presets */}
-              {loadingPalettes ? (
-                <div className="flex justify-center py-8">
-                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-brand/30 border-t-brand" />
+              {/* Palette presets — Standard vs Experimental */}
+              <div>
+                <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                  <p className="text-sm font-semibold">Or choose a preset</p>
+                  {/* Mode toggle */}
+                  <div className="inline-flex rounded-lg border border-border p-0.5" data-testid="palette-mode-toggle">
+                    <button
+                      type="button"
+                      onClick={() => setPaletteMode("standard")}
+                      className={`rounded-md px-3 py-1 text-xs font-medium transition-colors ${
+                        paletteMode === "standard" ? "bg-brand text-background" : "text-muted-foreground hover:text-foreground"
+                      }`}
+                      data-testid="palette-mode-standard"
+                    >
+                      Standard
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPaletteMode("experimental")}
+                      className={`flex items-center gap-1 rounded-md px-3 py-1 text-xs font-medium transition-colors ${
+                        paletteMode === "experimental" ? "bg-brand text-background" : "text-muted-foreground hover:text-foreground"
+                      }`}
+                      data-testid="palette-mode-experimental"
+                    >
+                      <Sparkles className="h-3 w-3" /> Experimental
+                    </button>
+                  </div>
                 </div>
-              ) : palettes.length > 0 && (
-                <div>
-                  <p className="text-sm font-semibold mb-3">Or choose a preset</p>
-                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                    {palettes.map((palette) => (
+
+                <p className="mb-3 text-xs text-muted-foreground">
+                  {paletteMode === "standard"
+                    ? "A hand-picked set of vibrant brand palettes."
+                    : `${EXPERIMENTAL_PALETTES.length}+ proven color themes from production design systems — light and dark.`}
+                </p>
+
+                {paletteMode === "standard" && loadingPalettes ? (
+                  <div className="flex justify-center py-8">
+                    <div className="h-6 w-6 animate-spin rounded-full border-2 border-brand/30 border-t-brand" />
+                  </div>
+                ) : (
+                  <div
+                    className={
+                      paletteMode === "experimental"
+                        ? "grid gap-3 sm:grid-cols-2 lg:grid-cols-3 max-h-[460px] overflow-y-auto pr-1"
+                        : "grid gap-3 sm:grid-cols-2 lg:grid-cols-3"
+                    }
+                  >
+                    {(paletteMode === "experimental" ? EXPERIMENTAL_PALETTES : palettes).map((palette) => (
                       <button
                         key={palette.id}
                         type="button"
@@ -529,7 +583,7 @@ export function OnboardingWizard({ initialDetails, onComplete }: OnboardingWizar
                         }`}
                         data-testid={`palette-preset-${palette.id}`}
                       >
-                        <p className="text-sm font-medium mb-2">{palette.name}</p>
+                        <p className="text-sm font-medium mb-2 truncate">{palette.name}</p>
                         <div className="flex gap-0.5 rounded overflow-hidden">
                           {(["primary", "secondary", "accent", "background", "text", "muted"] as const).map((key) => (
                             <div key={key} className="h-8 flex-1" style={{ backgroundColor: palette.colors[key] }} />
@@ -538,8 +592,8 @@ export function OnboardingWizard({ initialDetails, onComplete }: OnboardingWizar
                       </button>
                     ))}
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           )}
 
@@ -923,7 +977,12 @@ export function OnboardingWizard({ initialDetails, onComplete }: OnboardingWizar
           )}
 
           {/* Step 5: Review & Generate */}
-          {step === 5 && (
+          {step === 5 && generating && (
+            <div className="flex justify-center" data-testid="wizard-step-5-generating">
+              <GenerationLoader mode="create" />
+            </div>
+          )}
+          {step === 5 && !generating && (
             <div className="space-y-6 max-w-lg mx-auto" data-testid="wizard-step-5">
               <div className="text-center">
                 <h1 className="text-2xl font-bold tracking-tight">Ready to build your website</h1>

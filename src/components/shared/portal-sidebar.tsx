@@ -4,6 +4,7 @@ import { usePathname, useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import { cn } from "@/lib/utils"
 import { FEATURES } from "@/lib/features"
+import { ThemeToggle } from "@/components/ui/theme-toggle"
 import {
   LayoutDashboard, Mail, LogOut, ChevronRight,
   ChevronsUpDown, Check, LayoutTemplate, Globe,
@@ -78,6 +79,12 @@ export function PortalSidebar({ role, userName, userEmail }: PortalSidebarProps)
     ...(FEATURES.bookings ? [] : ["/admin/bookings", "/client/bookings"]),
     ...(FEATURES.blog ? [] : ["/admin/blog"]),
     ...(FEATURES.social ? [] : ["/admin/social"]),
+    ...(FEATURES.surveys ? [] : ["/admin/surveys"]),
+    ...(FEATURES.portfolio ? [] : ["/admin/portfolio"]),
+    ...(FEATURES.projects ? [] : ["/admin/projects", "/client/projects", "/client/projects/new", "/employee/projects"]),
+    ...(FEATURES.clients ? [] : ["/admin/clients"]),
+    ...(FEATURES.employees ? [] : ["/admin/employees"]),
+    ...(FEATURES.payments ? [] : ["/admin/payments"]),
   ]
   const nav = (role === "admin" ? adminNav : role === "employee" ? employeeNav : clientNav)
     .filter((item) => !hiddenHrefs.includes(item.href))
@@ -272,10 +279,11 @@ export function PortalSidebar({ role, userName, userEmail }: PortalSidebarProps)
           <div className="h-8 w-8 rounded-full bg-foreground text-background flex items-center justify-center text-xs font-semibold flex-shrink-0">
             {userName.charAt(0).toUpperCase()}
           </div>
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <p className="text-sm font-medium truncate">{userName}</p>
             <p className="text-xs text-muted-foreground truncate">{userEmail}</p>
           </div>
+          <ThemeToggle />
         </div>
         <button
           onClick={handleLogout}

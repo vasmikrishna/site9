@@ -24,6 +24,7 @@ export interface CuratedTemplate {
 export interface CategoryDef {
   key: string
   label: string
+  /** lucide-react icon name — resolved to a component in the UI (no emoji). */
   icon: string
 }
 
@@ -32,12 +33,12 @@ export interface CategoryDef {
 // ---------------------------------------------------------------------------
 
 export const CATEGORIES: CategoryDef[] = [
-  { key: "restaurant", label: "Restaurant / Cafe", icon: "🍽️" },
-  { key: "salon", label: "Salon / Beauty", icon: "💇" },
-  { key: "photography", label: "Photography", icon: "📷" },
-  { key: "professional", label: "Professional", icon: "💼" },
-  { key: "retail", label: "Retail / Shop", icon: "🛍️" },
-  { key: "other", label: "Other", icon: "🌐" },
+  { key: "restaurant", label: "Restaurant / Cafe", icon: "UtensilsCrossed" },
+  { key: "salon", label: "Salon / Beauty", icon: "Scissors" },
+  { key: "photography", label: "Photography", icon: "Camera" },
+  { key: "professional", label: "Professional", icon: "Briefcase" },
+  { key: "retail", label: "Retail / Shop", icon: "ShoppingBag" },
+  { key: "other", label: "Other", icon: "Globe" },
 ]
 
 // ---------------------------------------------------------------------------
