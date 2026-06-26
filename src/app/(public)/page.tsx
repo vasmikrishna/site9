@@ -4,13 +4,11 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { ArrowRight, Check, Mail, GitPullRequest, BookOpen, Code2 } from "lucide-react"
+import { MOCK_CUSTOM_PAGES } from "@/lib/mock-data"
 import type { CustomPage } from "@/types"
 import { sanitizeHtml, sanitizeCss } from "@/lib/sanitize-html"
 import { FEATURES } from "@/lib/features"
 import { FormHandler } from "@/components/public/form-handler"
-import { TemplateCarousel } from "@/components/public/template-carousel"
-import { ThemeToggle } from "@/components/ui/theme-toggle"
-import { ThemeLogo } from "@/components/ui/theme-logo"
 
 function GitHubIcon({ className }: { className?: string }) {
   return (
@@ -48,7 +46,9 @@ const fetchHomepageOverride = (slug: string) =>
 
 async function getHomepageOverride(): Promise<CustomPage | null> {
   if (!FEATURES.pageBuilder) return null
-  if (!supabaseConfigured()) return null
+  if (!supabaseConfigured()) {
+    return MOCK_CUSTOM_PAGES.find((p) => p.is_homepage && p.status === "published") ?? null
+  }
   try {
     const { getTenantSlug } = await import("@/lib/tenant")
     const slug = await getTenantSlug()
@@ -59,12 +59,64 @@ async function getHomepageOverride(): Promise<CustomPage | null> {
   }
 }
 
-const NAV_LINKS = [
-  { href: "/templates", label: "Templates" },
-  { href: "/pricing", label: "Pricing" },
-  { href: "/open-source", label: "Open Source" },
-  { href: "#about", label: "About" },
-  { href: "#contact", label: "Contact" },
+const SERVICES = [
+  {
+    tier: "launch",
+    name: "Launch in minutes",
+    tagline: "Go live before lunch",
+    description: "Enter your business info and launch a professional website in minutes — no coding, no design skills, no complicated setup.",
+    price: "Free to start",
+    price_note: "your own subdomain included",
+    features: ["Instant website creation", "Free yourbusiness.site9.in subdomain", "Mobile responsive", "No coding or design skills"],
+    highlight: false,
+  },
+  {
+    tier: "showcase",
+    name: "Show off your business",
+    tagline: "Everything your customers need to know",
+    description: "Tell your story, show your work, and make it easy for customers to reach you — all from one simple business profile.",
+    price: "Free to start",
+    price_note: "your own subdomain included",
+    features: ["Business profile (services, hours, address)", "Image gallery", "WhatsApp integration", "Contact forms & lead capture", "Google Maps"],
+    highlight: true,
+  },
+  {
+    tier: "grow",
+    name: "Get found & grow",
+    tagline: "Turn your site into a growth engine",
+    description: "Get discovered on Google, create content with AI, and track your visitors — with the option to bring your own domain.",
+    price: "Free to start",
+    price_note: "your own subdomain included",
+    features: ["SEO ready", "AI content generation", "Analytics dashboard", "Custom domain support", "Secure managed hosting"],
+    highlight: false,
+  },
+]
+
+const PRICING = [
+  {
+    name: "Starter",
+    price: "₹9",
+    period: "/month",
+    tagline: "Get your business online",
+    features: ["1 website", "Free yourbusiness.site9.in subdomain", "Mobile responsive", "Business profile", "WhatsApp button", "Contact form"],
+    available: true,
+  },
+  {
+    name: "Business",
+    price: "₹99",
+    period: "/month",
+    tagline: "Stand out and get found",
+    features: ["Everything in Starter", "Image gallery", "Google Maps", "SEO ready", "AI content generation", "Analytics", "No Site9 badge"],
+    available: false,
+  },
+  {
+    name: "Pro",
+    price: "₹999",
+    period: "/month",
+    tagline: "Your own brand and domain",
+    features: ["Everything in Business", "Custom domain (yourbusiness.com)", "Multi-page website", "Premium templates", "Priority support"],
+    available: false,
+  },
 ]
 
 export default async function LandingPage() {
@@ -79,36 +131,7 @@ export default async function LandingPage() {
   }
 
   return (
-    <div className="min-h-screen">
-      {/* Nav */}
-      <header className="border-b border-border sticky top-0 z-50 bg-background/80 backdrop-blur">
-        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center" data-testid="home-logo">
-            <ThemeLogo />
-          </Link>
-          <nav className="hidden md:flex items-center gap-6">
-            {NAV_LINKS.map(link => (
-              <a key={link.href} href={link.href} className="text-sm text-muted-foreground hover:text-foreground transition-colors">{link.label}</a>
-            ))}
-          </nav>
-          <div className="flex items-center gap-3">
-            <ThemeToggle />
-            <a
-              href="https://github.com/vasmikrishna/site9"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-muted-foreground hover:text-foreground transition-colors"
-              data-testid="nav-github-link"
-              aria-label="GitHub repository"
-            >
-              <GitHubIcon className="h-5 w-5" />
-            </a>
-            <Button asChild variant="ghost" size="sm"><Link href="/login">Sign in</Link></Button>
-            <Button asChild variant="brand" size="sm"><Link href="/start">Get started</Link></Button>
-          </div>
-        </div>
-      </header>
-
+    <>
       {/* Hero */}
       <section className="max-w-6xl mx-auto px-6 pt-24 pb-20 text-center">
         <div className="flex items-center justify-center gap-3 mb-6">
@@ -139,18 +162,87 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      {/* Templates */}
-      <section id="templates" className="py-20">
+      {/* Services */}
+      <section id="services" className="bg-muted/40 py-20">
         <div className="max-w-6xl mx-auto px-6">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold">100+ ready-made templates</h2>
-            <p className="text-muted-foreground mt-2">Pick a template, customize it, and launch your site in minutes.</p>
+            <h2 className="text-3xl font-bold">Everything you need to get online</h2>
+            <p className="text-muted-foreground mt-2">Launch, showcase, and grow — all from one simple platform.</p>
           </div>
-          <TemplateCarousel />
-          <div className="text-center mt-10">
-            <Button asChild variant="outline" size="lg" data-testid="browse-all-templates">
-              <Link href="/templates">Browse all templates <ArrowRight className="h-4 w-4" /></Link>
-            </Button>
+          <div className="grid md:grid-cols-3 gap-6">
+            {SERVICES.map((service) => (
+              <Card key={service.tier} className={service.highlight ? "border-foreground" : ""}>
+                <CardContent className="p-6 space-y-5">
+                  {service.highlight && <Badge variant="brand" className="text-xs">Most loved</Badge>}
+                  <div>
+                    <h3 className="text-xl font-bold">{service.name}</h3>
+                    <p className="text-muted-foreground text-sm mt-1">{service.tagline}</p>
+                  </div>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{service.description}</p>
+                  <div className="space-y-2">
+                    {service.features.map((feat, i) => (
+                      <div key={i} className="flex items-center gap-2 text-sm">
+                        <Check className="h-3.5 w-3.5 text-green-500 flex-shrink-0" />
+                        {feat}
+                      </div>
+                    ))}
+                  </div>
+                  <div className="pt-2 border-t border-border">
+                    <p className="text-2xl font-bold mt-3">{service.price}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{service.price_note}</p>
+                    <Button asChild variant={service.highlight ? "brand" : "outline"} size="sm" className="w-full mt-4">
+                      <Link href="/start">Create your website <ArrowRight className="h-3 w-3" /></Link>
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing */}
+      <section id="pricing" className="py-20">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold">Simple, honest pricing</h2>
+            <p className="text-muted-foreground mt-2">Get online for just ₹9/month. No setup fees, cancel anytime.</p>
+          </div>
+          <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto items-start">
+            {PRICING.map((plan) => (
+              <Card key={plan.name} className={plan.available ? "border-foreground shadow-lg" : ""}>
+                <CardContent className="p-6 space-y-5">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-xl font-bold">{plan.name}</h3>
+                    {plan.available
+                      ? <Badge variant="brand" className="text-xs">Available now</Badge>
+                      : <Badge variant="outline" className="text-xs">Coming soon</Badge>}
+                  </div>
+                  <p className="text-muted-foreground text-sm">{plan.tagline}</p>
+                  <div>
+                    <span className="text-4xl font-bold">{plan.price}</span>
+                    <span className="text-muted-foreground text-sm">{plan.period}</span>
+                  </div>
+                  <div className="space-y-2">
+                    {plan.features.map((feat, i) => (
+                      <div key={i} className="flex items-center gap-2 text-sm">
+                        <Check className="h-3.5 w-3.5 text-green-500 flex-shrink-0" />
+                        {feat}
+                      </div>
+                    ))}
+                  </div>
+                  {plan.available ? (
+                    <Button asChild variant="brand" size="sm" className="w-full" data-testid={`plan-${plan.name.toLowerCase()}-cta`}>
+                      <Link href="/start">Create your website <ArrowRight className="h-3 w-3" /></Link>
+                    </Button>
+                  ) : (
+                    <Button variant="outline" size="sm" className="w-full" disabled data-testid={`plan-${plan.name.toLowerCase()}-cta`}>
+                      Coming soon
+                    </Button>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
           </div>
         </div>
       </section>
@@ -258,14 +350,11 @@ export default async function LandingPage() {
               </CardContent>
             </Card>
           </div>
-          <div className="flex items-center justify-center gap-4">
+          <div className="text-center">
             <Button asChild variant="outline" size="lg" data-testid="open-source-cta">
               <a href="https://github.com/vasmikrishna/site9" target="_blank" rel="noopener noreferrer">
                 <GitHubIcon className="h-4 w-4" /> View on GitHub <ArrowRight className="h-4 w-4" />
               </a>
-            </Button>
-            <Button asChild variant="ghost" size="lg">
-              <Link href="/open-source">Learn more <ArrowRight className="h-4 w-4" /></Link>
             </Button>
           </div>
         </div>
@@ -292,32 +381,6 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t border-border py-10">
-        <div className="max-w-6xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4">
-          <ThemeLogo className="h-9 w-auto" />
-          <p className="text-sm text-muted-foreground">One Website for Every Business. Open source on GitHub.</p>
-          <div className="flex items-center gap-4">
-            <a
-              href="https://github.com/vasmikrishna/site9"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-muted-foreground hover:text-foreground transition-colors"
-              data-testid="footer-github-link"
-              aria-label="GitHub repository"
-            >
-              <GitHubIcon className="h-4 w-4" />
-            </a>
-            <a
-              href="mailto:hello@site9.in"
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
-              hello@site9.in
-            </a>
-            <Link href="/login" className="text-sm text-muted-foreground hover:text-foreground">Sign in</Link>
-          </div>
-        </div>
-      </footer>
-    </div>
+    </>
   )
 }

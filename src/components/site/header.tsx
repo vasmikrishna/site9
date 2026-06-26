@@ -29,6 +29,7 @@ export function SiteHeader({ settings, auth }: { settings: SiteSettings; auth: H
     { href: "/blog", label: "Blog" },
     { href: "/about", label: "About" },
     { href: "/work", label: "Our Work" },
+    { href: "/open-source", label: "Open Source" },
     { href: "/contact", label: "Contact" },
   ]
 
