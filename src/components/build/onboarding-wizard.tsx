@@ -837,7 +837,15 @@ export function OnboardingWizard({ initialDetails, onComplete }: OnboardingWizar
                               <div className="absolute inset-0">
                                 <iframe
                                   title={site.name}
-                                  srcDoc={`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=1280"><style>body{margin:0;font-family:system-ui,sans-serif;overflow:hidden;}${site.css ?? ""}</style></head><body>${site.html}</body></html>`}
+                                  srcDoc={(() => {
+                                    const h = site.html
+                                    const c = site.css ?? ""
+                                    if (h.trimStart().startsWith("<!")) {
+                                      if (c && h.includes("</head>")) return h.replace("</head>", `<style>${c}</style></head>`)
+                                      return h
+                                    }
+                                    return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=1280"><style>body{margin:0;font-family:system-ui,sans-serif;overflow:hidden;}${c}</style></head><body>${h}</body></html>`
+                                  })()}
                                   sandbox=""
                                   className="pointer-events-none absolute top-0 left-0 border-0"
                                   style={{ width: "1280px", height: "960px", transform: "scale(0.35)", transformOrigin: "top left" }}
@@ -893,7 +901,17 @@ export function OnboardingWizard({ initialDetails, onComplete }: OnboardingWizar
                   {previewSite && (
                     <iframe
                       title="Reference site preview"
-                      srcDoc={previewSite.html.startsWith("<!") ? previewSite.html : `<!doctype html><html><head><meta charset="utf-8"><style>body{margin:0;font-family:system-ui,sans-serif;}${previewSite.css}</style></head><body>${previewSite.html}</body></html>`}
+                      srcDoc={(() => {
+                        const h = previewSite.html
+                        const c = previewSite.css ?? ""
+                        if (h.startsWith("<!")) {
+                          if (c && h.includes("</head>")) {
+                            return h.replace("</head>", `<style>${c}</style></head>`)
+                          }
+                          return h
+                        }
+                        return `<!doctype html><html><head><meta charset="utf-8"><style>body{margin:0;font-family:system-ui,sans-serif;}${c}</style></head><body>${h}</body></html>`
+                      })()}
                       sandbox=""
                       className="w-full flex-1 min-h-0 bg-white"
                       data-testid="wizard-ref-preview"
