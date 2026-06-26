@@ -223,6 +223,7 @@ export const config = {
     "/work/:path*",
     "/contact",
     "/book",
+    "/pricing",
     "/templates/:path*",
   ],
 }

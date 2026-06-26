@@ -9,6 +9,7 @@ import type { CustomPage } from "@/types"
 import { sanitizeHtml, sanitizeCss } from "@/lib/sanitize-html"
 import { FEATURES } from "@/lib/features"
 import { FormHandler } from "@/components/public/form-handler"
+import { TemplateCarousel } from "@/components/public/template-carousel"
 
 function GitHubIcon({ className }: { className?: string }) {
   return (
@@ -92,37 +93,10 @@ const SERVICES = [
   },
 ]
 
-const PRICING = [
-  {
-    name: "Starter",
-    price: "₹9",
-    period: "/month",
-    tagline: "Get your business online",
-    features: ["1 website", "Free yourbusiness.site9.in subdomain", "Mobile responsive", "Business profile", "WhatsApp button", "Contact form"],
-    available: true,
-  },
-  {
-    name: "Business",
-    price: "₹99",
-    period: "/month",
-    tagline: "Stand out and get found",
-    features: ["Everything in Starter", "Image gallery", "Google Maps", "SEO ready", "AI content generation", "Analytics", "No Site9 badge"],
-    available: false,
-  },
-  {
-    name: "Pro",
-    price: "₹999",
-    period: "/month",
-    tagline: "Your own brand and domain",
-    features: ["Everything in Business", "Custom domain (yourbusiness.com)", "Multi-page website", "Premium templates", "Priority support"],
-    available: false,
-  },
-]
-
 const NAV_LINKS = [
   { href: "#services", label: "Features" },
-  { href: "#pricing", label: "Pricing" },
-  { href: "/templates", label: "Templates" },
+  { href: "#templates", label: "Templates" },
+  { href: "/pricing", label: "Pricing" },
   { href: "#about", label: "About" },
   { href: "#contact", label: "Contact" },
 ]
@@ -238,48 +212,18 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      {/* Pricing */}
-      <section id="pricing" className="py-20">
+      {/* Templates */}
+      <section id="templates" className="py-20">
         <div className="max-w-6xl mx-auto px-6">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold">Simple, honest pricing</h2>
-            <p className="text-muted-foreground mt-2">Get online for just ₹9/month. No setup fees, cancel anytime.</p>
+            <h2 className="text-3xl font-bold">100+ ready-made templates</h2>
+            <p className="text-muted-foreground mt-2">Pick a template, customize it, and launch your site in minutes.</p>
           </div>
-          <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto items-start">
-            {PRICING.map((plan) => (
-              <Card key={plan.name} className={plan.available ? "border-foreground shadow-lg" : ""}>
-                <CardContent className="p-6 space-y-5">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-xl font-bold">{plan.name}</h3>
-                    {plan.available
-                      ? <Badge variant="brand" className="text-xs">Available now</Badge>
-                      : <Badge variant="outline" className="text-xs">Coming soon</Badge>}
-                  </div>
-                  <p className="text-muted-foreground text-sm">{plan.tagline}</p>
-                  <div>
-                    <span className="text-4xl font-bold">{plan.price}</span>
-                    <span className="text-muted-foreground text-sm">{plan.period}</span>
-                  </div>
-                  <div className="space-y-2">
-                    {plan.features.map((feat, i) => (
-                      <div key={i} className="flex items-center gap-2 text-sm">
-                        <Check className="h-3.5 w-3.5 text-green-500 flex-shrink-0" />
-                        {feat}
-                      </div>
-                    ))}
-                  </div>
-                  {plan.available ? (
-                    <Button asChild variant="brand" size="sm" className="w-full" data-testid={`plan-${plan.name.toLowerCase()}-cta`}>
-                      <Link href="/start">Create your website <ArrowRight className="h-3 w-3" /></Link>
-                    </Button>
-                  ) : (
-                    <Button variant="outline" size="sm" className="w-full" disabled data-testid={`plan-${plan.name.toLowerCase()}-cta`}>
-                      Coming soon
-                    </Button>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
+          <TemplateCarousel />
+          <div className="text-center mt-10">
+            <Button asChild variant="outline" size="lg" data-testid="browse-all-templates">
+              <Link href="/templates">Browse all templates <ArrowRight className="h-4 w-4" /></Link>
+            </Button>
           </div>
         </div>
       </section>
