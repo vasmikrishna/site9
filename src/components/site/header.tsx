@@ -24,12 +24,10 @@ export function SiteHeader({ settings, auth }: { settings: SiteSettings; auth: H
   const siteName = settings.site_name || "Site9"
 
   const navLinks = [
-    { href: "/services", label: "Services" },
     { href: "/templates", label: "Templates" },
-    { href: "/blog", label: "Blog" },
-    { href: "/about", label: "About" },
-    { href: "/work", label: "Our Work" },
+    { href: "/pricing", label: "Pricing" },
     { href: "/open-source", label: "Open Source" },
+    { href: "/about", label: "About" },
     { href: "/contact", label: "Contact" },
   ]
 
