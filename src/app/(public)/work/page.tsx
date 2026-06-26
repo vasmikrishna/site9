@@ -66,7 +66,7 @@ export default function WorkPage() {
 
                   {/* Metrics row */}
                   <div className="grid grid-cols-3 gap-2 mt-4 pt-4 border-t border-gray-100">
-                    {item.metrics.map((m, i) => (
+                    {(item.metrics ?? []).map((m, i) => (
                       <div key={i}>
                         <div className="text-sm font-bold" style={{ color: "var(--site-accent)" }}>{m.value}</div>
                         <div className="text-[10px] text-gray-500 uppercase tracking-wide">{m.label}</div>
