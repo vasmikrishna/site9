@@ -7,7 +7,10 @@ import { FEATURES } from "@/lib/features"
 import {
   LayoutDashboard, Mail, LogOut, ChevronRight,
   ChevronsUpDown, Check, LayoutTemplate, Globe,
-  Newspaper, Receipt, Menu, X
+  Newspaper, Receipt, Menu, X,
+  FolderKanban, Plus, ShoppingCart, CalendarClock,
+  UserCheck, Users, CreditCard, ClipboardList,
+  Package, Share2, Sliders,
 } from "lucide-react"
 
 interface NavItem {
