@@ -8,7 +8,7 @@
 
 🌐 **Live:** **[site9.in](https://site9.in/)** &nbsp;·&nbsp; ✨ Pick a template → customise → publish to `yourbusiness.site9.in`
 
-![Site9 home](demo-shots/site9-home.png)
+![Site9 home](public/screenshots/site9-home.png)
 
 </div>
 
