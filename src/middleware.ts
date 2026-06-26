@@ -46,6 +46,24 @@ async function getTenantByCustomDomain(domain: string): Promise<{ slug: string; 
   return null
 }
 
+const tenantSlugByIdCache = new Map<string, { slug: string; ts: number }>()
+
+/** Resolve a tenant's slug by id (for active-site → tenant header override). */
+async function getSlugForTenantId(id: string): Promise<string | null> {
+  const cached = tenantSlugByIdCache.get(id)
+  if (cached && Date.now() - cached.ts < CACHE_TTL) return cached.slug
+  const sb = getSupabase()
+  if (!sb) return null
+  try {
+    const { data } = await sb.from("tenants").select("slug").eq("id", id).maybeSingle()
+    if (data?.slug) {
+      tenantSlugByIdCache.set(id, { slug: data.slug, ts: Date.now() })
+      return data.slug
+    }
+  } catch { /* ignore */ }
+  return null
+}
+
 async function getSessionFromRequest(req: NextRequest) {
   try {
     const token = req.cookies.get("session")?.value
@@ -87,7 +105,19 @@ const MANAGEMENT_PREFIXES = ["/login", "/register", "/admin", "/dashboard", "/ac
 export async function middleware(req: NextRequest) {
   const path = req.nextUrl.pathname
   const session = await getSessionFromRequest(req)
-  const tenantSlug = await extractTenantSlug(req)
+  let tenantSlug = await extractTenantSlug(req)
+
+  // Owner/admin context runs on the apex but operates on the user's ACTIVE
+  // site. Override the tenant header so all tenant-scoped server code
+  // (getCurrentTenant) targets that site, not the apex's default tenant.
+  if (
+    session?.tenant_id &&
+    session.id !== "admin" &&
+    (path.startsWith("/admin") || path.startsWith("/api/admin") || path.startsWith("/api/billing"))
+  ) {
+    const activeSlug = await getSlugForTenantId(session.tenant_id)
+    if (activeSlug) tenantSlug = activeSlug
+  }
 
   // ── Tenant hosts are public-only: bounce auth/management to the apex ──────
   const cleanHost = (req.headers.get("host") ?? "").split(":")[0].toLowerCase()
