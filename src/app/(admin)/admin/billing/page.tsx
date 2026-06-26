@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic"
 import { getSession } from "@/lib/session"
 import { getSubscriptionStatus } from "@/lib/subscription"
 import { BillingClient } from "./billing-client"

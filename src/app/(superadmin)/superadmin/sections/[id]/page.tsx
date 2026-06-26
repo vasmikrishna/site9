@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic"
 import { createClient } from "@/lib/supabase/server"
 import { notFound } from "next/navigation"
 import { SectionForm } from "../section-form"

@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic"
 import { notFound } from "next/navigation"
 import type { CustomPage } from "@/types"
 import { PageEditor } from "./page-editor"
