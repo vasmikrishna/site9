@@ -4,8 +4,8 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { ArrowRight, Check, Mail, GitPullRequest, BookOpen, Code2 } from "lucide-react"
-import { MOCK_PORTFOLIO, MOCK_CUSTOM_PAGES } from "@/lib/mock-data"
-import type { CustomPage, PortfolioItem } from "@/types"
+import { MOCK_CUSTOM_PAGES } from "@/lib/mock-data"
+import type { CustomPage } from "@/types"
 import { sanitizeHtml, sanitizeCss } from "@/lib/sanitize-html"
 import { FEATURES } from "@/lib/features"
 import { FormHandler } from "@/components/public/form-handler"
@@ -119,27 +119,10 @@ const PRICING = [
   },
 ]
 
-const getPortfolio = unstable_cache(
-  async () => {
-    try {
-      if (!process.env.NEXT_PUBLIC_SUPABASE_URL?.startsWith("http")) return MOCK_PORTFOLIO
-      const { createClient } = await import("@/lib/supabase/server")
-      const supabase = createClient()
-      const { data } = await supabase.from("portfolio_items").select("*").eq("visible", true).order("sort_order").limit(6)
-      return data?.length ? data : MOCK_PORTFOLIO
-    } catch {
-      return MOCK_PORTFOLIO
-    }
-  },
-  ["landing-portfolio"],
-  { tags: ["portfolio"], revalidate: 300 }
-)
-
 const NAV_LINKS = [
   { href: "#services", label: "Features" },
   { href: "#pricing", label: "Pricing" },
   { href: "/templates", label: "Templates" },
-  { href: "#portfolio", label: "Examples" },
   { href: "#about", label: "About" },
   { href: "#contact", label: "Contact" },
 ]
@@ -154,8 +137,6 @@ export default async function LandingPage() {
       </FormHandler>
     )
   }
-
-  const portfolio = await getPortfolio()
 
   return (
     <div className="min-h-screen">
@@ -205,7 +186,7 @@ export default async function LandingPage() {
             <Link href="/start">Create your website <ArrowRight className="h-4 w-4" /></Link>
           </Button>
           <Button asChild variant="outline" size="lg">
-            <a href="#portfolio">See examples</a>
+            <Link href="/templates">Browse templates</Link>
           </Button>
         </div>
 
@@ -302,45 +283,6 @@ export default async function LandingPage() {
           </div>
         </div>
       </section>
-
-      {/* Portfolio */}
-      {portfolio.length > 0 && (
-        <section id="portfolio" className="py-20">
-          <div className="max-w-6xl mx-auto px-6">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold">Made with Site9</h2>
-              <p className="text-muted-foreground mt-2">Real businesses already online — like cafe.site9.in, salon.site9.in, and photographer.site9.in</p>
-            </div>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {portfolio.map((item: PortfolioItem) => (
-                <Card key={item.id} className="overflow-hidden group hover:border-foreground/30 transition-colors">
-                  <div className="aspect-video bg-muted overflow-hidden">
-                    <img src={item.image_url} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                  </div>
-                  <CardContent className="p-4">
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <p className="font-semibold">{item.title}</p>
-                        {item.description && <p className="text-sm text-muted-foreground mt-0.5 line-clamp-2">{item.description}</p>}
-                      </div>
-                      {item.live_url && item.live_url !== "#" && (
-                        <a href={item.live_url} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground flex-shrink-0">
-                          <ArrowRight className="h-4 w-4 rotate-[-45deg]" />
-                        </a>
-                      )}
-                    </div>
-                    {item.tags && item.tags.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5 mt-3">
-                        {item.tags.map((tag) => <Badge key={tag} variant="outline" className="text-xs">{tag}</Badge>)}
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
 
       {/* About */}
       <section id="about" className="bg-muted/40 py-20">
