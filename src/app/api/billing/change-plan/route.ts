@@ -10,6 +10,8 @@ import {
 } from "@/lib/razorpay"
 import { getSubscriptionByTenant, upsertSubscription } from "@/lib/subscription"
 
+export const dynamic = "force-dynamic"
+
 const bodySchema = z.object({ plan: z.enum(["monthly", "annual"]) })
 
 /**

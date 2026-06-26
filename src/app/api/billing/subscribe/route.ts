@@ -4,6 +4,8 @@ import { getOwnerContext } from "@/lib/build-owner"
 import { getPlan, getRazorpay, getRazorpayKeyId, isRazorpayConfigured } from "@/lib/razorpay"
 import { upsertSubscription } from "@/lib/subscription"
 
+export const dynamic = "force-dynamic"
+
 const bodySchema = z.object({ plan: z.enum(["monthly", "annual"]) })
 
 /**

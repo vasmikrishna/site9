@@ -2,6 +2,8 @@ import { NextResponse } from "next/server"
 import { getOwnerContext } from "@/lib/build-owner"
 import { getSubscriptionStatus } from "@/lib/subscription"
 
+export const dynamic = "force-dynamic"
+
 /**
  * GET /api/billing/status
  * Current tenant's subscription state. The builder polls this after checkout

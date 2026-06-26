@@ -3,6 +3,8 @@ import { getOwnerContext } from "@/lib/build-owner"
 import { cancelRazorpaySubscription, isRazorpayConfigured } from "@/lib/razorpay"
 import { getSubscriptionByTenant, upsertSubscription } from "@/lib/subscription"
 
+export const dynamic = "force-dynamic"
+
 /**
  * POST /api/billing/cancel
  * Cancel the tenant's subscription at the end of the current billing cycle.

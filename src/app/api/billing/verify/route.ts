@@ -4,6 +4,8 @@ import { getOwnerContext } from "@/lib/build-owner"
 import { verifyCheckoutSignature } from "@/lib/razorpay"
 import { upsertSubscription } from "@/lib/subscription"
 
+export const dynamic = "force-dynamic"
+
 const bodySchema = z.object({
   razorpay_payment_id: z.string().min(1),
   razorpay_subscription_id: z.string().min(1),

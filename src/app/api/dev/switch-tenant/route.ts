@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server"
 
+export const dynamic = "force-dynamic"
+
 // Dev-only endpoint — sets a cookie to override the active tenant slug on localhost
 export async function POST(req: Request) {
   if (process.env.NODE_ENV === "production") {

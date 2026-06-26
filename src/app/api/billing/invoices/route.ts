@@ -2,6 +2,8 @@ import { NextResponse } from "next/server"
 import { getOwnerContext } from "@/lib/build-owner"
 import { listInvoices } from "@/lib/subscription"
 
+export const dynamic = "force-dynamic"
+
 /**
  * GET /api/billing/invoices
  * List all invoices for the signed-in tenant's subscription.
