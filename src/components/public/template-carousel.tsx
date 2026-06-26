@@ -2,17 +2,14 @@
 
 import { useState, useEffect, useCallback, useRef } from "react"
 import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { ChevronLeft, ChevronRight, ArrowRight } from "lucide-react"
+import { ChevronLeft, ChevronRight } from "lucide-react"
 import type { GalleryTemplateMeta } from "@/types"
 
 export function TemplateCarousel() {
   const [templates, setTemplates] = useState<GalleryTemplateMeta[]>([])
   const [loading, setLoading] = useState(true)
-  const [scrollIndex, setScrollIndex] = useState(0)
-  const trackRef = useRef<HTMLDivElement>(null)
+  const [active, setActive] = useState(0)
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   useEffect(() => {
@@ -32,119 +29,132 @@ export function TemplateCarousel() {
     load()
   }, [])
 
-  const visibleCount = typeof window !== "undefined" && window.innerWidth < 768 ? 1 : 3
-  const maxIndex = Math.max(0, templates.length - visibleCount)
-
-  const scrollTo = useCallback((index: number) => {
-    const clamped = Math.max(0, Math.min(index, maxIndex))
-    setScrollIndex(clamped)
-    if (trackRef.current) {
-      const card = trackRef.current.children[0] as HTMLElement | undefined
-      if (card) {
-        const gap = 24
-        const cardWidth = card.offsetWidth + gap
-        trackRef.current.scrollTo({ left: clamped * cardWidth, behavior: "smooth" })
-      }
-    }
-  }, [maxIndex])
+  const count = templates.length
 
   const next = useCallback(() => {
-    setScrollIndex((prev) => {
-      const nextIdx = prev >= maxIndex ? 0 : prev + 1
-      setTimeout(() => scrollTo(nextIdx), 0)
-      return nextIdx
-    })
-  }, [maxIndex, scrollTo])
+    setActive((prev) => (prev + 1) % count)
+  }, [count])
 
   const prev = useCallback(() => {
-    scrollTo(scrollIndex - 1)
-  }, [scrollIndex, scrollTo])
+    setActive((prev) => (prev - 1 + count) % count)
+  }, [count])
 
-  useEffect(() => {
-    if (templates.length <= visibleCount) return
-    intervalRef.current = setInterval(next, 4000)
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current)
-    }
-  }, [templates.length, visibleCount, next])
-
-  const resetAutoScroll = useCallback(() => {
+  const startAutoPlay = useCallback(() => {
     if (intervalRef.current) clearInterval(intervalRef.current)
     intervalRef.current = setInterval(next, 4000)
   }, [next])
 
+  useEffect(() => {
+    if (count <= 1) return
+    startAutoPlay()
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current)
+    }
+  }, [count, startAutoPlay])
+
+  const handlePrev = () => { prev(); startAutoPlay() }
+  const handleNext = () => { next(); startAutoPlay() }
+  const handleDot = (i: number) => { setActive(i); startAutoPlay() }
+
   if (loading) {
     return (
-      <div className="flex gap-6 overflow-hidden">
-        {[0, 1, 2].map((i) => (
-          <div key={i} className="min-w-[calc(33.333%-16px)] aspect-[4/3] bg-muted rounded-lg animate-pulse" />
+      <div className="flex items-center justify-center gap-4 h-80">
+        {[-1, 0, 1].map((i) => (
+          <div
+            key={i}
+            className={`rounded-xl bg-muted animate-pulse flex-shrink-0 ${
+              i === 0 ? "w-80 h-72" : "w-56 h-56 opacity-50 hidden md:block"
+            }`}
+          />
         ))}
       </div>
     )
   }
 
-  if (templates.length === 0) return null
+  if (count === 0) return null
+
+  const getOffset = (index: number) => {
+    let diff = index - active
+    if (diff > count / 2) diff -= count
+    if (diff < -count / 2) diff += count
+    return diff
+  }
 
   return (
-    <div className="relative group">
-      <div
-        ref={trackRef}
-        className="flex gap-6 overflow-hidden scroll-smooth"
-      >
-        {templates.map((template) => (
-          <Card
-            key={template.id}
-            className="min-w-[calc(100%-0px)] md:min-w-[calc(33.333%-16px)] flex-shrink-0 overflow-hidden hover:border-foreground/30 transition-colors"
-          >
-            <div className="aspect-[4/3] bg-muted overflow-hidden">
-              {template.preview_url ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={template.preview_url}
-                  alt={template.name}
-                  className="w-full h-full object-cover object-top"
-                  loading="lazy"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-muted-foreground text-sm">
-                  No preview
+    <div className="relative">
+      <div className="relative h-[420px] md:h-[400px] flex items-center justify-center overflow-hidden">
+        {templates.map((template, i) => {
+          const offset = getOffset(i)
+          const isCenter = offset === 0
+          const isVisible = Math.abs(offset) <= 2
+
+          if (!isVisible) return null
+
+          const translateX = offset * 320
+          const scale = isCenter ? 1 : 0.82
+          const zIndex = isCenter ? 30 : 20 - Math.abs(offset)
+          const opacity = isCenter ? 1 : Math.abs(offset) === 1 ? 0.6 : 0.3
+
+          return (
+            <Link
+              key={template.id}
+              href={`/templates/${template.slug}`}
+              className="absolute transition-all duration-500 ease-out cursor-pointer"
+              style={{
+                transform: `translateX(${translateX}px) scale(${scale})`,
+                zIndex,
+                opacity,
+              }}
+              data-testid={`carousel-card-${i}`}
+            >
+              <div
+                className={`w-72 md:w-80 rounded-xl overflow-hidden border transition-all duration-500 ${
+                  isCenter
+                    ? "border-foreground/30 shadow-2xl shadow-foreground/5"
+                    : "border-border"
+                }`}
+              >
+                <div className="aspect-[4/3] bg-muted overflow-hidden">
+                  {template.preview_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={template.preview_url}
+                      alt={template.name}
+                      className="w-full h-full object-cover object-top"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-muted-foreground text-sm bg-muted">
+                      Preview
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-            <CardContent className="p-4 space-y-3">
-              <div className="flex items-start justify-between gap-2">
-                <div>
-                  <p className="font-semibold">{template.name}</p>
-                  <p className="text-sm text-muted-foreground mt-0.5 line-clamp-1">{template.description}</p>
+                <div className="p-4 bg-background">
+                  <p className="font-semibold text-sm">{template.name}</p>
+                  <div className="flex items-center gap-2 mt-2">
+                    <Badge variant="outline" className="text-xs capitalize">{template.style}</Badge>
+                    <Badge variant="outline" className="text-xs capitalize">{template.category}</Badge>
+                  </div>
                 </div>
               </div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <Badge variant="outline" className="text-xs capitalize">{template.style}</Badge>
-                <Badge variant="outline" className="text-xs capitalize">{template.category}</Badge>
-              </div>
-              <Button asChild variant="outline" size="sm" className="w-full" data-testid={`template-${template.slug}-cta`}>
-                <Link href={`/templates/${template.slug}`}>
-                  Use this template <ArrowRight className="h-3 w-3" />
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
-        ))}
+            </Link>
+          )
+        })}
       </div>
 
-      {templates.length > visibleCount && (
+      {count > 1 && (
         <>
           <button
-            onClick={() => { prev(); resetAutoScroll() }}
-            className="absolute left-0 top-1/3 -translate-x-4 bg-background border border-border rounded-full p-2 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+            onClick={handlePrev}
+            className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 z-40 bg-background/80 backdrop-blur border border-border rounded-full p-2.5 hover:bg-background transition-colors"
             aria-label="Previous template"
             data-testid="carousel-prev"
           >
             <ChevronLeft className="h-5 w-5" />
           </button>
           <button
-            onClick={() => { next(); resetAutoScroll() }}
-            className="absolute right-0 top-1/3 translate-x-4 bg-background border border-border rounded-full p-2 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+            onClick={handleNext}
+            className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 z-40 bg-background/80 backdrop-blur border border-border rounded-full p-2.5 hover:bg-background transition-colors"
             aria-label="Next template"
             data-testid="carousel-next"
           >
@@ -154,11 +164,13 @@ export function TemplateCarousel() {
       )}
 
       <div className="flex items-center justify-center gap-1.5 mt-6">
-        {templates.slice(0, maxIndex + 1).map((_, i) => (
+        {templates.map((_, i) => (
           <button
             key={i}
-            onClick={() => { scrollTo(i); resetAutoScroll() }}
-            className={`h-1.5 rounded-full transition-all ${i === scrollIndex ? "w-6 bg-foreground" : "w-1.5 bg-muted-foreground/30"}`}
+            onClick={() => handleDot(i)}
+            className={`h-1.5 rounded-full transition-all duration-300 ${
+              i === active ? "w-6 bg-foreground" : "w-1.5 bg-muted-foreground/30"
+            }`}
             aria-label={`Go to template ${i + 1}`}
             data-testid={`carousel-dot-${i}`}
           />
