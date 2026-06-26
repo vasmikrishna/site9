@@ -20,7 +20,6 @@ function GitHubIcon({ className }: { className?: string }) {
 }
 
 const NAV_LINKS = [
-  { href: "/#services", label: "Features" },
   { href: "/templates", label: "Templates" },
   { href: "/pricing", label: "Pricing" },
   { href: "/open-source", label: "Open Source" },

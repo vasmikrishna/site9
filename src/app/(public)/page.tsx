@@ -60,41 +60,7 @@ async function getHomepageOverride(): Promise<CustomPage | null> {
   }
 }
 
-const SERVICES = [
-  {
-    tier: "launch",
-    name: "Launch in minutes",
-    tagline: "Go live before lunch",
-    description: "Enter your business info and launch a professional website in minutes — no coding, no design skills, no complicated setup.",
-    price: "Free to start",
-    price_note: "your own subdomain included",
-    features: ["Instant website creation", "Free yourbusiness.site9.in subdomain", "Mobile responsive", "No coding or design skills"],
-    highlight: false,
-  },
-  {
-    tier: "showcase",
-    name: "Show off your business",
-    tagline: "Everything your customers need to know",
-    description: "Tell your story, show your work, and make it easy for customers to reach you — all from one simple business profile.",
-    price: "Free to start",
-    price_note: "your own subdomain included",
-    features: ["Business profile (services, hours, address)", "Image gallery", "WhatsApp integration", "Contact forms & lead capture", "Google Maps"],
-    highlight: true,
-  },
-  {
-    tier: "grow",
-    name: "Get found & grow",
-    tagline: "Turn your site into a growth engine",
-    description: "Get discovered on Google, create content with AI, and track your visitors — with the option to bring your own domain.",
-    price: "Free to start",
-    price_note: "your own subdomain included",
-    features: ["SEO ready", "AI content generation", "Analytics dashboard", "Custom domain support", "Secure managed hosting"],
-    highlight: false,
-  },
-]
-
 const NAV_LINKS = [
-  { href: "#services", label: "Features" },
   { href: "/templates", label: "Templates" },
   { href: "/pricing", label: "Pricing" },
   { href: "/open-source", label: "Open Source" },
@@ -171,45 +137,6 @@ export default async function LandingPage() {
           <span className="flex items-center gap-2"><Check className="h-4 w-4 text-green-500" /> Free yourbusiness.site9.in subdomain</span>
           <span className="flex items-center gap-2"><Check className="h-4 w-4 text-green-500" /> No coding needed</span>
           <span className="flex items-center gap-2"><Check className="h-4 w-4 text-green-500" /> Works on any device</span>
-        </div>
-      </section>
-
-      {/* Services */}
-      <section id="services" className="bg-muted/40 py-20">
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold">Everything you need to get online</h2>
-            <p className="text-muted-foreground mt-2">Launch, showcase, and grow — all from one simple platform.</p>
-          </div>
-          <div className="grid md:grid-cols-3 gap-6">
-            {SERVICES.map((service) => (
-              <Card key={service.tier} className={service.highlight ? "border-foreground" : ""}>
-                <CardContent className="p-6 space-y-5">
-                  {service.highlight && <Badge variant="brand" className="text-xs">Most loved</Badge>}
-                  <div>
-                    <h3 className="text-xl font-bold">{service.name}</h3>
-                    <p className="text-muted-foreground text-sm mt-1">{service.tagline}</p>
-                  </div>
-                  <p className="text-sm text-muted-foreground leading-relaxed">{service.description}</p>
-                  <div className="space-y-2">
-                    {service.features.map((feat, i) => (
-                      <div key={i} className="flex items-center gap-2 text-sm">
-                        <Check className="h-3.5 w-3.5 text-green-500 flex-shrink-0" />
-                        {feat}
-                      </div>
-                    ))}
-                  </div>
-                  <div className="pt-2 border-t border-border">
-                    <p className="text-2xl font-bold mt-3">{service.price}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">{service.price_note}</p>
-                    <Button asChild variant={service.highlight ? "brand" : "outline"} size="sm" className="w-full mt-4">
-                      <Link href="/start">Create your website <ArrowRight className="h-3 w-3" /></Link>
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
         </div>
       </section>
 
