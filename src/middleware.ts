@@ -224,6 +224,7 @@ export const config = {
     "/contact",
     "/book",
     "/pricing",
+    "/open-source",
     "/templates/:path*",
   ],
 }

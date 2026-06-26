@@ -331,11 +331,14 @@ export default async function LandingPage() {
               </CardContent>
             </Card>
           </div>
-          <div className="text-center">
+          <div className="flex items-center justify-center gap-4">
             <Button asChild variant="outline" size="lg" data-testid="open-source-cta">
               <a href="https://github.com/vasmikrishna/site9" target="_blank" rel="noopener noreferrer">
                 <GitHubIcon className="h-4 w-4" /> View on GitHub <ArrowRight className="h-4 w-4" />
               </a>
+            </Button>
+            <Button asChild variant="ghost" size="lg">
+              <Link href="/open-source">Learn more <ArrowRight className="h-4 w-4" /></Link>
             </Button>
           </div>
         </div>
