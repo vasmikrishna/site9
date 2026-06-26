@@ -1,4 +1,3 @@
-export const dynamic = "force-dynamic"
 "use client"
 import { useState, useEffect, useCallback } from "react"
 import { Mail, Phone, Trash2, Reply, Archive, Inbox, Clock, Check, Search, RefreshCw } from "lucide-react"
