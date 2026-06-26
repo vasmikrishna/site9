@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { createSession } from "@/lib/session"
-import { getTenantSlug, getTenantBySlug } from "@/lib/tenant"
+import { getSitesForEmail } from "@/lib/sites"
 export const dynamic = "force-dynamic"
 
 export async function GET(req: Request) {
@@ -37,19 +37,16 @@ export async function GET(req: Request) {
     const googleUser = await userRes.json()
     if (!googleUser.email) throw new Error("No email returned from Google")
 
-    // Resolve current tenant from subdomain
-    const slug = await getTenantSlug()
-    const tenant = await getTenantBySlug(slug)
-    if (!tenant) return NextResponse.redirect(`${origin}/login?error=tenant_not_found`)
-
+    // Super-admin → platform console.
     const adminEmail = process.env.ADMIN_EMAIL
     if (googleUser.email === adminEmail) {
-      await createSession({ id: "admin", email: googleUser.email, name: googleUser.name ?? "Admin", role: "admin", tenant_id: tenant.id })
-      return NextResponse.redirect(`${origin}/admin/dashboard`)
+      await createSession({ id: "admin", email: googleUser.email, name: googleUser.name ?? "Admin", role: "admin", tenant_id: "" })
+      return NextResponse.redirect(`${origin}/superadmin`)
     }
 
+    // Regular user — global account (one per email), owns many sites.
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
     let userId = googleUser.id ?? googleUser.sub
     let userName = googleUser.name ?? googleUser.email
 
@@ -57,20 +54,32 @@ export async function GET(req: Request) {
       try {
         const { createClient } = await import("@supabase/supabase-js")
         const supabase = createClient(supabaseUrl, supabaseKey)
-        const { data: user } = await supabase
-          .from("users")
-          .upsert(
-            { email: googleUser.email, name: googleUser.name ?? googleUser.email, role: "client", tenant_id: tenant.id },
-            { onConflict: "email,tenant_id" }
-          )
-          .select("id, name, role, tenant_id")
-          .single()
-        if (user) { userId = user.id; userName = user.name }
-      } catch {}
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: existing } = await (supabase as any)
+          .from("users").select("id, name").ilike("email", googleUser.email).maybeSingle()
+        if (existing) {
+          userId = existing.id
+          userName = existing.name ?? userName
+        } else {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const { data: created } = await (supabase as any)
+            .from("users")
+            .insert({ email: googleUser.email, name: userName, role: "admin", tenant_id: null })
+            .select("id, name").single()
+          if (created) { userId = created.id; userName = created.name }
+        }
+      } catch { /* fall through with Google id */ }
     }
 
-    await createSession({ id: userId, email: googleUser.email, name: userName, role: "client", tenant_id: tenant.id })
-    return NextResponse.redirect(`${origin}/client/dashboard`)
+    const sites = await getSitesForEmail(googleUser.email)
+    await createSession({
+      id: userId,
+      email: googleUser.email,
+      name: userName,
+      role: "admin",
+      tenant_id: sites[0]?.id ?? "",
+    })
+    return NextResponse.redirect(`${origin}/dashboard`)
   } catch (err) {
     console.error("[google/callback]", err)
     return NextResponse.redirect(`${origin}/login?error=google_failed`)

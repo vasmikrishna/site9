@@ -9,7 +9,6 @@ if (!process.env.SESSION_SECRET) {
 const SECRET = new TextEncoder().encode(process.env.SESSION_SECRET)
 const BASE_DOMAIN = process.env.NEXT_PUBLIC_BASE_DOMAIN ?? "site9.in"
 
-const tenantCache = new Map<string, { id: string; ts: number }>()
 const domainCache = new Map<string, { slug: string; id: string; ts: number } | null>()
 const CACHE_TTL = 60_000
 
@@ -18,23 +17,6 @@ function getSupabase() {
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   if (!url || !key) return null
   return createClient(url, key)
-}
-
-async function getTenantIdForSlug(slug: string): Promise<string | null> {
-  const cached = tenantCache.get(slug)
-  if (cached && Date.now() - cached.ts < CACHE_TTL) return cached.id
-
-  const sb = getSupabase()
-  if (!sb) return null
-
-  try {
-    const { data } = await sb.from("tenants").select("id").eq("slug", slug).eq("status", "active").maybeSingle()
-    if (data?.id) {
-      tenantCache.set(slug, { id: data.id, ts: Date.now() })
-      return data.id
-    }
-  } catch { /* ignore */ }
-  return null
 }
 
 async function getTenantByCustomDomain(domain: string): Promise<{ slug: string; id: string } | null> {
@@ -98,10 +80,27 @@ async function extractTenantSlug(req: NextRequest): Promise<string> {
   return process.env.TENANT_SLUG ?? "site9"
 }
 
+// Auth/management routes that only ever live on the apex (site9.in). Tenant
+// hosts (subdomains + custom domains) are public-only.
+const MANAGEMENT_PREFIXES = ["/login", "/register", "/admin", "/dashboard", "/account", "/build", "/start", "/superadmin"]
+
 export async function middleware(req: NextRequest) {
   const path = req.nextUrl.pathname
   const session = await getSessionFromRequest(req)
   const tenantSlug = await extractTenantSlug(req)
+
+  // ── Tenant hosts are public-only: bounce auth/management to the apex ──────
+  const cleanHost = (req.headers.get("host") ?? "").split(":")[0].toLowerCase()
+  const isTenantHost =
+    (cleanHost.endsWith(`.${BASE_DOMAIN}`) && cleanHost !== `www.${BASE_DOMAIN}`) ||
+    (!cleanHost.endsWith(BASE_DOMAIN) &&
+      cleanHost !== "localhost" &&
+      cleanHost !== "127.0.0.1" &&
+      !cleanHost.endsWith(".localhost"))
+  const isManagementPath = MANAGEMENT_PREFIXES.some((p) => path === p || path.startsWith(`${p}/`))
+  if (isTenantHost && isManagementPath) {
+    return NextResponse.redirect(new URL(`https://${BASE_DOMAIN}${path}${req.nextUrl.search}`))
+  }
 
   const res = NextResponse.next({
     request: {
@@ -127,34 +126,18 @@ export async function middleware(req: NextRequest) {
     }
   }
 
-  const isProtected = path.startsWith("/admin")
-
-  if (session && isProtected && session.tenant_id && session.id !== "admin") {
-    const currentTenantId = await getTenantIdForSlug(tenantSlug)
-    if (currentTenantId && session.tenant_id !== currentTenantId) {
-      const redirect = NextResponse.redirect(new URL("/login", req.url))
-      const cookieDomain =
-        process.env.NODE_ENV === "production" ? `.${BASE_DOMAIN}` : undefined
-      redirect.cookies.set("session", "", {
-        httpOnly: true,
-        maxAge: 0,
-        path: "/",
-        ...(cookieDomain ? { domain: cookieDomain } : {}),
-      })
-      return redirect
-    }
-  }
+  const isProtected =
+    path.startsWith("/admin") ||
+    path.startsWith("/dashboard") ||
+    path.startsWith("/account") ||
+    path.startsWith("/build")
 
   if (!session && isProtected) {
     return NextResponse.redirect(new URL("/login", req.url))
   }
 
   if (session && (path === "/login" || path === "/register")) {
-    return NextResponse.redirect(new URL("/admin/dashboard", req.url))
-  }
-
-  if (session && path.startsWith("/admin") && session.role !== "admin") {
-    return NextResponse.redirect(new URL("/admin/dashboard", req.url))
+    return NextResponse.redirect(new URL("/dashboard", req.url))
   }
 
   return res
@@ -165,6 +148,10 @@ export const config = {
     "/",
     "/admin/:path*",
     "/superadmin/:path*",
+    "/dashboard/:path*",
+    "/account/:path*",
+    "/build/:path*",
+    "/start",
     "/login",
     "/register",
     "/api/:path*",

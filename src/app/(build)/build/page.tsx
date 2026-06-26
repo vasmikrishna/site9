@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation"
 import { getOwnerContext } from "@/lib/build-owner"
 import { subdomainHost, type BusinessDetails } from "@/lib/onboarding"
 import { getSubscriptionStatus } from "@/lib/subscription"
@@ -6,7 +7,8 @@ import { BuildPageClient } from "./build-client"
 
 export default async function BuildPage({ searchParams }: { searchParams: Promise<{ template?: string }> }) {
   const owner = await getOwnerContext()
-  if (!owner) return null
+  // No active site (or super-admin) → choose/create one on the dashboard.
+  if (!owner) redirect("/dashboard")
 
   const sp = await searchParams
   const saved = ((owner.tenant.settings as any)?.business ?? {}) as BusinessDetails

@@ -1,8 +1,13 @@
 import { NextResponse } from "next/server"
 import { createSession } from "@/lib/session"
-import { getTenantSlug, getTenantBySlug } from "@/lib/tenant"
 export const dynamic = "force-dynamic"
 
+/**
+ * POST /api/auth/register
+ *
+ * Creates a global account (one per email). The account owns no sites yet —
+ * the user creates their first site from the dashboard. No tenant binding.
+ */
 export async function POST(req: Request) {
   const { name, email, password } = await req.json()
 
@@ -15,20 +20,21 @@ export async function POST(req: Request) {
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-
   if (!supabaseUrl?.startsWith("http") || !supabaseKey) {
     return NextResponse.json({ error: "Database not configured" }, { status: 503 })
   }
-
-  const slug = await getTenantSlug()
-  const tenant = await getTenantBySlug(slug)
-  if (!tenant) return NextResponse.json({ error: "Tenant not found" }, { status: 404 })
 
   try {
     const { createClient } = await import("@supabase/supabase-js")
     const supabase = createClient(supabaseUrl, supabaseKey)
 
-    const { data: existing } = await supabase.from("users").select("id").eq("email", email).eq("tenant_id", tenant.id).single()
+    // Global uniqueness: one account per email (case-insensitive).
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: existing } = await (supabase as any)
+      .from("users")
+      .select("id")
+      .ilike("email", email)
+      .maybeSingle()
     if (existing) {
       return NextResponse.json({ error: "An account with this email already exists" }, { status: 409 })
     }
@@ -36,10 +42,11 @@ export async function POST(req: Request) {
     const bcrypt = await import("bcryptjs")
     const password_hash = await bcrypt.hash(password, 12)
 
-    const { data: user, error } = await supabase
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: user, error } = await (supabase as any)
       .from("users")
-      .insert({ name, email, password_hash, role: "client", tenant_id: tenant.id })
-      .select("id, email, name, role, tenant_id")
+      .insert({ name, email, password_hash, role: "admin", tenant_id: null })
+      .select("id, email, name")
       .single()
 
     if (error || !user) {
@@ -50,8 +57,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: msg }, { status: 500 })
     }
 
-    await createSession({ id: user.id, email: user.email, name: user.name, role: "client", tenant_id: tenant.id })
-    return NextResponse.json({ role: "client" })
+    await createSession({ id: user.id, email: user.email, name: user.name, role: "admin", tenant_id: "" })
+    return NextResponse.json({ ok: true })
   } catch {
     return NextResponse.json({ error: "Failed to create account" }, { status: 500 })
   }

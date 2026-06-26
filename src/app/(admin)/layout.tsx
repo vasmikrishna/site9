@@ -7,7 +7,9 @@ import { getSubscriptionStatus } from "@/lib/subscription"
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const session = await getSession()
   if (!session) redirect("/login")
-  if (session.role !== "admin") redirect("/client/dashboard")
+  if (session.role !== "admin") redirect("/dashboard")
+  // No active site selected yet → send them to pick/create one.
+  if (session.id !== "admin" && !session.tenant_id) redirect("/dashboard")
 
   // Super-admin (env login, id="admin") has no tenant — skip the upsell for them.
   const subscribed =
