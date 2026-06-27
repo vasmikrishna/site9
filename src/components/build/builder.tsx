@@ -9,7 +9,7 @@ import {
   ExternalLink, Sparkles, Link2, Trash2, Monitor, Tablet, Smartphone,
   LayoutGrid, LayoutTemplate, ChevronUp, ChevronDown, Search, FileText,
   Undo2, Redo2, AlignLeft, AlignCenter, AlignRight, Minus, Plus,
-  Files, Home, Trash, Link as LinkIcon,
+  Files, Home, Trash, Link as LinkIcon, X,
 } from "lucide-react"
 import { EDITOR_OVERLAY_CSS, EDITOR_SCRIPT } from "@/lib/editor-inject"
 import { GenerationLoader } from "@/components/build/generation-loader"
@@ -412,9 +412,9 @@ export function Builder({
     <div className="flex h-screen flex-col bg-background">
       {/* Top bar */}
       <header className="flex items-center justify-between border-b border-border px-4 py-2 shrink-0">
-        <div className="flex items-center gap-3">
-          <Sparkles className="h-5 w-5 text-brand" />
-          <div>
+        <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+          <Sparkles className="h-5 w-5 shrink-0 text-brand" />
+          <div className="hidden sm:block">
             <p className="text-sm font-semibold">Site9 Builder</p>
             <p className="text-xs text-muted-foreground">{ownerName} · {host}</p>
           </div>
@@ -428,9 +428,9 @@ export function Builder({
                 data-testid="pages-menu-toggle"
                 title="Pages"
               >
-                {activePage.is_homepage ? <Home className="h-3.5 w-3.5" /> : <Files className="h-3.5 w-3.5" />}
-                <span className="max-w-[10rem] truncate">{activePage.title}</span>
-                <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+                {activePage.is_homepage ? <Home className="h-3.5 w-3.5 shrink-0" /> : <Files className="h-3.5 w-3.5 shrink-0" />}
+                <span className="max-w-[4.5rem] truncate sm:max-w-[10rem]">{activePage.title}</span>
+                <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
               </button>
               {showPagesMenu && (
                 <>
@@ -495,9 +495,9 @@ export function Builder({
           </div>
         )}
 
-        {/* Viewport toggle */}
+        {/* Viewport toggle — desktop only (you're already on a phone on mobile) */}
         {hasContent && (
-          <div className="flex items-center gap-1 rounded-lg border border-border p-0.5">
+          <div className="hidden lg:flex items-center gap-1 rounded-lg border border-border p-0.5">
             {([["desktop", Monitor], ["tablet", Tablet], ["mobile", Smartphone]] as const).map(([vp, Icon]) => (
               <button
                 key={vp}
@@ -511,7 +511,9 @@ export function Builder({
           </div>
         )}
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+          {/* Panel toggles — hidden on phones to keep Publish reachable */}
+          <div className="hidden md:flex items-center gap-2">
           <button
             onClick={() => { setShowTemplateBrowser(!showTemplateBrowser); if (!showTemplateBrowser) { setShowSectionLib(false); setShowBlogPanel(false); setShowAssetLib(false) } }}
             className={`rounded-md p-1.5 transition-colors ${showTemplateBrowser ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground"}`}
@@ -548,8 +550,9 @@ export function Builder({
           >
             <FileText className="h-4 w-4" />
           </button>
+          </div>
           {published && (
-            <a href={`https://${host}`} target="_blank" rel="noopener" className="inline-flex items-center gap-1.5 text-xs text-brand hover:underline">
+            <a href={`https://${host}`} target="_blank" rel="noopener" className="hidden sm:inline-flex items-center gap-1.5 text-xs text-brand hover:underline">
               <ExternalLink className="h-3 w-3" /> View live
             </a>
           )}
@@ -678,6 +681,35 @@ export function Builder({
           </div>
         )}
       </div>
+
+      {/* Mobile element editor — bottom sheet (desktop uses the right panel) */}
+      {hasContent && !generating && selectedEl && (
+        <div className="lg:hidden fixed inset-x-0 bottom-0 z-50 flex max-h-[72vh] flex-col rounded-t-2xl border-t border-border bg-card shadow-2xl" data-testid="mobile-element-editor">
+          <div className="flex items-center justify-between border-b border-border px-4 py-2.5">
+            <span className="text-sm font-semibold">Edit element</span>
+            <button
+              onClick={() => { setSelectedEl(null); postToIframe({ type: "s9:deselect" }) }}
+              className="rounded-md p-1.5 text-muted-foreground hover:text-foreground"
+              data-testid="mobile-editor-close"
+              aria-label="Close editor"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+          <div className="overflow-y-auto overscroll-contain">
+            <ElementEditor
+              key={selectedEl.editKey}
+              selected={selectedEl}
+              onUpdate={handleUpdate}
+              onUpdateAttr={handleUpdateAttr}
+              onDelete={handleDelete}
+              onMoveSection={handleMoveSection}
+              onSetStyle={handleSetStyle}
+              businessName={initialDetails.name ?? ""}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Bottom prompt bar */}
       <div className="shrink-0 border-t border-border bg-background px-4 py-3">

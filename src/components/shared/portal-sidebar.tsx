@@ -11,7 +11,7 @@ import {
   Newspaper, Receipt, Menu, X,
   FolderKanban, Plus, ShoppingCart, CalendarClock,
   UserCheck, Users, CreditCard, ClipboardList,
-  Package, Share2, Sliders, ImageIcon,
+  Package, Share2, ImageIcon,
 } from "lucide-react"
 
 interface NavItem {
@@ -47,7 +47,6 @@ const adminNav: NavItem[] = [
   { label: "Portfolio", href: "/admin/portfolio", icon: ImageIcon },
   { label: "Billing", href: "/admin/billing", icon: Receipt },
   { label: "Domain", href: "/admin/config/domain", icon: Globe },
-  { label: "Config", href: "/admin/config/intake", icon: Sliders },
 ]
 
 const employeeNav: NavItem[] = [

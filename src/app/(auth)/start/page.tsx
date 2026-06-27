@@ -92,7 +92,7 @@ export default function StartPage() {
   const canContinue = avail.state === "available" && businessName.trim().length > 0
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background px-4 py-12">
+    <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center bg-background px-4 py-12">
       <div className="w-full max-w-md space-y-8">
         <div className="text-center space-y-2">
           <Link href="/" className="text-2xl font-bold tracking-tight">Site9</Link>

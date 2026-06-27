@@ -30,7 +30,7 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background px-4">
+    <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center bg-background px-4">
       <div className="w-full max-w-sm space-y-8">
         <div className="text-center space-y-2">
           <Link href="/" className="text-2xl font-bold tracking-tight">Site9</Link>
