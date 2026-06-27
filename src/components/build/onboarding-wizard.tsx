@@ -346,7 +346,7 @@ export function OnboardingWizard({ initialDetails, onComplete }: OnboardingWizar
       : referenceSites.filter((s) => (s.industry || "general").toLowerCase() === industryFilter)
 
   return (
-    <div className="flex h-screen flex-col bg-background">
+    <div className="flex h-[100dvh] flex-col bg-background">
       {/* Progress header */}
       <header className="shrink-0 border-b border-border px-6 py-4">
         <div className="mx-auto max-w-3xl">

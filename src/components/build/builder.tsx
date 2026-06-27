@@ -9,8 +9,9 @@ import {
   ExternalLink, Sparkles, Link2, Trash2, Monitor, Tablet, Smartphone,
   LayoutGrid, LayoutTemplate, ChevronUp, ChevronDown, Search, FileText,
   Undo2, Redo2, AlignLeft, AlignCenter, AlignRight, Minus, Plus,
-  Files, Home, Trash, Link as LinkIcon, X,
+  Files, Home, Trash, Link as LinkIcon, X, CheckCircle2, LayoutDashboard,
 } from "lucide-react"
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
 import { EDITOR_OVERLAY_CSS, EDITOR_SCRIPT } from "@/lib/editor-inject"
 import { GenerationLoader } from "@/components/build/generation-loader"
 import { SectionLibrary } from "@/components/build/section-library"
@@ -67,6 +68,7 @@ export function Builder({
   const [generating, setGenerating] = useState(false)
   const [publishing, setPublishing] = useState(false)
   const [published, setPublished] = useState(false)
+  const [showPublishedDialog, setShowPublishedDialog] = useState(false)
   const [error, setError] = useState("")
   const [selectedEl, setSelectedEl] = useState<SelectedElement | null>(null)
   const [viewport, setViewport] = useState<Viewport>("desktop")
@@ -403,13 +405,14 @@ export function Builder({
     setPublishing(false)
     if (!res.ok) { const d = await res.json().catch(() => ({})); setError(d.error ?? "Could not publish"); return }
     setPublished(true)
+    setShowPublishedDialog(true)
   }
 
   const srcDoc = hasContent ? buildSrcDoc(rawHtml) : ""
 
   // -- Render -----------------------------------------------------------------
   return (
-    <div className="flex h-screen flex-col bg-background">
+    <div className="flex h-[100dvh] flex-col bg-background">
       {/* Top bar */}
       <header className="flex items-center justify-between border-b border-border px-4 py-2 shrink-0">
         <div className="flex min-w-0 items-center gap-2 sm:gap-3">
@@ -561,6 +564,43 @@ export function Builder({
           </Button>
         </div>
       </header>
+
+      {/* Publish success — gives a clear next action so the owner is never stranded
+       * on the builder after going live (the inline "View live" link is hidden on phones). */}
+      <Dialog open={showPublishedDialog} onOpenChange={setShowPublishedDialog}>
+        <DialogContent className="max-w-sm text-center">
+          <div className="flex flex-col items-center gap-4 py-2">
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-green-500/10">
+              <CheckCircle2 className="h-8 w-8 text-green-500" />
+            </div>
+            <div className="space-y-1">
+              <DialogTitle className="text-lg">Your site is live!</DialogTitle>
+              <p className="text-sm text-muted-foreground">
+                {host} is now published and ready to share.
+              </p>
+            </div>
+            <div className="flex w-full flex-col gap-2 pt-1">
+              <Button asChild variant="brand" className="w-full" data-testid="published-view-live">
+                <a href={`https://${host}`} target="_blank" rel="noopener">
+                  <ExternalLink className="h-4 w-4" /> View live site
+                </a>
+              </Button>
+              <Button asChild variant="outline" className="w-full" data-testid="published-dashboard">
+                <a href="/admin/dashboard">
+                  <LayoutDashboard className="h-4 w-4" /> Go to dashboard
+                </a>
+              </Button>
+              <button
+                onClick={() => setShowPublishedDialog(false)}
+                className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                data-testid="published-keep-editing"
+              >
+                Keep editing
+              </button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Soft upsell — never blocks publishing, hidden once subscribed */}
       <UpgradeBanner subscribed={subscribed} />

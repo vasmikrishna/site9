@@ -35,57 +35,15 @@ export function GenerationLoader({ mode = "create" }: { mode?: "create" | "updat
   }, [steps.length])
 
   return (
-    <div className="flex w-full max-w-xl flex-col items-center gap-6 px-6 py-10" data-testid="generation-loader">
+    <div className="flex w-full max-w-md flex-col items-center gap-5 px-6 py-6" data-testid="generation-loader">
       <style>{SHIMMER_KEYFRAMES}</style>
 
-      {/* Skeleton web page mock */}
-      <div className="w-full overflow-hidden rounded-xl border border-border bg-card shadow-sm">
-        {/* Browser chrome */}
-        <div className="flex items-center gap-1.5 border-b border-border bg-muted/40 px-3 py-2">
-          <span className="h-2.5 w-2.5 rounded-full bg-muted-foreground/30" />
-          <span className="h-2.5 w-2.5 rounded-full bg-muted-foreground/30" />
-          <span className="h-2.5 w-2.5 rounded-full bg-muted-foreground/30" />
-        </div>
-
-        <div className="space-y-5 p-5">
-          {/* Nav */}
-          <div className="flex items-center justify-between">
-            <Skeleton className="h-4 w-20" />
-            <div className="flex gap-3">
-              <Skeleton className="h-3 w-10" />
-              <Skeleton className="h-3 w-10" />
-              <Skeleton className="h-3 w-10" />
-              <Skeleton className="h-6 w-16 rounded-full" />
-            </div>
-          </div>
-
-          {/* Hero */}
-          <div className="flex flex-col items-center gap-3 py-6 text-center">
-            <Skeleton className="h-8 w-3/4" />
-            <Skeleton className="h-8 w-1/2" />
-            <Skeleton className="h-3 w-2/3" />
-            <div className="mt-2 flex gap-2">
-              <Skeleton className="h-8 w-28 rounded-full" />
-              <Skeleton className="h-8 w-24 rounded-full" />
-            </div>
-          </div>
-
-          {/* Feature cards */}
-          <div className="grid grid-cols-3 gap-3">
-            {[0, 1, 2].map((i) => (
-              <div key={i} className="space-y-2 rounded-lg border border-border p-3">
-                <Skeleton className="h-8 w-8 rounded-lg" />
-                <Skeleton className="h-3 w-full" />
-                <Skeleton className="h-3 w-2/3" />
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Rotating status copy */}
+      {/* Status first — what's happening is always visible without scrolling. */}
       <div className="flex flex-col items-center gap-3 text-center">
-        <p key={stepIndex} className="text-sm font-medium animate-in fade-in slide-in-from-bottom-1 duration-500" data-testid="generation-step">
+        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-brand/10">
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-brand/30 border-t-brand" />
+        </div>
+        <p key={stepIndex} className="text-base font-semibold animate-in fade-in slide-in-from-bottom-1 duration-500" data-testid="generation-step">
           {steps[stepIndex]}
         </p>
 
@@ -97,6 +55,31 @@ export function GenerationLoader({ mode = "create" }: { mode?: "create" | "updat
           />
         </div>
         <p className="text-xs text-muted-foreground">This usually takes 15–45 seconds</p>
+      </div>
+
+      {/* Compact skeleton preview — a hint of the page taking shape, kept small
+       * so it never pushes the status copy off a phone screen. */}
+      <div className="hidden w-full overflow-hidden rounded-xl border border-border bg-card shadow-sm sm:block">
+        <div className="flex items-center gap-1.5 border-b border-border bg-muted/40 px-3 py-2">
+          <span className="h-2.5 w-2.5 rounded-full bg-muted-foreground/30" />
+          <span className="h-2.5 w-2.5 rounded-full bg-muted-foreground/30" />
+          <span className="h-2.5 w-2.5 rounded-full bg-muted-foreground/30" />
+        </div>
+        <div className="space-y-4 p-4">
+          <div className="flex items-center justify-between">
+            <Skeleton className="h-3.5 w-16" />
+            <div className="flex gap-2">
+              <Skeleton className="h-2.5 w-8" />
+              <Skeleton className="h-2.5 w-8" />
+              <Skeleton className="h-5 w-12 rounded-full" />
+            </div>
+          </div>
+          <div className="flex flex-col items-center gap-2 py-3 text-center">
+            <Skeleton className="h-5 w-3/4" />
+            <Skeleton className="h-5 w-1/2" />
+            <Skeleton className="h-2.5 w-2/3" />
+          </div>
+        </div>
       </div>
     </div>
   )

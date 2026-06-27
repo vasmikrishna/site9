@@ -197,17 +197,16 @@ export default function TenantDetailPage() {
       <Card>
         <CardContent className="py-4 flex items-center justify-between gap-4">
           <div>
-            <p className="text-xs text-muted-foreground mb-0.5">Portal URL</p>
+            <p className="text-xs text-muted-foreground mb-0.5">Site URL</p>
             <p className="font-mono text-sm">{tenant.slug}.site9.in</p>
-            <p className="text-xs text-muted-foreground mt-0.5">Dev: <span className="font-mono">{tenant.slug}.localhost:3001</span></p>
           </div>
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={copyUrl}>
               {copied ? <><Check className="h-3.5 w-3.5 text-green-500" /> Copied</> : <><Copy className="h-3.5 w-3.5" /> Copy</>}
             </Button>
             <Button variant="outline" size="sm" asChild>
-              <a href={`http://${tenant.slug}.localhost:3001`} target="_blank" rel="noopener noreferrer">
-                <ExternalLink className="h-3.5 w-3.5" /> Open dev
+              <a href={`https://${tenant.slug}.site9.in`} target="_blank" rel="noopener noreferrer">
+                <ExternalLink className="h-3.5 w-3.5" /> Open site
               </a>
             </Button>
           </div>
