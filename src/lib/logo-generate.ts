@@ -33,6 +33,7 @@ const SYSTEM = `You are an expert logo designer. Create a clean, professional SV
 
 OUTPUT RULES (strict):
 - Return ONLY a valid SVG string starting with <svg and ending with </svg>
+- TRANSPARENT BACKGROUND: do NOT add any background. No <rect> or <path> filling the whole canvas, no white/colored backdrop, no card behind the mark. The logo must sit on transparency so it blends into any UI.
 - Use simple, scalable vector shapes — no raster images, no base64 data
 - Keep it minimal and memorable — great logos are simple
 - Use the provided colors for the design
@@ -79,12 +80,74 @@ function buildPrompt(
 }
 
 /**
+ * Strip an opaque background so the logo sits on transparency and blends into
+ * any UI. Removes:
+ *  - a `background`/`fill` on the root <svg> tag,
+ *  - any <rect> that covers (essentially) the whole canvas — the "card" behind
+ *    the mark. A genuine badge/emblem uses a heavily-rounded colored rect or a
+ *    circle, so we KEEP full-canvas rects that are both clearly rounded AND
+ *    non-white; everything else (sharp rects, white/light fills) is dropped.
+ */
+export function stripLogoBackground(svg: string): string {
+  // Canvas size from viewBox (preferred) or root width/height.
+  const vb = svg.match(/viewBox\s*=\s*["']\s*(-?[\d.]+)[ ,]+(-?[\d.]+)[ ,]+([\d.]+)[ ,]+([\d.]+)/i)
+  let minX = 0, minY = 0, W = 0, H = 0
+  if (vb) { minX = +vb[1]; minY = +vb[2]; W = +vb[3]; H = +vb[4] }
+  if (!W || !H) {
+    // No viewBox yet — fall back to the root <svg> pixel dimensions.
+    const tag = svg.match(/<svg\b[^>]*>/i)?.[0] ?? ""
+    W = parseFloat(tag.match(/\bwidth\s*=\s*["']?([\d.]+)/i)?.[1] ?? "0") || 0
+    H = parseFloat(tag.match(/\bheight\s*=\s*["']?([\d.]+)/i)?.[1] ?? "0") || 0
+  }
+
+  let out = svg
+
+  // 1) Remove background styling on the root <svg> element itself.
+  out = out.replace(/<svg\b[^>]*>/i, (tag) =>
+    tag
+      .replace(/\sstyle\s*=\s*["'][^"']*["']/i, (s) =>
+        /background/i.test(s) ? s.replace(/background[^;"']*;?/gi, "").replace(/\sstyle\s*=\s*["']\s*["']/i, "") : s)
+      .replace(/\sfill\s*=\s*["'](?!none)[^"']*["']/i, "")
+  )
+
+  // 2) Remove full-canvas background <rect> elements.
+  out = out.replace(/<rect\b[^>]*?\/?>(?:\s*<\/rect>)?/gi, (m) => {
+    const attr = (a: string) => m.match(new RegExp(`\\b${a}\\s*=\\s*["']?\\s*([^"'\\s>/]+)`, "i"))?.[1] ?? ""
+    const fill = attr("fill").toLowerCase()
+    if (fill === "none" || fill === "transparent") return m // already transparent — leave it
+
+    const wRaw = attr("width"), hRaw = attr("height")
+    const pctFull = wRaw === "100%" && hRaw === "100%"
+    const x = parseFloat(attr("x")) || 0
+    const y = parseFloat(attr("y")) || 0
+    const w = parseFloat(wRaw) || 0
+    const h = parseFloat(hRaw) || 0
+    const rx = parseFloat(attr("rx")) || 0
+
+    const dimsFull = W > 0 && H > 0 &&
+      Math.abs(x - minX) <= W * 0.03 && Math.abs(y - minY) <= H * 0.03 &&
+      w >= W * 0.94 && h >= H * 0.94
+    if (!pctFull && !dimsFull) return m // not a background — keep
+
+    // Keep only an intentional, clearly-rounded, non-white badge.
+    const refDim = W || w
+    const rounded = refDim > 0 && rx >= refDim * 0.12
+    const isWhiteish = /^#?f{3}$|^#?f{6}$|^white$|^rgb\(\s*255\s*,\s*255\s*,\s*255\s*\)$/i.test(fill)
+    if (rounded && !isWhiteish) return m // colored rounded badge — part of the design
+    return "" // white/sharp full-canvas backdrop — strip it
+  })
+
+  return out
+}
+
+/**
  * Normalize the root <svg> so it always renders centered and scales to fill its
  * container: guarantee a viewBox (derive from width/height if absent), drop the
  * fixed pixel width/height so `object-contain` can size it, and center it via
  * preserveAspectRatio. Leaves the artwork untouched.
  */
 export function normalizeLogoSvg(svg: string): string {
+  svg = stripLogoBackground(svg)
   const tag = svg.match(/<svg\b[^>]*>/i)?.[0]
   if (!tag) return svg
 
