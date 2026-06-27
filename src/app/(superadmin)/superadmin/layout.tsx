@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation"
 import { getSession } from "@/lib/session"
 import Link from "next/link"
-import { LayoutDashboard, Building2, LayoutGrid, LayoutTemplate, Globe, Palette, Newspaper, LogOut } from "lucide-react"
+import { LayoutDashboard, Building2, LayoutGrid, LayoutTemplate, Globe, Palette, Users, CreditCard, LogOut } from "lucide-react"
 
 export default async function SuperAdminLayout({ children }: { children: React.ReactNode }) {
   const session = await getSession()
@@ -19,11 +19,14 @@ export default async function SuperAdminLayout({ children }: { children: React.R
           <Link href="/superadmin" className="flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg hover:bg-muted transition-colors">
             <LayoutDashboard className="h-4 w-4" /> Dashboard
           </Link>
-          <Link href="/superadmin/tenants" className="flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg hover:bg-muted transition-colors">
-            <Building2 className="h-4 w-4" /> Tenants
+          <Link href="/superadmin/users" className="flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg hover:bg-muted transition-colors">
+            <Users className="h-4 w-4" /> Users
           </Link>
-          <Link href="/superadmin/blog" className="flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg hover:bg-muted transition-colors">
-            <Newspaper className="h-4 w-4" /> Blog
+          <Link href="/superadmin/tenants" className="flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg hover:bg-muted transition-colors">
+            <Building2 className="h-4 w-4" /> Sites
+          </Link>
+          <Link href="/superadmin/payments" className="flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg hover:bg-muted transition-colors">
+            <CreditCard className="h-4 w-4" /> Payments
           </Link>
           <p className="mt-4 mb-1 px-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Builder Content</p>
           <Link href="/superadmin/templates" className="flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg hover:bg-muted transition-colors">
