@@ -11,10 +11,9 @@ export interface HeaderAuth {
   role: "admin" | "client" | "employee"
 }
 
-function dashboardHref(role: HeaderAuth["role"]): string {
-  if (role === "admin") return "/admin/dashboard"
-  if (role === "employee") return "/employee/dashboard"
-  return "/client/dashboard"
+// Site9 is admin-only; the user's dashboard is always the account/admin portal.
+function dashboardHref(): string {
+  return "/admin/dashboard"
 }
 
 export function SiteHeader({ settings, auth }: { settings: SiteSettings; auth: HeaderAuth | null }) {
@@ -112,7 +111,7 @@ export function SiteHeader({ settings, auth }: { settings: SiteSettings; auth: H
                         <LayoutGrid className="h-4 w-4" /> My businesses
                       </Link>
                       <Link
-                        href={dashboardHref(auth.role)}
+                        href={dashboardHref()}
                         onClick={() => setMenuOpen(false)}
                         className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-50"
                         role="menuitem"
@@ -178,7 +177,7 @@ export function SiteHeader({ settings, auth }: { settings: SiteSettings; auth: H
                   className="flex items-center gap-2 px-2 py-2 text-sm text-white/85 hover:text-white" data-testid="header-mobile-businesses">
                   <LayoutGrid className="h-4 w-4" /> My businesses
                 </Link>
-                <Link href={dashboardHref(auth.role)} onClick={() => setOpen(false)}
+                <Link href={dashboardHref()} onClick={() => setOpen(false)}
                   className="flex items-center gap-2 px-2 py-2 text-sm text-white/85 hover:text-white">
                   <User className="h-4 w-4" /> My dashboard
                 </Link>

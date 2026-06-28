@@ -4,8 +4,8 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { ArrowRight, Check, X as XIcon, Server, Cloud } from "lucide-react"
-import { ThemeToggle } from "@/components/ui/theme-toggle"
 import { ThemeLogo } from "@/components/ui/theme-logo"
+import { MarketingHeader } from "@/components/public/marketing-header"
 
 export const metadata: Metadata = {
   title: "Pricing | Site9",
@@ -53,33 +53,7 @@ const FEATURES: Feature[] = [
 export default function PricingPage() {
   return (
     <div className="min-h-screen">
-      <header className="border-b border-border sticky top-0 z-50 bg-background/80 backdrop-blur">
-        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center" data-testid="home-logo">
-            <ThemeLogo />
-          </Link>
-          <nav className="hidden md:flex items-center gap-6">
-            {NAV_LINKS.map(link => (
-              <a key={link.href} href={link.href} className="text-sm text-muted-foreground hover:text-foreground transition-colors">{link.label}</a>
-            ))}
-          </nav>
-          <div className="flex items-center gap-3">
-            <ThemeToggle />
-            <a
-              href="https://github.com/vasmikrishna/site9"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-muted-foreground hover:text-foreground transition-colors"
-              data-testid="nav-github-link"
-              aria-label="GitHub repository"
-            >
-              <GitHubIcon className="h-5 w-5" />
-            </a>
-            <Button asChild variant="ghost" size="sm"><Link href="/login">Sign in</Link></Button>
-            <Button asChild variant="brand" size="sm"><Link href="/start">Get started</Link></Button>
-          </div>
-        </div>
-      </header>
+      <MarketingHeader navLinks={NAV_LINKS} />
 
       <section className="py-16 border-b border-border">
         <div className="max-w-4xl mx-auto px-6">
