@@ -5,8 +5,8 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { ArrowRight, Check, Code2, GitPullRequest, BookOpen, Users, Shield, Heart } from "lucide-react"
 import { Contributors } from "@/components/public/contributors"
-import { ThemeToggle } from "@/components/ui/theme-toggle"
 import { ThemeLogo } from "@/components/ui/theme-logo"
+import { MarketingHeader } from "@/components/public/marketing-header"
 
 export const metadata: Metadata = {
   title: "Open Source | Site9",
@@ -67,32 +67,7 @@ export default function OpenSourcePage() {
   return (
     <div className="min-h-screen">
       {/* Nav */}
-      <header className="border-b border-border sticky top-0 z-50 bg-background/80 backdrop-blur">
-        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center" data-testid="home-logo">
-            <ThemeLogo />
-          </Link>
-          <nav className="hidden md:flex items-center gap-6">
-            {NAV_LINKS.map(link => (
-              <a key={link.href} href={link.href} className="text-sm text-muted-foreground hover:text-foreground transition-colors">{link.label}</a>
-            ))}
-          </nav>
-          <div className="flex items-center gap-3">
-            <ThemeToggle />
-            <a
-              href="https://github.com/vasmikrishna/site9"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-muted-foreground hover:text-foreground transition-colors"
-              aria-label="GitHub repository"
-            >
-              <GitHubIcon className="h-5 w-5" />
-            </a>
-            <Button asChild variant="ghost" size="sm"><Link href="/login">Sign in</Link></Button>
-            <Button asChild variant="brand" size="sm"><Link href="/start">Get started</Link></Button>
-          </div>
-        </div>
-      </header>
+      <MarketingHeader navLinks={NAV_LINKS} />
 
       {/* Hero */}
       <section className="max-w-5xl mx-auto px-6 pt-20 pb-16 text-center">
@@ -103,13 +78,13 @@ export default function OpenSourcePage() {
         <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
           Site9 is fully open source under the Apache 2.0 license. Browse the code, report issues, suggest features, or contribute directly. Every business deserves great software — and great software is built together.
         </p>
-        <div className="flex items-center justify-center gap-4 mt-8">
-          <Button asChild variant="brand" size="lg" data-testid="oss-github-cta">
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-8">
+          <Button asChild variant="brand" size="lg" className="w-full sm:w-auto" data-testid="oss-github-cta">
             <a href="https://github.com/vasmikrishna/site9" target="_blank" rel="noopener noreferrer">
               <GitHubIcon className="h-4 w-4" /> View on GitHub <ArrowRight className="h-4 w-4" />
             </a>
           </Button>
-          <Button asChild variant="outline" size="lg">
+          <Button asChild variant="outline" size="lg" className="w-full sm:w-auto">
             <a href="https://github.com/vasmikrishna/site9/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener noreferrer">
               Contributing guide
             </a>

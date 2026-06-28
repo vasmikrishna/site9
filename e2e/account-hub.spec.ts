@@ -1,5 +1,10 @@
 import { test, expect } from "@playwright/test"
 
+test.skip(
+  !process.env.E2E_AUTHED,
+  "Requires a seeded tenant admin session + tenant-pointed BASE_URL; set E2E_AUTHED=1 to run."
+)
+
 /**
  * E2E: Customer accounts + unified "My Businesses" hub. (Issue #7)
  *

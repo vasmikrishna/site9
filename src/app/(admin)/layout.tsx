@@ -27,7 +27,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   return (
     <div className="flex min-h-screen">
       <PortalSidebar role="admin" userName={session.name} userEmail={session.email} siteName={siteName} siteHost={siteHost} />
-      <main className="flex-1 overflow-auto pt-14 md:pt-0">
+      <main className="flex-1 min-w-0 overflow-auto pt-14 md:pt-0">
         <UpgradeBanner subscribed={subscribed} />
         <div className="max-w-6xl mx-auto p-4 sm:p-6 md:p-8">{children}</div>
       </main>

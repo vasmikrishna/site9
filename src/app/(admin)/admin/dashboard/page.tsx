@@ -3,6 +3,7 @@ import Link from "next/link"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { ArrowRight } from "lucide-react"
+import { getSession } from "@/lib/session"
 
 const supabaseConfigured = () =>
   process.env.NEXT_PUBLIC_SUPABASE_URL?.startsWith("http") &&
@@ -14,12 +15,24 @@ export default async function AdminDashboard() {
   let enquiryCount = 0
 
   if (supabaseConfigured()) {
+    const session = await getSession()
+    // The server client uses the service role, which bypasses RLS — so every
+    // count MUST be scoped to the current tenant, or it would total all tenants.
+    // Super-admin (id="admin") has no tenant_id and intentionally sees the global
+    // totals.
+    const tenantId = session?.tenant_id
+    const scope = <T extends { eq: (c: string, v: string) => T }>(q: T): T =>
+      tenantId ? q.eq("tenant_id", tenantId) : q
+
     const { createClient } = await import("@/lib/supabase/server")
     const supabase = createClient()
     const [{ count: pages }, { count: posts }, { count: enquiries }] = await Promise.all([
-      supabase.from("custom_pages").select("*", { count: "exact", head: true }),
-      supabase.from("blog_posts").select("*", { count: "exact", head: true }),
-      supabase.from("enquiries").select("*", { count: "exact", head: true }),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      scope((supabase as any).from("custom_pages").select("*", { count: "exact", head: true })),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      scope((supabase as any).from("blog_posts").select("*", { count: "exact", head: true })),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      scope((supabase as any).from("contact_enquiries").select("*", { count: "exact", head: true })),
     ])
     pageCount = pages ?? 0
     blogPostCount = posts ?? 0
