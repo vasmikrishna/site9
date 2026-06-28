@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 import { getSiteSettings } from "@/lib/site-settings"
 import { getTenantSlug, getCurrentTenant } from "@/lib/tenant"
-import { getCanonicalOrigin, isMainSite, buildLocalBusinessJsonLd, buildWebSiteJsonLd } from "@/lib/seo"
+import { getCanonicalOrigin, isMainSite, buildLocalBusinessJsonLd, buildWebSiteJsonLd, buildOrganizationJsonLd } from "@/lib/seo"
 import { SiteHeader, type HeaderAuth } from "@/components/site/header"
 import { SiteFooter } from "@/components/site/footer"
 import { getSession } from "@/lib/session"
@@ -57,7 +57,10 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
       : null
 
   const jsonLdScripts = isMainSite(slug)
-    ? [buildWebSiteJsonLd(origin, siteName)]
+    ? [
+        buildWebSiteJsonLd(origin, siteName),
+        buildOrganizationJsonLd(origin, siteName, tenant?.logo_url),
+      ]
     : [
         buildWebSiteJsonLd(origin, siteName),
         ...(tenant ? [buildLocalBusinessJsonLd(tenant, settings, origin)] : []),

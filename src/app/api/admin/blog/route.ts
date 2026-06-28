@@ -2,6 +2,8 @@ import { NextResponse } from "next/server"
 import { getSession } from "@/lib/session"
 import { createClient } from "@/lib/supabase/server"
 import { getCurrentTenant } from "@/lib/tenant"
+import { getCanonicalOrigin } from "@/lib/seo"
+import { submitToIndexNow } from "@/lib/indexnow"
 
 export const dynamic = "force-dynamic"
 
@@ -107,6 +109,11 @@ export async function POST(request: Request) {
     .single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  if (status === "published") {
+    const origin = getCanonicalOrigin(tenant, tenant?.slug ?? "site9")
+    await submitToIndexNow([`${origin}/blog/${slug}`, `${origin}/blog`])
+  }
 
   return NextResponse.json({ post: data })
 }

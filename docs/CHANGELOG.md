@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Added — Platform SEO hardening (#5)
+- **Apex sitemap fix.** `sitemap.ts` no longer early-returns 5 static URLs for the main site — the apex (`site9.in`) now lists published blog posts and custom pages too, so the platform's own content (incl. the daily content engine) gets submitted. `/blog` marked `changeFrequency: daily`.
+- **Search-console verification.** Root metadata emits Google/Bing verification tags from `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` / `NEXT_PUBLIC_BING_SITE_VERIFICATION` (GSC domain-property via DNS already covers all `*.site9.in`).
+- **IndexNow.** `src/lib/indexnow.ts` (`submitToIndexNow`, grouped per host, best-effort) + key route `/api/indexnow-key` (env `INDEXNOW_KEY`). Fired on blog publish (POST) and publish-on-edit (PATCH) so Bing/Yandex recrawl in minutes.
+- **RSS feed.** Tenant-aware RSS 2.0 at `/blog/feed.xml` (latest 50 published posts) + `<link rel="alternate" type="application/rss+xml">` on the blog index.
+- **Structured data.** Added `Organization` (apex layout) and `BreadcrumbList` (blog post: Home → Blog → Post) JSON-LD alongside the existing WebSite/LocalBusiness/BlogPosting.
+- **Dynamic OG images.** `next/og` `ImageResponse` cards: per-post (`(public)/blog/[slug]/opengraph-image.tsx`) and a branded site default (`(public)/opengraph-image.tsx`), both tinted with the tenant's primary colour.
+- **New env vars.** `INDEXNOW_KEY`, `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION`, `NEXT_PUBLIC_BING_SITE_VERIFICATION` (all optional).
+
 ### Added — Social Media Management (Instagram + Facebook, mock-first)
 - **Connections tab.** Per-platform (Instagram / Facebook) account management. With `SOCIAL_MOCK=1` (or no `META_APP_ID`) the connect flow uses `MockProvider` and seeds a demo account immediately — no Meta credentials required. Real OAuth flows to `/api/social/meta/start` → `/api/social/meta/callback`. Account tokens are stored AES-256-GCM encrypted (`src/lib/social/crypto.ts`).
 - **Calendar tab.** Chronological view of scheduled, published, and failed posts. "New Post" opens the Composer from any state.
