@@ -86,28 +86,28 @@ export default async function LandingPage() {
       <MarketingHeader navLinks={NAV_LINKS} />
 
       {/* Hero */}
-      <section className="max-w-6xl mx-auto px-6 pt-24 pb-20 text-center">
-        <div className="flex items-center justify-center gap-3 mb-6">
+      <section className="max-w-6xl mx-auto px-6 pt-16 sm:pt-24 pb-20 text-center">
+        <div className="flex flex-wrap items-center justify-center gap-3 mb-6">
           <Badge variant="outline">A website for every business</Badge>
           <Badge variant="brand">Open Source</Badge>
         </div>
-        <h1 className="text-5xl md:text-7xl font-bold tracking-tight leading-[1.05]">
+        <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold tracking-tight leading-[1.05]">
           One Website for Every Business
         </h1>
-        <p className="mt-6 text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+        <p className="mt-6 text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
           Whether you&apos;re a local shop, freelancer, photographer, restaurant, salon, PG owner, consultant, or startup — Site9 makes it simple, affordable, and accessible to get your business online. No coding. No design skills. No complicated setup.
         </p>
-        <div className="flex items-center justify-center gap-4 mt-10">
-          <Button asChild variant="brand" size="lg">
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-10">
+          <Button asChild variant="brand" size="lg" className="w-full sm:w-auto">
             <Link href="/start">Create your website <ArrowRight className="h-4 w-4" /></Link>
           </Button>
-          <Button asChild variant="outline" size="lg">
+          <Button asChild variant="outline" size="lg" className="w-full sm:w-auto">
             <Link href="/templates">Browse templates</Link>
           </Button>
         </div>
 
         {/* Trust bar */}
-        <div className="flex items-center justify-center gap-8 mt-16 text-sm text-muted-foreground flex-wrap">
+        <div className="flex items-center justify-center gap-x-6 gap-y-3 sm:gap-8 mt-16 text-sm text-muted-foreground flex-wrap">
           <span className="flex items-center gap-2"><Check className="h-4 w-4 text-green-500" /> Launch in minutes</span>
           <span className="flex items-center gap-2"><Check className="h-4 w-4 text-green-500" /> Free yourbusiness.site9.in subdomain</span>
           <span className="flex items-center gap-2"><Check className="h-4 w-4 text-green-500" /> No coding needed</span>
@@ -234,13 +234,13 @@ export default async function LandingPage() {
               </CardContent>
             </Card>
           </div>
-          <div className="flex items-center justify-center gap-4">
-            <Button asChild variant="outline" size="lg" data-testid="open-source-cta">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Button asChild variant="outline" size="lg" className="w-full sm:w-auto" data-testid="open-source-cta">
               <a href="https://github.com/vasmikrishna/site9" target="_blank" rel="noopener noreferrer">
                 <GitHubIcon className="h-4 w-4" /> View on GitHub <ArrowRight className="h-4 w-4" />
               </a>
             </Button>
-            <Button asChild variant="ghost" size="lg">
+            <Button asChild variant="ghost" size="lg" className="w-full sm:w-auto">
               <Link href="/open-source">Learn more <ArrowRight className="h-4 w-4" /></Link>
             </Button>
           </div>
