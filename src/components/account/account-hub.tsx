@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { ArrowRight, Plus, LogOut, Store, Crown, Briefcase } from "lucide-react"
+import { ArrowRight, Plus, LogOut, Crown } from "lucide-react"
 import type { Workspace } from "@/lib/workspaces"
 
 interface AccountHubProps {
@@ -12,10 +12,9 @@ interface AccountHubProps {
   baseDomain: string
 }
 
-function dashboardPath(role: Workspace["role"]): string {
-  if (role === "admin") return "/admin/dashboard"
-  if (role === "employee") return "/employee/dashboard"
-  return "/client/dashboard"
+function dashboardPath(): string {
+  // Site9 is admin-only; every business a user can enter is one they own.
+  return "/admin/dashboard"
 }
 
 function BusinessSection({ title, hint, icon: Icon, items, busy, onEnter }: {
@@ -85,8 +84,6 @@ export function AccountHub({ userName, userEmail, workspaces, baseDomain }: Acco
   const [error, setError] = useState("")
 
   const owned = workspaces.filter((w) => w.role === "admin")
-  const customerOf = workspaces.filter((w) => w.role === "client")
-  const workWith = workspaces.filter((w) => w.role === "employee")
 
   // Build the absolute URL of a business on its own subdomain. The session cookie
   // is shared across *.site9.in, so a full navigation there stays authenticated.
@@ -115,7 +112,7 @@ export function AccountHub({ userName, userEmail, workspaces, baseDomain }: Acco
         setBusy(null)
         return
       }
-      window.location.assign(businessUrl(ws.slug, dashboardPath(data.role ?? ws.role)))
+      window.location.assign(businessUrl(ws.slug, dashboardPath()))
     } catch {
       setError("Could not open that business")
       setBusy(null)
@@ -164,8 +161,6 @@ export function AccountHub({ userName, userEmail, workspaces, baseDomain }: Acco
         {hasAny ? (
           <div className="space-y-8">
             <BusinessSection title="Businesses you own" hint="sites you manage" icon={Crown} items={owned} busy={busy} onEnter={enter} />
-            <BusinessSection title="You're a customer of" hint="businesses you've signed up with" icon={Store} items={customerOf} busy={busy} onEnter={enter} />
-            <BusinessSection title="Businesses you work with" hint="as a team member" icon={Briefcase} items={workWith} busy={busy} onEnter={enter} />
           </div>
         ) : (
           <div className="rounded-xl border border-dashed border-border py-16 text-center text-muted-foreground">

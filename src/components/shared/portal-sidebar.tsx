@@ -9,8 +9,8 @@ import {
   LayoutDashboard, Mail, LogOut, ChevronRight, ChevronLeft, Pencil,
   ChevronsUpDown, Check, LayoutTemplate, Globe,
   Newspaper, Receipt, Menu, X,
-  FolderKanban, Plus, ShoppingCart, CalendarClock,
-  UserCheck, Users, CreditCard, ClipboardList,
+  FolderKanban, ShoppingCart, CalendarClock,
+  CreditCard, ClipboardList,
   Package, Share2, ImageIcon,
 } from "lucide-react"
 
@@ -21,20 +21,9 @@ interface NavItem {
   badgeKey?: "enquiries"
 }
 
-const clientNav: NavItem[] = [
-  { label: "Dashboard", href: "/client/dashboard", icon: LayoutDashboard },
-  { label: "My Projects", href: "/client/projects", icon: FolderKanban },
-  { label: "New Project", href: "/client/projects/new", icon: Plus },
-  { label: "My Orders", href: "/client/orders", icon: ShoppingCart },
-  { label: "My Bookings", href: "/client/bookings", icon: CalendarClock },
-  { label: "Profile", href: "/client/profile", icon: UserCheck },
-]
-
 const adminNav: NavItem[] = [
   { label: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
   { label: "Projects", href: "/admin/projects", icon: FolderKanban },
-  { label: "Clients", href: "/admin/clients", icon: Users },
-  { label: "Employees", href: "/admin/employees", icon: UserCheck },
   { label: "Enquiries", href: "/admin/enquiries", icon: Mail, badgeKey: "enquiries" },
   { label: "Bookings", href: "/admin/bookings", icon: CalendarClock },
   { label: "Payments", href: "/admin/payments", icon: CreditCard },
@@ -49,11 +38,6 @@ const adminNav: NavItem[] = [
   { label: "Domain", href: "/admin/config/domain", icon: Globe },
 ]
 
-const employeeNav: NavItem[] = [
-  { label: "Dashboard", href: "/employee/dashboard", icon: LayoutDashboard },
-  { label: "My Projects", href: "/employee/projects", icon: FolderKanban },
-]
-
 interface Workspace {
   tenantId: string
   name: string
@@ -64,7 +48,8 @@ interface Workspace {
 }
 
 interface PortalSidebarProps {
-  role: "client" | "admin" | "employee"
+  /** Site9 ships an admin-only portal; client/employee portals were removed. */
+  role: "admin"
   userName: string
   userEmail: string
   /** The site currently being managed (shown as a context header). */
@@ -76,20 +61,19 @@ export function PortalSidebar({ role, userName, userEmail, siteName, siteHost }:
   const pathname = usePathname()
   const router = useRouter()
   const hiddenHrefs: string[] = [
-    ...(FEATURES.ecommerce ? [] : ["/admin/products", "/admin/orders", "/client/orders"]),
+    ...(FEATURES.ecommerce ? [] : ["/admin/products", "/admin/orders"]),
     ...(FEATURES.pageBuilder ? [] : ["/admin/pages"]),
-    ...(FEATURES.bookings ? [] : ["/admin/bookings", "/client/bookings"]),
+    ...(FEATURES.bookings ? [] : ["/admin/bookings"]),
     ...(FEATURES.blog ? [] : ["/admin/blog"]),
     ...(FEATURES.social ? [] : ["/admin/social"]),
     ...(FEATURES.surveys ? [] : ["/admin/surveys"]),
     ...(FEATURES.portfolio ? [] : ["/admin/portfolio"]),
-    ...(FEATURES.projects ? [] : ["/admin/projects", "/client/projects", "/client/projects/new", "/employee/projects"]),
+    ...(FEATURES.projects ? [] : ["/admin/projects"]),
     ...(FEATURES.clients ? [] : ["/admin/clients"]),
     ...(FEATURES.employees ? [] : ["/admin/employees"]),
     ...(FEATURES.payments ? [] : ["/admin/payments"]),
   ]
-  const nav = (role === "admin" ? adminNav : role === "employee" ? employeeNav : clientNav)
-    .filter((item) => !hiddenHrefs.includes(item.href))
+  const nav = adminNav.filter((item) => !hiddenHrefs.includes(item.href))
   const [newEnquiries, setNewEnquiries] = useState(0)
 
   // Mobile off-canvas drawer state. Closes automatically on navigation.
@@ -117,9 +101,7 @@ export function PortalSidebar({ role, userName, userEmail, siteName, siteHost }:
     setSwitching(null)
     setShowWsSwitcher(false)
     if (res.ok) {
-      if (data.role === "admin") router.push("/admin/dashboard")
-      else if (data.role === "employee") router.push("/employee/dashboard")
-      else router.push("/client/dashboard")
+      router.push("/admin/dashboard")
       router.refresh()
     }
   }
@@ -266,7 +248,7 @@ export function PortalSidebar({ role, userName, userEmail, siteName, siteHost }:
       <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
         {nav.map((item) => {
           const Icon = item.icon
-          const active = pathname === item.href || (item.href !== "/client/dashboard" && pathname.startsWith(item.href))
+          const active = pathname === item.href || (item.href !== "/admin/dashboard" && pathname.startsWith(item.href))
           return (
             <Link
               key={item.href + item.label}
