@@ -46,10 +46,15 @@ test.describe("Mobile navigation", () => {
   test("menu stays reachable after navigating to Pricing then Templates", async ({ page }) => {
     const openMenuAndClick = async (linkName: RegExp) => {
       const toggle = page.getByTestId("mobile-nav-toggle")
-      await expect(toggle).toBeVisible()
-      await toggle.click()
       const panel = page.getByTestId("mobile-nav-panel")
-      await expect(panel).toBeVisible()
+      await expect(toggle).toBeVisible()
+      // Retry-open to ride out post-navigation hydration (the SSR'd button is
+      // visible before its click handler attaches). Idempotent: only click when
+      // the panel isn't already open, so we never toggle it back shut.
+      await expect(async () => {
+        if (!(await panel.isVisible())) await toggle.click()
+        await expect(panel).toBeVisible({ timeout: 1000 })
+      }).toPass({ timeout: 10_000 })
       await panel.getByRole("link", { name: linkName }).click()
     }
 
