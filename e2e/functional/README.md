@@ -9,11 +9,22 @@ default suite (`playwright.config.ts`) which only covers public + responsive UI.
 - **Owner / admin** — account dashboard (overview + My Sites tabs), admin portal
   (dashboard, pages, enquiries, billing), and create → publish → public render.
 
-## Not covered (intentionally)
-- **Client / employee portals** — `/client/*` and `/employee/*` routes are **not
-  implemented** (only referenced in the sidebar nav). Nothing to test until built.
-- **Super-admin** — `/superadmin` is gated on the env `ADMIN_EMAIL`/`ADMIN_PASSWORD`;
-  no DB account exists to log in with, so it isn't driven here.
+## Super-admin
+`superadmin.spec.ts` drives the `/superadmin` console (read-only). It logs in
+with the env super-admin credentials and skips if they're absent. The console
+pages need the **service-role key** (admin Supabase client, no anon fallback),
+so run this against an env that has it (e.g. production):
+
+```bash
+E2E_SUPERADMIN_EMAIL='<ADMIN_EMAIL>' E2E_SUPERADMIN_PASSWORD='<ADMIN_PASSWORD>' \
+  BASE_URL=https://site9.in \
+  pnpm exec playwright test --config playwright.functional.config.ts --project=superadmin
+```
+
+## Removed
+- **Client / employee portals** — `/client/*` and `/employee/*` were never
+  implemented (sidebar-only) and the dead code has been removed. Site9 is
+  admin-only; the DB `role` column is retained for super-admin classification.
 
 ## Run
 

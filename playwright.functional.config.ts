@@ -36,5 +36,13 @@ export default defineConfig({
       testMatch: /public\.spec\.ts/,
       use: { ...devices["Desktop Chrome"] },
     },
+    {
+      // Logs in per-test via env credentials (no seeded DB account); skips when
+      // E2E_SUPERADMIN_EMAIL/PASSWORD are unset.
+      name: "superadmin",
+      testMatch: /superadmin\.spec\.ts/,
+      use: { ...devices["Desktop Chrome"] },
+    },
   ],
 })
+
