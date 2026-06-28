@@ -40,6 +40,27 @@ test.describe("Mobile navigation", () => {
     await expect(panel.getByRole("link", { name: /Templates/i })).toBeVisible()
     await expect(panel.getByRole("link", { name: /Get started/i })).toBeVisible()
   })
+
+  // Regression: navigating via the mobile menu used to land on a page with no
+  // hamburger (Pricing/Templates had desktop-only nav), trapping the user.
+  test("menu stays reachable after navigating to Pricing then Templates", async ({ page }) => {
+    const openMenuAndClick = async (linkName: RegExp) => {
+      const toggle = page.getByTestId("mobile-nav-toggle")
+      await expect(toggle).toBeVisible()
+      await toggle.click()
+      const panel = page.getByTestId("mobile-nav-panel")
+      await expect(panel).toBeVisible()
+      await panel.getByRole("link", { name: linkName }).click()
+    }
+
+    await page.goto("/")
+    await openMenuAndClick(/Pricing/i)
+    await expect(page).toHaveURL(/\/pricing/)
+    // The menu must be reachable again on the destination page (the bug: it wasn't).
+    await openMenuAndClick(/Templates/i)
+    await expect(page).toHaveURL(/\/templates/)
+    await expect(page.getByTestId("mobile-nav-toggle")).toBeVisible()
+  })
 })
 
 test.describe("Marketing routes load", () => {
