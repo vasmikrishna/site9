@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation"
 import { getSession } from "@/lib/session"
-import { getSitesForEmail, getAccountPlan, PLAN_SITE_LIMITS } from "@/lib/sites"
+import { getSitesForEmail, getAccountPlan, getAccountStats, PLAN_SITE_LIMITS } from "@/lib/sites"
 import { SitesDashboard } from "@/components/dashboard/sites-dashboard"
 
 export const dynamic = "force-dynamic"
@@ -15,6 +15,7 @@ export default async function DashboardPage() {
     getSitesForEmail(session.email),
     getAccountPlan(session.email),
   ])
+  const stats = await getAccountStats(sites.map((s) => s.id))
 
   return (
     <SitesDashboard
@@ -23,6 +24,7 @@ export default async function DashboardPage() {
       userEmail={session.email}
       plan={plan}
       limit={PLAN_SITE_LIMITS[plan]}
+      stats={stats}
     />
   )
 }

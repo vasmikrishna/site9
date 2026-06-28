@@ -144,6 +144,36 @@ export async function getAccountQuota(email: string): Promise<{ plan: AccountPla
   return { plan, used: sites.length, limit: PLAN_SITE_LIMITS[plan] }
 }
 
+/** Aggregated content counts across a set of owned sites, for the account dashboard. */
+export interface AccountStats {
+  pages: number
+  posts: number
+  enquiries: number
+}
+
+/**
+ * Sum pages, blog posts, and enquiries across the given owned tenant ids. Each
+ * count is a head-only query (no rows transferred). Returns zeros for an empty
+ * set so the dashboard renders cleanly before the first site exists.
+ */
+export async function getAccountStats(tenantIds: string[]): Promise<AccountStats> {
+  if (tenantIds.length === 0) return { pages: 0, posts: 0, enquiries: 0 }
+  const supabase = createClient()
+  const [pagesRes, postsRes, enquiriesRes] = await Promise.all([
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (supabase as any).from("custom_pages").select("*", { count: "exact", head: true }).in("tenant_id", tenantIds),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (supabase as any).from("blog_posts").select("*", { count: "exact", head: true }).in("tenant_id", tenantIds),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (supabase as any).from("contact_enquiries").select("*", { count: "exact", head: true }).in("tenant_id", tenantIds),
+  ])
+  return {
+    pages: pagesRes.count ?? 0,
+    posts: postsRes.count ?? 0,
+    enquiries: enquiriesRes.count ?? 0,
+  }
+}
+
 /** Generate a subdomain slug that isn't already taken. */
 async function uniqueSlug(name: string): Promise<string> {
   const supabase = createClient()
