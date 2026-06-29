@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { ArrowRight, Check, Mail, GitPullRequest, BookOpen, Code2 } from "lucide-react"
 import type { CustomPage } from "@/types"
 import { sanitizeHtml, sanitizeCss } from "@/lib/sanitize-html"
+import { SCROLL_REVEAL_CSS, SCROLL_REVEAL_SCRIPT } from "@/lib/scroll-reveal"
 import { FEATURES } from "@/lib/features"
 import { FormHandler } from "@/components/public/form-handler"
 import { TemplateCarousel } from "@/components/public/template-carousel"
@@ -75,7 +76,13 @@ export default async function LandingPage() {
     return (
       <FormHandler>
         <style dangerouslySetInnerHTML={{ __html: sanitizeCss(homepageOverride.css) }} />
+        {/* Published HTML strips <script>, so the page's own scroll-reveal runtime
+            never runs. Inject Site9's trusted reveal CSS + script (same as the
+            /p/[slug] custom-page renderer) so s9-reveal sections become visible
+            instead of staying at opacity:0. */}
+        <style dangerouslySetInnerHTML={{ __html: SCROLL_REVEAL_CSS }} />
         <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(homepageOverride.html) }} />
+        <script dangerouslySetInnerHTML={{ __html: SCROLL_REVEAL_SCRIPT }} />
       </FormHandler>
     )
   }
