@@ -6,7 +6,7 @@ import { useEffect, useState } from "react"
 import { cn } from "@/lib/utils"
 import {
   LayoutDashboard, Building2, LayoutGrid, LayoutTemplate, Globe, Palette,
-  Users, CreditCard, LogOut, Menu, X,
+  Users, CreditCard, Newspaper, LogOut, Menu, X,
 } from "lucide-react"
 
 const NAV: { href: string; label: string; icon: React.ElementType }[] = [
@@ -14,6 +14,7 @@ const NAV: { href: string; label: string; icon: React.ElementType }[] = [
   { href: "/superadmin/users", label: "Users", icon: Users },
   { href: "/superadmin/tenants", label: "Sites", icon: Building2 },
   { href: "/superadmin/payments", label: "Payments", icon: CreditCard },
+  { href: "/superadmin/blog", label: "Blogs", icon: Newspaper },
 ]
 const BUILDER_NAV: { href: string; label: string; icon: React.ElementType }[] = [
   { href: "/superadmin/templates", label: "Templates", icon: LayoutTemplate },
