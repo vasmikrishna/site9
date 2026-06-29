@@ -22,9 +22,22 @@ function slugify(value: string): string {
 interface BlogFormProps {
   mode: "create" | "edit"
   id?: string
+  // Defaults target the tenant admin; super admin overrides these to author
+  // for a specific site via the cross-tenant API.
+  apiBase?: string
+  tenantId?: string
+  listHref?: string
+  uploadUrl?: string
 }
 
-export function BlogForm({ mode, id }: BlogFormProps) {
+export function BlogForm({
+  mode,
+  id,
+  apiBase = "/api/admin/blog",
+  tenantId,
+  listHref = "/admin/blog",
+  uploadUrl = "/api/build/upload",
+}: BlogFormProps) {
   const router = useRouter()
   const [post, setPost] = useState<Partial<BlogPost>>({
     title: "",
@@ -47,7 +60,7 @@ export function BlogForm({ mode, id }: BlogFormProps) {
     if (mode !== "edit" || !id) return
     async function fetchPost() {
       try {
-        const res = await fetch(`/api/admin/blog/${id}`)
+        const res = await fetch(`${apiBase}/${id}`)
         if (!res.ok) throw new Error("Failed to fetch post")
         const data = await res.json()
         setPost(data.post)
@@ -58,7 +71,7 @@ export function BlogForm({ mode, id }: BlogFormProps) {
       }
     }
     fetchPost()
-  }, [mode, id, setLoading])
+  }, [mode, id, apiBase, setLoading])
 
   function updateTitle(title: string) {
     setPost(p => ({ ...p, title }))
@@ -72,7 +85,7 @@ export function BlogForm({ mode, id }: BlogFormProps) {
     try {
       const formData = new FormData()
       formData.append("file", file)
-      const res = await fetch("/api/build/upload", { method: "POST", body: formData })
+      const res = await fetch(uploadUrl, { method: "POST", body: formData })
       if (!res.ok) throw new Error("Upload failed")
       const data = await res.json()
       setPost(p => ({ ...p, cover_image_url: data.url }))
@@ -109,12 +122,11 @@ export function BlogForm({ mode, id }: BlogFormProps) {
         cover_image_url: post.cover_image_url || null,
         author_name: post.author_name || null,
         status: post.status || "draft",
+        ...(tenantId ? { tenant_id: tenantId } : {}),
       }
 
       const res = await fetch(
-        mode === "create"
-          ? "/api/admin/blog"
-          : `/api/admin/blog/${id}`,
+        mode === "create" ? apiBase : `${apiBase}/${id}`,
         {
           method: mode === "create" ? "POST" : "PATCH",
           headers: { "Content-Type": "application/json" },
@@ -129,7 +141,7 @@ export function BlogForm({ mode, id }: BlogFormProps) {
 
       const data = await res.json()
       if (mode === "create") {
-        router.push(`/admin/blog/${data.post.id}`)
+        router.push(`${listHref}/${data.post.id}`)
       } else {
         router.refresh()
       }
