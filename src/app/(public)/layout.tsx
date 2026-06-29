@@ -4,6 +4,8 @@ import { getTenantSlug, getCurrentTenant } from "@/lib/tenant"
 import { getCanonicalOrigin, isMainSite, buildLocalBusinessJsonLd, buildWebSiteJsonLd, buildOrganizationJsonLd } from "@/lib/seo"
 import { SiteHeader, type HeaderAuth } from "@/components/site/header"
 import { SiteFooter } from "@/components/site/footer"
+import { MarketingHeader } from "@/components/public/marketing-header"
+import { MarketingFooter } from "@/components/public/marketing-footer"
 import { getSession } from "@/lib/session"
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -66,7 +68,22 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
         ...(tenant ? [buildLocalBusinessJsonLd(tenant, settings, origin)] : []),
       ]
 
-  const cssVars = `
+  const mainSite = isMainSite(slug)
+
+  // Tenant sites use their own brand theme; Site9's own pages (the apex) use the
+  // marketing theme tokens so shared (public) pages like /blog match /pricing &
+  // /templates instead of inheriting a tenant's colors.
+  const cssVars = mainSite
+    ? `
+    :root {
+      --site-primary: var(--foreground);
+      --site-secondary: var(--muted);
+      --site-accent: var(--accent);
+      --site-bg: var(--background);
+      --site-text: var(--foreground);
+    }
+  `
+    : `
     :root {
       --site-primary: ${settings.theme_primary};
       --site-secondary: ${settings.theme_secondary};
@@ -86,11 +103,19 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
           dangerouslySetInnerHTML={{ __html: JSON.stringify(ld) }}
         />
       ))}
-      <div style={{ background: "var(--site-bg)", color: "var(--site-text)", minHeight: "100vh" }}>
-        <SiteHeader settings={settings} auth={auth} />
-        <main>{children}</main>
-        <SiteFooter settings={settings} />
-      </div>
+      {mainSite ? (
+        <div className="min-h-screen bg-background text-foreground">
+          <MarketingHeader />
+          <main>{children}</main>
+          <MarketingFooter />
+        </div>
+      ) : (
+        <div style={{ background: "var(--site-bg)", color: "var(--site-text)", minHeight: "100vh" }}>
+          <SiteHeader settings={settings} auth={auth} />
+          <main>{children}</main>
+          <SiteFooter settings={settings} />
+        </div>
+      )}
     </>
   )
 }
