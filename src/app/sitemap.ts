@@ -9,15 +9,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const origin = getCanonicalOrigin(tenant, slug)
   const now = new Date()
 
-  if (isMainSite(slug)) {
-    return [
-      { url: origin, lastModified: now, changeFrequency: "weekly", priority: 1.0 },
-      { url: `${origin}/about`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
-      { url: `${origin}/services`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
-      { url: `${origin}/contact`, lastModified: now, changeFrequency: "monthly", priority: 0.6 },
-      { url: `${origin}/templates`, lastModified: now, changeFrequency: "weekly", priority: 0.7 },
-    ]
-  }
+  const mainSite = isMainSite(slug)
 
   const entries: MetadataRoute.Sitemap = [
     { url: origin, lastModified: now, changeFrequency: "weekly", priority: 1.0 },
@@ -26,12 +18,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${origin}/contact`, lastModified: now, changeFrequency: "monthly", priority: 0.6 },
   ]
 
+  // The marketing/templates gallery only lives on the apex site.
+  if (mainSite) {
+    entries.push({ url: `${origin}/templates`, lastModified: now, changeFrequency: "weekly", priority: 0.7 })
+  }
+
+  // Custom pages and blog posts must be listed for the apex site too — the
+  // platform's own content (incl. the daily content engine) lives on the
+  // "site9" tenant, so skipping it here would leave that content unindexed.
   if (FEATURES.pageBuilder) {
     await appendCustomPageUrls(entries, origin, tenant?.id ?? null)
   }
 
   if (FEATURES.blog) {
-    entries.push({ url: `${origin}/blog`, lastModified: now, changeFrequency: "weekly", priority: 0.7 })
+    entries.push({ url: `${origin}/blog`, lastModified: now, changeFrequency: "daily", priority: 0.7 })
     await appendBlogUrls(entries, origin, tenant?.id ?? null)
   }
 

@@ -2,6 +2,8 @@ import { NextResponse } from "next/server"
 import { getSession } from "@/lib/session"
 import { createClient } from "@/lib/supabase/server"
 import { getCurrentTenant } from "@/lib/tenant"
+import { getCanonicalOrigin } from "@/lib/seo"
+import { submitToIndexNow } from "@/lib/indexnow"
 import type { BlogPostStatus } from "@/types"
 
 export const dynamic = "force-dynamic"
@@ -107,6 +109,13 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       return NextResponse.json({ error: "Not found" }, { status: 404 })
     }
     return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+
+  // Notify IndexNow when the post is live so the edit is recrawled promptly.
+  const post = data as { slug?: string; status?: string } | null
+  if (post?.status === "published" && post.slug) {
+    const origin = getCanonicalOrigin(tenant, tenant?.slug ?? "site9")
+    await submitToIndexNow([`${origin}/blog/${post.slug}`, `${origin}/blog`])
   }
 
   return NextResponse.json({ post: data })

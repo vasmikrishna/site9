@@ -44,7 +44,12 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: "Blog",
     description: settings.site_tagline ?? `Latest from ${siteName}`,
-    alternates: { canonical: `${origin}/blog` },
+    alternates: {
+      canonical: `${origin}/blog`,
+      types: {
+        "application/rss+xml": [{ url: `${origin}/blog/feed.xml`, title: `${siteName} — Blog` }],
+      },
+    },
     openGraph: {
       title: "Blog",
       description: settings.site_tagline ?? `Latest from ${siteName}`,

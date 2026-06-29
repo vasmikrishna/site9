@@ -4,7 +4,7 @@ import type { Metadata } from "next"
 import { ArrowLeft } from "lucide-react"
 import { getSiteSettings } from "@/lib/site-settings"
 import { getCurrentTenant, getTenantSlug } from "@/lib/tenant"
-import { getCanonicalOrigin, buildArticleJsonLd } from "@/lib/seo"
+import { getCanonicalOrigin, buildArticleJsonLd, buildBreadcrumbJsonLd } from "@/lib/seo"
 import { sanitizeHtml } from "@/lib/sanitize-html"
 import type { BlogPost } from "@/types"
 
@@ -86,9 +86,16 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
     dateModified: post.updated_at,
   })
 
+  const breadcrumbJsonLd = buildBreadcrumbJsonLd([
+    { name: "Home", url: origin },
+    { name: "Blog", url: `${origin}/blog` },
+    { name: post.title, url: canonicalUrl },
+  ])
+
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
 
       <div style={{ background: "var(--site-bg)", minHeight: "60vh" }}>
         {/* Hero strip with cover image or primary color */}

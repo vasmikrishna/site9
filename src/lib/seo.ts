@@ -51,6 +51,38 @@ export function buildWebSiteJsonLd(canonicalOrigin: string, name: string) {
   }
 }
 
+export function buildOrganizationJsonLd(
+  canonicalOrigin: string,
+  name: string,
+  logo?: string | null,
+) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name,
+    url: canonicalOrigin,
+    ...(logo ? { logo } : {}),
+  }
+}
+
+export interface BreadcrumbItem {
+  name: string
+  url: string
+}
+
+export function buildBreadcrumbJsonLd(items: BreadcrumbItem[]) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: items.map((item, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      name: item.name,
+      item: item.url,
+    })),
+  }
+}
+
 export interface ArticleJsonLdInput {
   url: string
   headline: string
