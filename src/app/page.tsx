@@ -12,6 +12,14 @@ import { FormHandler } from "@/components/public/form-handler"
 import { TemplateCarousel } from "@/components/public/template-carousel"
 import { MarketingHeader } from "@/components/public/marketing-header"
 import { ThemeLogo } from "@/components/ui/theme-logo"
+import type { Metadata } from "next"
+
+export const metadata: Metadata = {
+  title: "Site9 — One Website for Every Business",
+  description:
+    "Build and launch a professional website in minutes. Answer a few questions, Site9 generates your site, and you publish it — free on a subdomain or Pro with a custom domain.",
+  alternates: { canonical: "/" },
+}
 
 export const dynamic = "force-dynamic"
 
