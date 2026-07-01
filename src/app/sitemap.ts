@@ -18,14 +18,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${origin}/contact`, lastModified: now, changeFrequency: "monthly", priority: 0.6 },
   ]
 
-  // The marketing/templates gallery only lives on the apex site.
+  // Marketing pages that only live on the apex site.
   if (mainSite) {
     entries.push({ url: `${origin}/templates`, lastModified: now, changeFrequency: "weekly", priority: 0.7 })
+    entries.push({ url: `${origin}/pricing`, lastModified: now, changeFrequency: "monthly", priority: 0.8 })
+    entries.push({ url: `${origin}/open-source`, lastModified: now, changeFrequency: "monthly", priority: 0.6 })
   }
 
-  // Custom pages and blog posts must be listed for the apex site too — the
-  // platform's own content (incl. the daily content engine) lives on the
-  // "site9" tenant, so skipping it here would leave that content unindexed.
+  // Custom pages and blog posts. On the apex (mainSite, no tenant) this is
+  // Site9's OWN content — rows with tenant_id NULL. A customer's pages live on
+  // their subdomain and must NOT be listed under site9.in, or Google indexes
+  // duplicate/foreign content on the apex.
   if (FEATURES.pageBuilder) {
     await appendCustomPageUrls(entries, origin, tenant?.id ?? null)
   }
@@ -52,7 +55,7 @@ async function appendBlogUrls(
       .from("blog_posts")
       .select("slug, updated_at")
       .eq("status", "published")
-    if (tenantId) query = query.eq("tenant_id", tenantId)
+    query = tenantId ? query.eq("tenant_id", tenantId) : query.is("tenant_id", null)
     const { data } = await query
     const rows = (data ?? []) as { slug: string; updated_at: string | null }[]
     for (const post of rows) {
@@ -82,7 +85,7 @@ async function appendCustomPageUrls(
       .select("slug, updated_at")
       .eq("status", "published")
       .eq("is_homepage", false)
-    if (tenantId) query = query.eq("tenant_id", tenantId)
+    query = tenantId ? query.eq("tenant_id", tenantId) : query.is("tenant_id", null)
     const { data } = await query
     for (const page of data ?? []) {
       entries.push({
