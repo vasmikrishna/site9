@@ -23,6 +23,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     entries.push({ url: `${origin}/templates`, lastModified: now, changeFrequency: "weekly", priority: 0.7 })
     entries.push({ url: `${origin}/pricing`, lastModified: now, changeFrequency: "monthly", priority: 0.8 })
     entries.push({ url: `${origin}/open-source`, lastModified: now, changeFrequency: "monthly", priority: 0.6 })
+    entries.push({ url: `${origin}/sites`, lastModified: now, changeFrequency: "daily", priority: 0.7 })
   }
 
   // Custom pages and blog posts. On the apex (mainSite, no tenant) this is

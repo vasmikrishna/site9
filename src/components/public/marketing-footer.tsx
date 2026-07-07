@@ -19,6 +19,7 @@ export function MarketingFooter() {
         <p className="text-sm text-muted-foreground">Build your website in 5 minutes. Open source on GitHub.</p>
         <div className="flex items-center gap-4">
           <Link href="/blog" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Blog</Link>
+          <Link href="/sites" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Made with Site9</Link>
           <a
             href="https://github.com/vasmikrishna/site9"
             target="_blank"
