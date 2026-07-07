@@ -9,6 +9,10 @@ export const metadata: Metadata = {
   alternates: { canonical: "/sites" },
 }
 
+// No dynamic APIs are used, so without this Next bakes the directory in at
+// build time and newly published sites never appear. Hourly ISR.
+export const revalidate = 3600
+
 interface DirectorySite {
   id: string
   name: string
