@@ -13,6 +13,9 @@ Tenant-aware, generated per request via `getCanonicalOrigin`. Lists home/about/s
 ## Robots — `src/app/robots.ts`
 Allows `/`, disallows `/admin/`, `/superadmin/`, `/api/`, `/login`, `/register`, etc. Points at `/sitemap.xml`.
 
+## Sites directory — `src/app/sites/page.tsx` (#17)
+Public apex page at `/sites` listing every active tenant with a published homepage (linking to its subdomain or verified custom domain) plus the latest published tenant blog posts. This is the crawl path from the apex to `*.site9.in` — without inbound links Google never discovers the subdomains. Linked from the marketing footers and listed in the apex sitemap.
+
 ## IndexNow — `src/lib/indexnow.ts` + `/api/indexnow-key`
 Instant-recrawl pings to Bing/Yandex on publish. `submitToIndexNow(urls)` groups URLs per host and is best-effort (never blocks a publish). Requires env `INDEXNOW_KEY` (hex, 8–128 chars), served at `/api/indexnow-key` and referenced as `keyLocation`. Wired into `POST /api/admin/blog` and `PATCH /api/admin/blog/[id]` (when status is `published`).
 

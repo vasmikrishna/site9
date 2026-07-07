@@ -289,6 +289,9 @@ export default async function LandingPage() {
           <ThemeLogo className="h-9 w-auto" />
           <p className="text-sm text-muted-foreground">One Website for Every Business. Open source on GitHub.</p>
           <div className="flex items-center gap-4">
+            <Link href="/sites" className="text-sm text-muted-foreground hover:text-foreground" data-testid="footer-sites-link">
+              Made with Site9
+            </Link>
             <a
               href="https://github.com/vasmikrishna/site9"
               target="_blank"

@@ -82,3 +82,9 @@
   Tables/migration `013_subscriptions.sql`, `lib/razorpay.ts`, `lib/subscription.ts`,
   `/api/billing/*`, `UpgradeBanner`, setup script, unit + e2e tests.
   See [features/billing.md](../features/billing.md).
+
+## 2026-07-07 — Sites directory page (#17)
+  `/sites` on the apex lists all live tenant sites (published homepage, active)
+  and their latest blog posts, giving Google a crawl path to `*.site9.in`
+  subdomains. Footer links + apex sitemap entry.
+  See [features/seo.md](../features/seo.md).
