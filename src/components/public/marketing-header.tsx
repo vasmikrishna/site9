@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import { TrackedLink } from "@/components/tracked-link"
 import { ThemeToggle } from "@/components/ui/theme-toggle"
 import { ThemeLogo } from "@/components/ui/theme-logo"
 import { MobileNav } from "@/components/public/mobile-nav"
@@ -50,8 +51,8 @@ export function MarketingHeader({
           >
             <GitHubIcon className="h-5 w-5" />
           </a>
-          <Button asChild variant="ghost" size="sm" className="hidden md:inline-flex"><Link href="/login">Sign in</Link></Button>
-          <Button asChild variant="brand" size="sm" className="hidden md:inline-flex"><Link href="/start">Get started</Link></Button>
+          <Button asChild variant="ghost" size="sm" className="hidden md:inline-flex"><TrackedLink href="/login" event="login_start" eventParams={{ source: "header" }}>Sign in</TrackedLink></Button>
+          <Button asChild variant="brand" size="sm" className="hidden md:inline-flex"><TrackedLink href="/start" event="sign_up_start" eventParams={{ source: "header" }}>Get started</TrackedLink></Button>
           <MobileNav navLinks={navLinks} />
         </div>
       </div>

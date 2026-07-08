@@ -73,6 +73,10 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
   // Tenant sites use their own brand theme; Site9's own pages (the apex) use the
   // marketing theme tokens so shared (public) pages like /blog match /pricing &
   // /templates instead of inheriting a tenant's colors.
+  // --site-surface (card background) and --site-on-primary (text sitting on a
+  // --site-primary banner) let the shared (public) pages adapt to the marketing
+  // light/dark toggle on the apex without white-on-white text. Tenants keep the
+  // fixed white values these spots used to hardcode, so their look is unchanged.
   const cssVars = mainSite
     ? `
     :root {
@@ -81,6 +85,8 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
       --site-accent: var(--accent);
       --site-bg: var(--background);
       --site-text: var(--foreground);
+      --site-surface: var(--card);
+      --site-on-primary: var(--background);
     }
   `
     : `
@@ -90,6 +96,8 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
       --site-accent: ${settings.theme_accent};
       --site-bg: ${settings.theme_bg};
       --site-text: ${settings.theme_text};
+      --site-surface: #ffffff;
+      --site-on-primary: #ffffff;
     }
   `
 

@@ -5,16 +5,24 @@ Publishing is **never blocked**; an active subscription only hides the upgrade
 prompt and unlocks "full potential" perks (branding removal, custom domain, etc.).
 
 ## Plans
-| Plan | Price | Notes |
-|------|-------|-------|
-| Monthly | ₹29 / month | Billed monthly, cancel anytime |
-| Annual | ₹108 / year | ₹9/month — best value |
+Two paid tiers (Pro, Max), each in **monthly** and **yearly** cadence (yearly =
+2 months free). Plus a Free tier (1 website).
 
-Plans are created once in the Razorpay dashboard via the setup script and their
-ids stored in env.
+| Plan | Monthly | Yearly | Websites |
+|------|---------|--------|----------|
+| Free | ₹0 | — | 1 |
+| Pro | ~~₹199~~ ₹99/mo | ~~₹1,188~~ ₹990/yr | up to 5 |
+| Max | ~~₹499~~ ₹299/mo | ~~₹3,588~~ ₹2,990/yr | up to 20 |
+
+Plan keys are composite `tier_period`: `pro_monthly`, `pro_yearly`,
+`max_monthly`, `max_yearly`. Env (live plan IDs):
+`RAZORPAY_PLAN_PRO_ID` `plan_T7OjeP1wqzwJP1`, `RAZORPAY_PLAN_PRO_YEARLY_ID`
+`plan_T7QQZBPvJNMGA8`, `RAZORPAY_PLAN_MAX_ID` `plan_T7Ptw7aBZD5M0g`,
+`RAZORPAY_PLAN_MAX_YEARLY_ID` `plan_T7QQZP7xc9PY7E`.
+**Website-count limits are display-only — not yet enforced** (no account-level site cap wired).
 
 ## Data model
-- **subscriptions** (one row per tenant) — `tenant_id (unique)`, `plan (monthly|annual)`, `status`, `razorpay_subscription_id`, `razorpay_plan_id`, `razorpay_customer_id`, `short_url`, `current_end`, timestamps.
+- **subscriptions** (one row per tenant) — `tenant_id (unique)`, `plan (pro_monthly|pro_yearly|max_monthly|max_yearly)`, `status`, `razorpay_subscription_id`, `razorpay_plan_id`, `razorpay_customer_id`, `short_url`, `current_end`, timestamps.
 - **Entitlement** (`isSubscriptionActive`): status in `active`/`authenticated` **and** `current_end` (if set) is in the future.
 
 ## Surfaces
@@ -29,6 +37,7 @@ ids stored in env.
 | Invoice history | `GET /api/billing/invoices` |
 | Lifecycle webhook | `POST /api/billing/webhook` (records charges → `subscription_invoices`, sends receipt/failed emails) |
 | Status | `GET /api/billing/status` (incl. `cancelAtPeriodEnd`) |
+| Super-admin payments | `/superadmin/payments` — lists recorded invoices **and** subscription attempts that never produced an invoice (`created`/`halted`→failed), so initiated/failed charges are visible (`src/lib/superadmin-data.ts`) |
 | Reusable Checkout hook | `src/hooks/use-razorpay-checkout.ts` |
 | Receipt / dunning emails | `src/lib/email/billing.ts` |
 | Razorpay client/plans/signatures | `src/lib/razorpay.ts` |

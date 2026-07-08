@@ -12,7 +12,7 @@ import { getSubscriptionByTenant, upsertSubscription } from "@/lib/subscription"
 
 export const dynamic = "force-dynamic"
 
-const bodySchema = z.object({ plan: z.enum(["monthly", "annual"]) })
+const bodySchema = z.object({ plan: z.enum(["pro_monthly", "pro_yearly", "max_monthly", "max_yearly"]) })
 
 /**
  * POST /api/billing/change-plan
@@ -20,7 +20,7 @@ const bodySchema = z.object({ plan: z.enum(["monthly", "annual"]) })
  * a new one. When Razorpay is configured, uses the Razorpay API. When not configured,
  * unlocks the new plan inline (dev fallback).
  *
- * Body: { plan: "monthly" | "annual" }
+ * Body: { plan: "pro_monthly" | "pro_yearly" | "max_monthly" | "max_yearly" }
  */
 export async function POST(req: Request) {
   const owner = await getOwnerContext()
@@ -45,7 +45,7 @@ export async function POST(req: Request) {
   // ── Dev fallback: no Razorpay keys → unlock inline ──────────────────────────
   if (!isRazorpayConfigured()) {
     const end = new Date()
-    end.setMonth(end.getMonth() + (newPlan.key === "annual" ? 12 : 1))
+    end.setMonth(end.getMonth() + (newPlan.period === "yearly" ? 12 : 1))
     await upsertSubscription(owner.tenant.id, {
       plan: newPlan.key,
       status: "active",

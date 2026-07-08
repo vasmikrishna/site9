@@ -33,7 +33,7 @@ export function BlogIndexClient({ posts }: { posts: BlogPostCard[] }) {
                 className="group overflow-hidden rounded-xl border h-full flex flex-col transition-shadow hover:shadow-lg"
                 style={{
                   borderColor: "color-mix(in srgb, var(--site-primary) 15%, transparent)",
-                  background: "#fff",
+                  background: "var(--site-surface)",
                 }}
               >
                 {/* Cover Image */}

@@ -66,9 +66,9 @@ export default async function BlogIndexPage() {
     <div style={{ background: "var(--site-bg)", minHeight: "60vh" }}>
       {/* Hero banner */}
       <section style={{ background: "var(--site-primary)" }} className="py-14 sm:py-20">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          <h1 className="text-4xl font-bold text-white">Blog</h1>
-          <p className="mt-3 text-white/80 max-w-2xl text-lg">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6" style={{ color: "var(--site-on-primary)" }}>
+          <h1 className="text-4xl font-bold">Blog</h1>
+          <p className="mt-3 max-w-2xl text-lg" style={{ opacity: 0.8 }}>
             {settings.site_tagline ?? `Latest articles and insights from ${siteName}`}
           </p>
         </div>

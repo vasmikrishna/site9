@@ -19,7 +19,7 @@ export interface PaymentFailedEmailOptions {
 
 /**
  * Send a receipt email for a successful payment / invoice.
- * Amount is in paise (e.g. 19900 = ₹199).
+ * Amount is in paise (e.g. 9900 = ₹99).
  */
 export async function sendReceiptEmail(options: ReceiptEmailOptions): Promise<boolean> {
   const amountInRupees = (options.amount / 100).toFixed(2)

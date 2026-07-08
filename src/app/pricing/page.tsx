@@ -1,15 +1,16 @@
 import Link from "next/link"
 import type { Metadata } from "next"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { ArrowRight, Check, X as XIcon, Server, Cloud } from "lucide-react"
+import { Check, X as XIcon, Server, Cloud } from "lucide-react"
 import { ThemeLogo } from "@/components/ui/theme-logo"
 import { MarketingHeader } from "@/components/public/marketing-header"
+import { PricingPlans } from "./pricing-plans"
+import { FEATURES, SITES } from "./plans-data"
 
 export const metadata: Metadata = {
   title: "Pricing | Site9",
-  description: "Build your website in 5 minutes. Free forever on a subdomain, or upgrade to Pro for ₹199/month with custom domain.",
+  description: "Build your website in 5 minutes. Free forever (1 website), Pro at ₹99/month for 5 websites, or Max at ₹299/month for 20 websites with priority support.",
   alternates: { canonical: "/pricing" },
 }
 
@@ -27,27 +28,6 @@ const NAV_LINKS = [
   { href: "/open-source", label: "Open Source" },
   { href: "/#about", label: "About" },
   { href: "/#contact", label: "Contact" },
-]
-
-interface Feature {
-  label: string
-  free: boolean
-  pro: boolean
-}
-
-const FEATURES: Feature[] = [
-  { label: "Website on yourname.site9.in", free: true, pro: true },
-  { label: "5 starter templates", free: true, pro: false },
-  { label: "All 100+ templates", free: false, pro: true },
-  { label: "Contact form", free: true, pro: true },
-  { label: "WhatsApp button", free: true, pro: true },
-  { label: "1 blog post", free: true, pro: false },
-  { label: "Unlimited blog posts", free: false, pro: true },
-  { label: "\"Powered by Site9\" badge", free: true, pro: false },
-  { label: "Remove Site9 badge", free: false, pro: true },
-  { label: "Custom domain (yourbusiness.com)", free: false, pro: true },
-  { label: "Google Analytics integration", free: false, pro: true },
-  { label: "Priority email support", free: false, pro: true },
 ]
 
 export default function PricingPage() {
@@ -95,68 +75,11 @@ export default function PricingPage() {
           <div className="text-center mb-4">
             <Badge variant="brand" className="mb-4">Managed Hosting</Badge>
             <h1 className="text-4xl font-bold tracking-tight">Simple, honest pricing</h1>
-            <p className="text-muted-foreground mt-3 text-lg">Two plans. No surprises. Cancel anytime.</p>
+            <p className="text-muted-foreground mt-3 text-lg">Three plans. No surprises. Cancel anytime.</p>
           </div>
           <p className="text-center text-sm text-muted-foreground mb-12">Prefer to self-host? It&apos;s free and always will be.</p>
 
-          <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto items-start">
-            {/* Free */}
-            <Card data-testid="plan-free">
-              <CardContent className="p-8 space-y-6">
-                <div>
-                  <h2 className="text-xl font-bold">Free</h2>
-                  <p className="text-sm text-muted-foreground mt-1">Get your business online</p>
-                </div>
-                <div>
-                  <span className="text-4xl font-bold">₹0</span>
-                  <span className="text-muted-foreground text-sm"> forever</span>
-                </div>
-                <Button asChild variant="outline" size="sm" className="w-full" data-testid="plan-free-cta">
-                  <Link href="/start">Start free <ArrowRight className="h-3 w-3" /></Link>
-                </Button>
-                <div className="space-y-3 pt-2">
-                  {FEATURES.filter(f => f.free).map((feat) => (
-                    <div key={feat.label} className="flex items-center gap-2 text-sm">
-                      <Check className="h-3.5 w-3.5 text-green-500 flex-shrink-0" />
-                      {feat.label}
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Pro */}
-            <Card className="border-foreground shadow-lg relative" data-testid="plan-pro">
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                <Badge variant="brand">Most popular</Badge>
-              </div>
-              <CardContent className="p-8 space-y-6">
-                <div>
-                  <h2 className="text-xl font-bold">Pro</h2>
-                  <p className="text-sm text-muted-foreground mt-1">Your own brand and domain</p>
-                </div>
-                <div>
-                  <span className="text-4xl font-bold">₹199</span>
-                  <span className="text-muted-foreground text-sm">/month</span>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    or <span className="font-medium text-foreground">₹1,499/year</span>
-                    <span className="text-green-500 text-xs ml-1">(save 37%)</span>
-                  </p>
-                </div>
-                <Button asChild variant="brand" size="sm" className="w-full" data-testid="plan-pro-cta">
-                  <Link href="/start">Get Pro <ArrowRight className="h-3 w-3" /></Link>
-                </Button>
-                <div className="space-y-3 pt-2">
-                  {FEATURES.filter(f => f.pro).map((feat) => (
-                    <div key={feat.label} className="flex items-center gap-2 text-sm">
-                      <Check className="h-3.5 w-3.5 text-green-500 flex-shrink-0" />
-                      {feat.label}
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+          <PricingPlans />
 
           {/* Comparison table */}
           <div className="mt-16 max-w-3xl mx-auto">
@@ -168,9 +91,16 @@ export default function PricingPage() {
                     <th className="text-left py-3 px-4 font-medium">Feature</th>
                     <th className="text-center py-3 px-4 font-medium w-24">Free</th>
                     <th className="text-center py-3 px-4 font-medium w-24">Pro</th>
+                    <th className="text-center py-3 px-4 font-medium w-24">Max</th>
                   </tr>
                 </thead>
                 <tbody>
+                  <tr className="border-b">
+                    <td className="py-3 px-4">Websites included</td>
+                    <td className="py-3 px-4 text-center font-medium">{SITES.free}</td>
+                    <td className="py-3 px-4 text-center font-medium">{SITES.pro}</td>
+                    <td className="py-3 px-4 text-center font-medium">{SITES.max}</td>
+                  </tr>
                   {FEATURES.map((feat) => (
                     <tr key={feat.label} className="border-b last:border-b-0">
                       <td className="py-3 px-4">{feat.label}</td>
@@ -182,6 +112,12 @@ export default function PricingPage() {
                       </td>
                       <td className="py-3 px-4 text-center">
                         {feat.pro
+                          ? <Check className="h-4 w-4 text-green-500 mx-auto" />
+                          : <XIcon className="h-4 w-4 text-muted-foreground/30 mx-auto" />
+                        }
+                      </td>
+                      <td className="py-3 px-4 text-center">
+                        {feat.max
                           ? <Check className="h-4 w-4 text-green-500 mx-auto" />
                           : <XIcon className="h-4 w-4 text-muted-foreground/30 mx-auto" />
                         }

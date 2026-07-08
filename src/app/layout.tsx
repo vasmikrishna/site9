@@ -1,6 +1,9 @@
 import type { Metadata } from "next"
 import { Geist, Geist_Mono } from "next/font/google"
+import { GoogleAnalytics } from "@next/third-parties/google"
 import { Providers } from "@/components/providers"
+import { ClarityAnalytics } from "@/components/clarity"
+import { GA_ID, analyticsEnabled, clarityEnabled } from "@/lib/analytics"
 import "./globals.css"
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] })
@@ -47,7 +50,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`} suppressHydrationWarning>
       <body className="min-h-screen bg-background text-foreground antialiased">
         <Providers>{children}</Providers>
+        {clarityEnabled && <ClarityAnalytics />}
       </body>
+      {analyticsEnabled && <GoogleAnalytics gaId={GA_ID} />}
     </html>
   )
 }

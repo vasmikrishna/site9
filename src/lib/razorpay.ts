@@ -9,52 +9,85 @@ import Razorpay from "razorpay"
  * demoable without hitting Razorpay.
  */
 
-export type PlanKey = "monthly" | "annual"
+export type PlanTier = "pro" | "max"
+export type BillingPeriod = "monthly" | "yearly"
+/** Composite plan id stored on the subscription, e.g. "pro_yearly". */
+export type PlanKey = "pro_monthly" | "pro_yearly" | "max_monthly" | "max_yearly"
 
 export interface PlanConfig {
   key: PlanKey
+  tier: PlanTier
+  /** Razorpay billing period (also the plan's billing cadence). */
+  period: BillingPeriod
   /** Razorpay plan id (from env, created via scripts/razorpay-setup.ts). */
   planId: string | undefined
   /** Price in paise (₹1 = 100 paise). */
   amount: number
-  period: "monthly" | "yearly"
+  /** Original (pre-discount) price in paise, shown struck through. */
+  originalAmount: number
+  /** Number of websites this plan unlocks. */
+  sites: number
   interval: number
   /** Number of billing cycles to schedule the subscription for. */
   totalCount: number
   label: string
-  /** Human-readable price, e.g. "₹199/month". */
+  /** Human-readable price, e.g. "₹99/month". */
   priceLabel: string
+  /** Original price label, e.g. "₹199". */
+  originalPriceLabel: string
   /** Short selling point shown on the plan card. */
   blurb: string
 }
 
 export const PLANS: Record<PlanKey, PlanConfig> = {
-  monthly: {
-    key: "monthly",
-    planId: process.env.RAZORPAY_PLAN_MONTHLY_ID,
-    amount: 19900, // ₹199
-    period: "monthly",
-    interval: 1,
-    totalCount: 120,
-    label: "Pro — Monthly",
-    priceLabel: "₹199/month",
-    blurb: "Billed every month. Cancel anytime.",
+  pro_monthly: {
+    key: "pro_monthly", tier: "pro", period: "monthly",
+    planId: process.env.RAZORPAY_PLAN_PRO_ID,
+    amount: 9900, // ₹99
+    originalAmount: 19900, // ₹199
+    sites: 5, interval: 1, totalCount: 120,
+    label: "Pro",
+    priceLabel: "₹99/month",
+    originalPriceLabel: "₹199",
+    blurb: "Up to 5 websites · all core features.",
   },
-  annual: {
-    key: "annual",
-    planId: process.env.RAZORPAY_PLAN_ANNUAL_ID,
-    amount: 149900, // ₹1,499
-    period: "yearly",
-    interval: 1,
-    totalCount: 10,
-    label: "Pro — Annual",
-    priceLabel: "₹1,499/year",
-    blurb: "₹125/month — save 37% vs monthly.",
+  pro_yearly: {
+    key: "pro_yearly", tier: "pro", period: "yearly",
+    planId: process.env.RAZORPAY_PLAN_PRO_YEARLY_ID,
+    amount: 99000, // ₹990 — 2 months free
+    originalAmount: 118800, // ₹1,188 (₹99 × 12)
+    sites: 5, interval: 1, totalCount: 10,
+    label: "Pro",
+    priceLabel: "₹990/year",
+    originalPriceLabel: "₹1,188",
+    blurb: "Up to 5 websites · 2 months free.",
+  },
+  max_monthly: {
+    key: "max_monthly", tier: "max", period: "monthly",
+    planId: process.env.RAZORPAY_PLAN_MAX_ID,
+    amount: 29900, // ₹299
+    originalAmount: 49900, // ₹499
+    sites: 20, interval: 1, totalCount: 120,
+    label: "Max",
+    priceLabel: "₹299/month",
+    originalPriceLabel: "₹499",
+    blurb: "Up to 20 websites · all features + priority support.",
+  },
+  max_yearly: {
+    key: "max_yearly", tier: "max", period: "yearly",
+    planId: process.env.RAZORPAY_PLAN_MAX_YEARLY_ID,
+    amount: 299000, // ₹2,990 — 2 months free
+    originalAmount: 358800, // ₹3,588 (₹299 × 12)
+    sites: 20, interval: 1, totalCount: 10,
+    label: "Max",
+    priceLabel: "₹2,990/year",
+    originalPriceLabel: "₹3,588",
+    blurb: "Up to 20 websites · 2 months free.",
   },
 }
 
 export function getPlan(key: string): PlanConfig | null {
-  return key === "monthly" || key === "annual" ? PLANS[key] : null
+  return key in PLANS ? PLANS[key as PlanKey] : null
 }
 
 export function isRazorpayConfigured(): boolean {
