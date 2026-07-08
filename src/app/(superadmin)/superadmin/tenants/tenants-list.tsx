@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
-import { User, Globe } from "lucide-react"
+import { User, Globe, Phone } from "lucide-react"
 import { formatDate } from "@/lib/utils"
 import { PaginatedList } from "@/components/paginated-list"
 import { formatPaise } from "@/lib/superadmin-data"
@@ -33,7 +33,7 @@ export function TenantsList({ tenants }: { tenants: any[] }) {
       searchPlaceholder="Search tenants by name, subdomain, or industry..."
       testId="tenants"
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      searchText={(t: any) => `${t.name} ${t.slug} ${t.status} ${t.plan} ${t.ownerEmail ?? ""} ${INDUSTRY_LABELS[t.industry] ?? t.industry}`}
+      searchText={(t: any) => `${t.name} ${t.slug} ${t.status} ${t.plan} ${t.ownerEmail ?? ""} ${t.ownerPhone ?? ""} ${INDUSTRY_LABELS[t.industry] ?? t.industry}`}
     >
       {(pageTenants) => (
         <div className="space-y-2">
@@ -64,6 +64,12 @@ export function TenantsList({ tenants }: { tenants: any[] }) {
                       <span className="flex items-center gap-1">
                         <User className="h-3 w-3" />{t.ownerEmail ?? "no owner"}
                       </span>
+                      {t.ownerPhone && (
+                        <>
+                          <span>·</span>
+                          <span className="flex items-center gap-1"><Phone className="h-3 w-3" />{t.ownerPhone}</span>
+                        </>
+                      )}
                       {t.paidPaise > 0 && (
                         <>
                           <span>·</span>
