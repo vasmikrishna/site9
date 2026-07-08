@@ -49,6 +49,9 @@ export async function GET(req: Request) {
     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
     let userId = googleUser.id ?? googleUser.sub
     let userName = googleUser.name ?? googleUser.email
+    // Google never returns a phone, so a Gmail account has one only if it was
+    // captured earlier. When missing we force /complete-profile after sign-in.
+    let needsPhone = true
 
     if (supabaseUrl?.startsWith("http") && supabaseKey) {
       try {
@@ -56,10 +59,11 @@ export async function GET(req: Request) {
         const supabase = createClient(supabaseUrl, supabaseKey)
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { data: existing } = await (supabase as any)
-          .from("users").select("id, name").ilike("email", googleUser.email).maybeSingle()
+          .from("users").select("id, name, phone").ilike("email", googleUser.email).maybeSingle()
         if (existing) {
           userId = existing.id
           userName = existing.name ?? userName
+          needsPhone = !existing.phone
         } else {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const { data: created } = await (supabase as any)
@@ -67,6 +71,7 @@ export async function GET(req: Request) {
             .insert({ email: googleUser.email, name: userName, role: "admin", tenant_id: null })
             .select("id, name").single()
           if (created) { userId = created.id; userName = created.name }
+          needsPhone = true
         }
       } catch { /* fall through with Google id */ }
     }
@@ -78,8 +83,9 @@ export async function GET(req: Request) {
       name: userName,
       role: "admin",
       tenant_id: sites[0]?.id ?? "",
+      needsPhone,
     })
-    return NextResponse.redirect(`${origin}/dashboard`)
+    return NextResponse.redirect(`${origin}${needsPhone ? "/complete-profile" : "/dashboard"}`)
   } catch (err) {
     console.error("[google/callback]", err)
     return NextResponse.redirect(`${origin}/login?error=google_failed`)

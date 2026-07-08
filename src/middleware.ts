@@ -100,7 +100,7 @@ async function extractTenantSlug(req: NextRequest): Promise<string> {
 
 // Auth/management routes that only ever live on the apex (site9.in). Tenant
 // hosts (subdomains + custom domains) are public-only.
-const MANAGEMENT_PREFIXES = ["/login", "/register", "/admin", "/dashboard", "/account", "/build", "/start", "/superadmin"]
+const MANAGEMENT_PREFIXES = ["/login", "/register", "/admin", "/dashboard", "/account", "/build", "/start", "/superadmin", "/complete-profile"]
 
 export async function middleware(req: NextRequest) {
   const path = req.nextUrl.pathname
@@ -160,10 +160,27 @@ export async function middleware(req: NextRequest) {
     path.startsWith("/admin") ||
     path.startsWith("/dashboard") ||
     path.startsWith("/account") ||
-    path.startsWith("/build")
+    path.startsWith("/build") ||
+    path.startsWith("/complete-profile")
 
   if (!session && isProtected) {
     return NextResponse.redirect(new URL("/login", req.url))
+  }
+
+  // Gmail sign-ins with no mobile number are held at /complete-profile until they
+  // provide one. Allow that page, its save API, and logout; funnel every other
+  // management route back to it so the step can't be skipped.
+  if (session?.needsPhone) {
+    const allowed =
+      path === "/complete-profile" ||
+      path === "/api/auth/phone" ||
+      path === "/api/auth/logout"
+    if (!allowed && isManagementPath) {
+      return NextResponse.redirect(new URL("/complete-profile", req.url))
+    }
+  } else if (session && path === "/complete-profile") {
+    // Already has a number — no reason to sit on the gate page.
+    return NextResponse.redirect(new URL("/dashboard", req.url))
   }
 
   if (session && (path === "/login" || path === "/register")) {
@@ -182,6 +199,7 @@ export const config = {
     "/account/:path*",
     "/build/:path*",
     "/start",
+    "/complete-profile",
     "/login",
     "/register",
     "/api/:path*",

@@ -7,6 +7,10 @@
 - **Sitemap index.** New apex-only `/sitemap-index.xml` lists every live tenant's sitemap (active + published homepage, same rule as `/sites`), referenced from the apex `robots.txt`. One URL to submit in Search Console now leads Google to all `*.site9.in` sites.
 - Note: the stale `biharstartupsclub`/`controlpanel`/`lavanyapurefood.site9.in` URLs seen in Search Console are historical entries from a previous owner of the domain — unrelated to the platform; they age out or can be removed in GSC.
 
+### Added — Mobile number from Google sign-ins (#22)
+- **Gmail signups now provide a phone.** Google OAuth never returns a phone number, so Gmail accounts previously had `users.phone = null`. The callback now flags any Gmail sign-in with no number on file (`needsPhone` in the session JWT) and routes it to a new `/complete-profile` page before the dashboard — covering both new signups and existing Google users on their next login.
+- **`/complete-profile`** — single required "Mobile number" field; `POST /api/auth/phone` validates + saves `users.phone` and clears the gate. Middleware funnels management routes back to it while `needsPhone` is set, so the step can't be skipped. Super-admin is unaffected.
+
 ### Added — Platform SEO hardening (#5)
 - **Apex sitemap fix.** `sitemap.ts` no longer early-returns 5 static URLs for the main site — the apex (`site9.in`) now lists published blog posts and custom pages too, so the platform's own content (incl. the daily content engine) gets submitted. `/blog` marked `changeFrequency: daily`.
 - **Search-console verification.** Root metadata emits Google/Bing verification tags from `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` / `NEXT_PUBLIC_BING_SITE_VERIFICATION` (GSC domain-property via DNS already covers all `*.site9.in`).
