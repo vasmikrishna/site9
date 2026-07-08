@@ -22,6 +22,9 @@ export type SessionPayload = {
   name: string
   role: "admin" | "client" | "employee"
   tenant_id: string
+  // Set when a Google sign-in has no mobile number yet. While true, middleware
+  // funnels the user to /complete-profile until they provide one.
+  needsPhone?: boolean
 }
 
 export async function createSession(payload: SessionPayload) {
