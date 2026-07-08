@@ -67,6 +67,7 @@ export default async function SuperAdminDashboard() {
                       <span className="font-mono">{t.slug}.site9.in</span>
                       <span className="mx-2">·</span>
                       <span>{t.ownerEmail ?? "no owner"}</span>
+                      {t.ownerPhone && (<><span className="mx-2">·</span><span>{t.ownerPhone}</span></>)}
                       {t.paidPaise > 0 && (<><span className="mx-2">·</span><span className="text-foreground">{formatPaise(t.paidPaise)} paid</span></>)}
                     </p>
                   </div>

@@ -2,7 +2,7 @@
 
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Globe } from "lucide-react"
+import { Globe, Phone } from "lucide-react"
 import { formatDate } from "@/lib/utils"
 import { PaginatedList } from "@/components/paginated-list"
 import { formatPaise, type SAUser } from "@/lib/superadmin-data"
@@ -12,9 +12,9 @@ export function UsersList({ users }: { users: SAUser[] }) {
     <PaginatedList
       items={users}
       pageSize={12}
-      searchPlaceholder="Search users by name or email..."
+      searchPlaceholder="Search users by name, email, or phone..."
       testId="users"
-      searchText={(u: SAUser) => `${u.name ?? ""} ${u.email} ${u.plan}`}
+      searchText={(u: SAUser) => `${u.name ?? ""} ${u.email} ${u.phone ?? ""} ${u.plan}`}
     >
       {(pageUsers) => (
         <div className="space-y-2">
@@ -34,6 +34,12 @@ export function UsersList({ users }: { users: SAUser[] }) {
                       </div>
                       <div className="flex items-center gap-3 mt-0.5 text-xs text-muted-foreground flex-wrap">
                         <span className="truncate">{u.email}</span>
+                        {u.phone && (
+                          <>
+                            <span>·</span>
+                            <span className="flex items-center gap-1"><Phone className="h-3 w-3" />{u.phone}</span>
+                          </>
+                        )}
                         <span>·</span>
                         <span>Joined {u.created_at ? formatDate(u.created_at) : "—"}</span>
                       </div>

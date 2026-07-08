@@ -10,6 +10,7 @@ export interface SAUser {
   id: string
   email: string
   name: string | null
+  phone: string | null
   plan: string
   created_at: string | null
   siteCount: number
@@ -26,6 +27,7 @@ export interface SATenant {
   plan: string
   ownerEmail: string | null
   ownerName: string | null
+  ownerPhone: string | null
   subStatus: string | null
   subPlan: string | null
   paidPaise: number
@@ -62,7 +64,7 @@ export async function getPlatformData(): Promise<PlatformData> {
 
   const [tenantsRes, usersRes, subsRes, invoicesRes] = await Promise.all([
     sb.from("tenants").select("*").order("created_at", { ascending: false }),
-    sb.from("users").select("id,email,name,plan,created_at,tenant_id").order("created_at", { ascending: false }),
+    sb.from("users").select("id,email,name,phone,plan,created_at,tenant_id").order("created_at", { ascending: false }),
     sb.from("subscriptions").select("tenant_id,plan,status,current_end"),
     sb
       .from("subscription_invoices")
@@ -110,6 +112,7 @@ export async function getPlatformData(): Promise<PlatformData> {
       ...t,
       ownerEmail: owner?.email ?? null,
       ownerName: owner?.name ?? null,
+      ownerPhone: owner?.phone ?? null,
       subStatus: sub?.status ?? null,
       subPlan: sub?.plan ?? null,
       paidPaise: paidByTenant.get(t.id) ?? 0,
@@ -130,6 +133,7 @@ export async function getPlatformData(): Promise<PlatformData> {
     id: u.id,
     email: u.email,
     name: u.name ?? null,
+    phone: u.phone ?? null,
     plan: u.plan ?? "free",
     created_at: u.created_at ?? null,
     siteCount: siteCount.get(u.id) ?? 0,
