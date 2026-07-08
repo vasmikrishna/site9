@@ -12,13 +12,58 @@ import { FormHandler } from "@/components/public/form-handler"
 import { TemplateCarousel } from "@/components/public/template-carousel"
 import { MarketingHeader } from "@/components/public/marketing-header"
 import { ThemeLogo } from "@/components/ui/theme-logo"
+import { getTenantSlug, getCurrentTenant } from "@/lib/tenant"
+import { getCanonicalOrigin, isMainSite } from "@/lib/seo"
+import { getSiteSettings } from "@/lib/site-settings"
 import type { Metadata } from "next"
 
-export const metadata: Metadata = {
-  title: "Site9 — One Website for Every Business",
-  description:
-    "Build and launch a professional website in minutes. Answer a few questions, Site9 generates your site, and you publish it — free on a subdomain or Pro with a custom domain.",
-  alternates: { canonical: "/" },
+export async function generateMetadata(): Promise<Metadata> {
+  const slug = await getTenantSlug()
+  const override = await getHomepageOverride()
+
+  // Apex, or a tenant that has NOT published a homepage (it renders the Site9
+  // marketing fallback below) → keep the apex metadata so the page canonicals
+  // to site9.in instead of being indexed as a duplicate of it.
+  if (isMainSite(slug) || !override) {
+    return {
+      title: { absolute: "Site9 — One Website for Every Business" },
+      description:
+        "Build and launch a professional website in minutes. Answer a few questions, Site9 generates your site, and you publish it — free on a subdomain or Pro with a custom domain.",
+      alternates: { canonical: "/" },
+    }
+  }
+
+  // A tenant with a real published homepage → canonical to their OWN subdomain
+  // with their business name, so Google indexes it as a distinct site. Prefer a
+  // customised site name, else the tenant's name (never the "Site9" default,
+  // which would recreate the duplicate-title problem across subdomains).
+  const tenant = await getCurrentTenant().catch(() => null)
+  const settings = await getSiteSettings()
+  const origin = getCanonicalOrigin(tenant, slug)
+  const siteName =
+    (settings.site_name && settings.site_name !== "Site9" ? settings.site_name : tenant?.name) ?? "Site9"
+  const description = settings.site_tagline ?? siteName
+
+  return {
+    title: { absolute: siteName },
+    description,
+    metadataBase: new URL(origin),
+    alternates: { canonical: "/" },
+    openGraph: {
+      type: "website",
+      siteName,
+      title: siteName,
+      description,
+      url: origin,
+      ...(tenant?.logo_url ? { images: [{ url: tenant.logo_url, alt: siteName }] } : {}),
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: siteName,
+      description,
+      ...(tenant?.logo_url ? { images: [tenant.logo_url] } : {}),
+    },
+  }
 }
 
 export const dynamic = "force-dynamic"

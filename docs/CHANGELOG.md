@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Fixed — Tenant subdomains were de-indexed by a hardcoded canonical (#24)
+- **Homepage canonical bug.** `src/app/page.tsx` exported a **static** `metadata` block, so every tenant subdomain homepage emitted `<link rel="canonical" href="https://site9.in">` and the generic title "Site9 — One Website for Every Business" — telling Google the apex was the real page and to skip the subdomain. None of the live tenant sites could be indexed. Replaced with `generateMetadata()`: a subdomain with a **published homepage** now canonicals to its own origin with its business name; the apex (and tenants showing the marketing fallback) keep the apex metadata so they aren't indexed as duplicates. Inner pages were already correct via `(public)/layout.tsx`.
+- **Sitemap index.** New apex-only `/sitemap-index.xml` lists every live tenant's sitemap (active + published homepage, same rule as `/sites`), referenced from the apex `robots.txt`. One URL to submit in Search Console now leads Google to all `*.site9.in` sites.
+- Note: the stale `biharstartupsclub`/`controlpanel`/`lavanyapurefood.site9.in` URLs seen in Search Console are historical entries from a previous owner of the domain — unrelated to the platform; they age out or can be removed in GSC.
+
 ### Added — Platform SEO hardening (#5)
 - **Apex sitemap fix.** `sitemap.ts` no longer early-returns 5 static URLs for the main site — the apex (`site9.in`) now lists published blog posts and custom pages too, so the platform's own content (incl. the daily content engine) gets submitted. `/blog` marked `changeFrequency: daily`.
 - **Search-console verification.** Root metadata emits Google/Bing verification tags from `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` / `NEXT_PUBLIC_BING_SITE_VERIFICATION` (GSC domain-property via DNS already covers all `*.site9.in`).
