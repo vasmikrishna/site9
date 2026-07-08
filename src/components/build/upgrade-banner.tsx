@@ -11,20 +11,40 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog"
 
-type PlanKey = "monthly" | "annual"
+type Tier = "pro" | "max"
+type Period = "monthly" | "yearly"
+
+interface TierPrice {
+  price: string
+  original: string
+  per: string
+}
 
 interface PlanCard {
-  key: PlanKey
+  key: Tier
   label: string
-  price: string
-  per: string
+  monthly: TierPrice
+  yearly: TierPrice
   blurb: string
   highlight?: boolean
 }
 
 const PLAN_CARDS: PlanCard[] = [
-  { key: "monthly", label: "Pro — Monthly", price: "₹199", per: "/month", blurb: "Billed monthly. Cancel anytime." },
-  { key: "annual", label: "Pro — Annual", price: "₹1,499", per: "/year", blurb: "₹125/month — save 37%.", highlight: true },
+  {
+    key: "pro",
+    label: "Pro",
+    monthly: { price: "₹99", original: "₹199", per: "/month" },
+    yearly: { price: "₹990", original: "₹1,188", per: "/year" },
+    blurb: "Up to 5 websites · all core features.",
+  },
+  {
+    key: "max",
+    label: "Max",
+    monthly: { price: "₹299", original: "₹499", per: "/month" },
+    yearly: { price: "₹2,990", original: "₹3,588", per: "/year" },
+    blurb: "Up to 20 websites · all features + priority support.",
+    highlight: true,
+  },
 ]
 
 const PERKS = [
@@ -86,19 +106,21 @@ function loadRazorpay(): Promise<RazorpayConstructor | null> {
 export function UpgradeBanner({ subscribed }: { subscribed: boolean }) {
   const [active, setActive] = useState(subscribed)
   const [open, setOpen] = useState(false)
-  const [busy, setBusy] = useState<PlanKey | null>(null)
+  const [period, setPeriod] = useState<Period>("monthly")
+  const [selected, setSelected] = useState<Tier | null>(null)
+  const [busy, setBusy] = useState<Tier | null>(null)
   const [error, setError] = useState("")
 
   if (active) return null
 
-  async function handleSubscribe(plan: PlanKey) {
+  async function handleSubscribe(tier: Tier) {
     setError("")
-    setBusy(plan)
+    setBusy(tier)
     try {
       const res = await fetch("/api/billing/subscribe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan }),
+        body: JSON.stringify({ plan: `${tier}_${period}` }),
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) {
@@ -190,42 +212,89 @@ export function UpgradeBanner({ subscribed }: { subscribed: boolean }) {
             ))}
           </ul>
 
-          <div className="grid grid-cols-2 gap-3">
-            {PLAN_CARDS.map((p) => (
-              <button
-                key={p.key}
-                onClick={() => handleSubscribe(p.key)}
-                disabled={busy !== null}
-                data-testid={`subscribe-${p.key}`}
-                className={`relative flex flex-col items-start rounded-lg border p-4 text-left transition-all disabled:opacity-60 ${
-                  p.highlight
-                    ? "border-brand bg-gradient-to-br from-brand/15 to-brand/5 shadow-md hover:shadow-lg hover:scale-105 hover:border-brand/80"
-                    : "border-border bg-card hover:border-brand/50 hover:shadow-sm"
-                }`}
-              >
-                {p.highlight && (
-                  <span className="absolute right-3 top-3 rounded-full bg-brand px-2 py-0.5 text-[10px] font-semibold text-white shadow-sm">
-                    BEST VALUE
-                  </span>
-                )}
-                <span className="text-sm font-medium">{p.label}</span>
-                <span className="mt-1 text-2xl font-bold">
-                  {p.price}
-                  <span className="text-sm font-normal text-muted-foreground">{p.per}</span>
-                </span>
-                <span className="mt-1 text-xs text-muted-foreground">{p.blurb}</span>
-                <span className={`mt-3 inline-flex items-center gap-1.5 text-sm font-medium ${p.highlight ? "text-brand font-semibold" : "text-brand"}`}>
-                  {busy === p.key ? (
-                    <>
-                      <Loader2 className="h-3.5 w-3.5 animate-spin" /> Starting…
-                    </>
-                  ) : (
-                    "Subscribe"
+          <div className="flex justify-center my-1">
+            <div className="inline-flex items-center gap-1 rounded-full border bg-muted/40 p-1" role="tablist" aria-label="Billing period">
+              {(["monthly", "yearly"] as const).map((pr) => (
+                <button
+                  key={pr}
+                  type="button"
+                  role="tab"
+                  aria-selected={period === pr}
+                  disabled={busy !== null}
+                  onClick={() => setPeriod(pr)}
+                  data-testid={`upgrade-period-${pr}`}
+                  className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-colors disabled:opacity-60 ${
+                    period === pr ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {pr === "monthly" ? "Monthly" : "Yearly"}
+                  {pr === "yearly" && (
+                    <span className="rounded-full bg-green-500/15 px-1.5 py-0.5 text-[10px] font-semibold text-green-600 dark:text-green-400">
+                      2 months free
+                    </span>
                   )}
-                </span>
-              </button>
-            ))}
+                </button>
+              ))}
+            </div>
           </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            {PLAN_CARDS.map((p) => {
+              const isSelected = selected === p.key
+              return (
+                <button
+                  key={p.key}
+                  onClick={() => setSelected(p.key)}
+                  disabled={busy !== null}
+                  aria-pressed={isSelected}
+                  data-testid={`select-${p.key}`}
+                  className={`relative flex flex-col items-start rounded-lg border p-4 text-left transition-all disabled:opacity-60 ${
+                    isSelected
+                      ? "border-brand ring-2 ring-brand bg-gradient-to-br from-brand/15 to-brand/5 shadow-md"
+                      : p.highlight
+                        ? "border-brand/60 bg-gradient-to-br from-brand/10 to-brand/5 hover:border-brand hover:shadow-md"
+                        : "border-border bg-card hover:border-brand/50 hover:shadow-sm"
+                  }`}
+                >
+                  {p.highlight && (
+                    <span className="absolute right-3 top-3 rounded-full bg-brand px-2 py-0.5 text-[10px] font-semibold text-white shadow-sm">
+                      BEST VALUE
+                    </span>
+                  )}
+                  <span className="text-sm font-medium">{p.label}</span>
+                  <span className="mt-1 flex items-baseline gap-1.5 flex-wrap">
+                    <span className="text-sm font-normal text-muted-foreground line-through">{p[period].original}</span>
+                    <span className="text-2xl font-bold">{p[period].price}</span>
+                    <span className="text-sm font-normal text-muted-foreground">{p[period].per}</span>
+                  </span>
+                  <span className="mt-1 text-xs text-muted-foreground">{p.blurb}</span>
+                  {isSelected && (
+                    <span className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-brand">
+                      <Check className="h-3.5 w-3.5" /> Selected
+                    </span>
+                  )}
+                </button>
+              )
+            })}
+          </div>
+
+          {selected && (
+            <Button
+              variant="brand"
+              className="mt-4 w-full font-semibold"
+              disabled={busy !== null}
+              onClick={() => handleSubscribe(selected)}
+              data-testid="checkout"
+            >
+              {busy ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" /> Starting…
+                </>
+              ) : (
+                "Checkout"
+              )}
+            </Button>
+          )}
 
           {error && (
             <p className="mt-3 text-sm text-destructive" data-testid="upgrade-error">

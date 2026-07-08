@@ -6,7 +6,7 @@ import { upsertSubscription } from "@/lib/subscription"
 
 export const dynamic = "force-dynamic"
 
-const bodySchema = z.object({ plan: z.enum(["monthly", "annual"]) })
+const bodySchema = z.object({ plan: z.enum(["pro_monthly", "pro_yearly", "max_monthly", "max_yearly"]) })
 
 /**
  * POST /api/billing/subscribe
@@ -14,7 +14,7 @@ const bodySchema = z.object({ plan: z.enum(["monthly", "annual"]) })
  * params the browser Checkout widget needs. When Razorpay is not configured,
  * unlocks the subscription inline (dev fallback) so the flow stays demoable.
  *
- * Body: { plan: "monthly" | "annual" }
+ * Body: { plan: "pro_monthly" | "pro_yearly" | "max_monthly" | "max_yearly" }
  */
 export async function POST(req: Request) {
   const owner = await getOwnerContext()
@@ -28,7 +28,7 @@ export async function POST(req: Request) {
   // ── Dev fallback: no Razorpay keys → unlock inline ──────────────────────────
   if (!isRazorpayConfigured()) {
     const end = new Date()
-    end.setMonth(end.getMonth() + (plan.key === "annual" ? 12 : 1))
+    end.setMonth(end.getMonth() + (plan.period === "yearly" ? 12 : 1))
     await upsertSubscription(owner.tenant.id, {
       plan: plan.key,
       status: "active",

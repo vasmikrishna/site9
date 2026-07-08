@@ -1,12 +1,13 @@
 /**
- * One-time Razorpay plan setup. Creates the Monthly (₹199) and Annual (₹1,499)
- * subscription plans, then prints the plan IDs to paste into .env.local.
+ * One-time Razorpay plan setup. Creates the Pro & Max plans in both monthly and
+ * yearly cadences (yearly = 2 months free), then prints the plan IDs for .env.local.
  *
  * Usage:
  *   set -a && source .env.local && set +a && pnpm exec tsx src/scripts/razorpay-setup.ts
  *
  * Required env: RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET
- * After running, set: RAZORPAY_PLAN_MONTHLY_ID, RAZORPAY_PLAN_ANNUAL_ID
+ * After running, set: RAZORPAY_PLAN_PRO_ID, RAZORPAY_PLAN_PRO_YEARLY_ID,
+ *                     RAZORPAY_PLAN_MAX_ID, RAZORPAY_PLAN_MAX_YEARLY_ID
  */
 
 import Razorpay from "razorpay"
@@ -23,18 +24,32 @@ const rzp = new Razorpay({ key_id, key_secret })
 
 const PLANS = [
   {
-    envVar: "RAZORPAY_PLAN_MONTHLY_ID",
+    envVar: "RAZORPAY_PLAN_PRO_ID",
     period: "monthly" as const,
     interval: 1,
-    amount: 19900, // ₹199
-    name: "Site9 Pro — Monthly",
+    amount: 9900, // ₹99 — up to 5 sites
+    name: "Site9 Pro — 5 sites",
   },
   {
-    envVar: "RAZORPAY_PLAN_ANNUAL_ID",
+    envVar: "RAZORPAY_PLAN_PRO_YEARLY_ID",
     period: "yearly" as const,
     interval: 1,
-    amount: 149900, // ₹1,499
-    name: "Site9 Pro — Annual",
+    amount: 99000, // ₹990 — up to 5 sites, 2 months free
+    name: "Site9 Pro — 5 sites (yearly)",
+  },
+  {
+    envVar: "RAZORPAY_PLAN_MAX_ID",
+    period: "monthly" as const,
+    interval: 1,
+    amount: 29900, // ₹299 — up to 20 sites
+    name: "Site9 Max — 20 sites",
+  },
+  {
+    envVar: "RAZORPAY_PLAN_MAX_YEARLY_ID",
+    period: "yearly" as const,
+    interval: 1,
+    amount: 299000, // ₹2,990 — up to 20 sites, 2 months free
+    name: "Site9 Max — 20 sites (yearly)",
   },
 ]
 

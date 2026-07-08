@@ -8,7 +8,7 @@ function sub(overrides: Partial<Subscription>): Subscription {
   return {
     id: "s1",
     tenant_id: "t1",
-    plan: "monthly",
+    plan: "pro_monthly",
     status: "active",
     razorpay_subscription_id: "sub_x",
     razorpay_plan_id: "plan_x",

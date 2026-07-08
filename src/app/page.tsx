@@ -10,6 +10,7 @@ import { SCROLL_REVEAL_CSS, SCROLL_REVEAL_SCRIPT } from "@/lib/scroll-reveal"
 import { FEATURES } from "@/lib/features"
 import { FormHandler } from "@/components/public/form-handler"
 import { TemplateCarousel } from "@/components/public/template-carousel"
+import { TrackedLink } from "@/components/tracked-link"
 import { MarketingHeader } from "@/components/public/marketing-header"
 import { ThemeLogo } from "@/components/ui/theme-logo"
 import type { Metadata } from "next"
@@ -114,7 +115,7 @@ export default async function LandingPage() {
         </p>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-10">
           <Button asChild variant="brand" size="lg" className="w-full sm:w-auto">
-            <Link href="/start">Create your website <ArrowRight className="h-4 w-4" /></Link>
+            <TrackedLink href="/start" event="sign_up_start" eventParams={{ source: "home_hero" }}>Create your website <ArrowRight className="h-4 w-4" /></TrackedLink>
           </Button>
           <Button asChild variant="outline" size="lg" className="w-full sm:w-auto">
             <Link href="/templates">Browse templates</Link>
@@ -271,7 +272,7 @@ export default async function LandingPage() {
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Button asChild variant="brand" size="lg">
-              <Link href="/start">Create your website <ArrowRight className="h-4 w-4" /></Link>
+              <TrackedLink href="/start" event="sign_up_start" eventParams={{ source: "home_footer_cta" }}>Create your website <ArrowRight className="h-4 w-4" /></TrackedLink>
             </Button>
             <a
               href="mailto:hello@site9.in"

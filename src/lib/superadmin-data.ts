@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server"
+import { PLANS, type PlanKey } from "@/lib/razorpay"
 
 // Super-admin platform data. We query each table separately and stitch in JS
 // instead of using PostgREST embeds: since migration 020 added
@@ -36,6 +37,7 @@ export interface SAPayment {
   tenantId: string | null
   tenantName: string
   ownerEmail: string | null
+  ownerPhone: string | null
   amount: number // paise
   currency: string
   status: string
@@ -56,14 +58,26 @@ export interface PlatformData {
   }
 }
 
+// Display status for a subscription shown as a payment attempt. `created` =
+// initiated at Checkout but the charge never went through (treated as failed);
+// `halted` = charges failed. Anything unmapped falls through to its raw status.
+const SUB_PAYMENT_STATUS: Record<string, string> = {
+  created: "failed",
+  authenticated: "active",
+  active: "active",
+  halted: "failed",
+  cancelled: "cancelled",
+  completed: "completed",
+}
+
 export async function getPlatformData(): Promise<PlatformData> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const sb = createClient() as any
 
   const [tenantsRes, usersRes, subsRes, invoicesRes] = await Promise.all([
     sb.from("tenants").select("*").order("created_at", { ascending: false }),
-    sb.from("users").select("id,email,name,plan,created_at,tenant_id").order("created_at", { ascending: false }),
-    sb.from("subscriptions").select("tenant_id,plan,status,current_end"),
+    sb.from("users").select("id,email,name,phone,plan,created_at,tenant_id").order("created_at", { ascending: false }),
+    sb.from("subscriptions").select("id,tenant_id,plan,status,current_end,short_url,created_at"),
     sb
       .from("subscription_invoices")
       .select("id,tenant_id,subscription_id,amount,currency,status,paid_at,invoice_url,created_at")
@@ -145,6 +159,7 @@ export async function getPlatformData(): Promise<PlatformData> {
       tenantId: inv.tenant_id ?? null,
       tenantName: t?.name ?? "—",
       ownerEmail: owner?.email ?? null,
+      ownerPhone: owner?.phone ?? t?.contact_phone ?? null,
       amount: inv.amount ?? 0,
       currency: inv.currency ?? "INR",
       status: inv.status ?? "paid",
@@ -153,6 +168,32 @@ export async function getPlatformData(): Promise<PlatformData> {
       invoiceUrl: inv.invoice_url ?? null,
     }
   })
+
+  // Surface subscriptions that never produced an invoice as payment attempts, so
+  // initiated-but-incomplete charges (status `created`/`halted`) are visible too
+  // — not just successful ones. These don't count toward revenue or paid invoices.
+  const tenantsWithInvoice = new Set(invoices.map((i) => i.tenant_id))
+  for (const s of subs) {
+    if (tenantsWithInvoice.has(s.tenant_id)) continue
+    const t = tenantById.get(s.tenant_id)
+    const owner = t ? ownerOf(t) : null
+    payments.push({
+      id: `sub:${s.id}`,
+      tenantId: s.tenant_id ?? null,
+      tenantName: t?.name ?? "—",
+      ownerEmail: owner?.email ?? null,
+      ownerPhone: owner?.phone ?? t?.contact_phone ?? null,
+      amount: PLANS[s.plan as PlanKey]?.amount ?? 0,
+      currency: "INR",
+      status: SUB_PAYMENT_STATUS[s.status] ?? s.status,
+      plan: s.plan ?? null,
+      paidAt: s.created_at ?? null,
+      invoiceUrl: s.short_url ?? null,
+    })
+  }
+
+  // Newest first across both real invoices and subscription attempts.
+  payments.sort((a, b) => (b.paidAt ?? "").localeCompare(a.paidAt ?? ""))
 
   const revenuePaise = invoices
     .filter((i) => i.status === "paid")
