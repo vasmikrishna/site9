@@ -37,10 +37,13 @@ export default async function AboutPage() {
   return (
     <>
       {/* Hero */}
-      <section style={{ background: "var(--site-primary)" }} className="text-white py-14 sm:py-20">
+      <section
+        style={{ background: "var(--site-primary)", color: "var(--site-on-primary)" }}
+        className="py-14 sm:py-20"
+      >
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <h1 className="text-4xl font-bold">{s(settings, "about_heading")}</h1>
-          <p className="mt-3 text-white/80 max-w-2xl text-lg">
+          <p className="mt-3 max-w-2xl text-lg opacity-80">
             To bring every business online — where having a website is as common as having a phone number.
           </p>
         </div>
@@ -54,7 +57,9 @@ export default async function AboutPage() {
               <h2 className="text-2xl font-bold mb-4" style={{ color: "var(--site-primary)" }}>
                 Our vision
               </h2>
-              <p className="text-gray-700 leading-relaxed text-lg">{s(settings, "about_intro")}</p>
+              <p className="leading-relaxed text-lg" style={{ color: "var(--site-text)" }}>
+                {s(settings, "about_intro")}
+              </p>
               <div className="mt-6 space-y-3">
                 {[
                   "Getting online shouldn't be complicated",
@@ -62,7 +67,7 @@ export default async function AboutPage() {
                   "Every business deserves a professional online presence",
                   "Simple, affordable, and accessible for all",
                 ].map((item, i) => (
-                  <div key={i} className="flex items-center gap-2 text-sm text-gray-700">
+                  <div key={i} className="flex items-center gap-2 text-sm" style={{ color: "var(--site-text)" }}>
                     <Check className="h-4 w-4 flex-shrink-0" style={{ color: "var(--site-accent)" }} />
                     {item}
                   </div>
@@ -71,9 +76,13 @@ export default async function AboutPage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               {stats.map((stat, i) => (
-                <div key={i} className="bg-white rounded-lg border border-gray-200 p-5 text-center">
+                <div
+                  key={i}
+                  className="rounded-lg border p-5 text-center"
+                  style={{ background: "var(--site-surface)", borderColor: "var(--site-border)" }}
+                >
                   <div className="text-3xl font-bold" style={{ color: "var(--site-primary)" }}>{stat.num}</div>
-                  <div className="text-xs text-gray-500 mt-1">{stat.label}</div>
+                  <div className="text-xs mt-1" style={{ color: "var(--site-muted-text)" }}>{stat.label}</div>
                 </div>
               ))}
             </div>
@@ -86,17 +95,23 @@ export default async function AboutPage() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold" style={{ color: "var(--site-primary)" }}>Why Site9</h2>
-            <p className="mt-2 text-gray-500">The beliefs that guide everything we build</p>
+            <p className="mt-2" style={{ color: "var(--site-muted-text)" }}>
+              The beliefs that guide everything we build
+            </p>
           </div>
           <div className="grid md:grid-cols-3 gap-6">
             {values.map((v, i) => (
-              <div key={i} className="p-5 rounded-lg border border-gray-200 bg-white hover:shadow-sm transition-shadow">
-                <div className="w-8 h-8 rounded-full flex items-center justify-center mb-3 text-white text-sm font-bold"
-                  style={{ background: "var(--site-accent)" }}>
+              <div
+                key={i}
+                className="p-5 rounded-lg border hover:shadow-sm transition-shadow"
+                style={{ background: "var(--site-surface)", borderColor: "var(--site-border)" }}
+              >
+                <div className="w-8 h-8 rounded-full flex items-center justify-center mb-3 text-sm font-bold"
+                  style={{ background: "var(--site-accent)", color: "var(--site-on-accent)" }}>
                   {i + 1}
                 </div>
                 <h3 className="font-semibold mb-1" style={{ color: "var(--site-primary)" }}>{v.title}</h3>
-                <p className="text-sm text-gray-600">{v.desc}</p>
+                <p className="text-sm" style={{ color: "var(--site-muted-text)" }}>{v.desc}</p>
               </div>
             ))}
           </div>
@@ -104,14 +119,17 @@ export default async function AboutPage() {
       </section>
 
       {/* CTA */}
-      <section style={{ background: "var(--site-accent)" }} className="py-12 text-white text-center">
+      <section
+        style={{ background: "var(--site-accent)", color: "var(--site-on-accent)" }}
+        className="py-12 text-center"
+      >
         <div className="max-w-xl mx-auto px-4 sm:px-6">
           <h2 className="text-2xl font-bold">Get your business online</h2>
-          <p className="mt-2 text-white/85">Create your website in minutes — free to start, on your own subdomain.</p>
+          <p className="mt-2 opacity-85">Create your website in minutes — free to start, on your own subdomain.</p>
           <Link
             href="/contact"
-            className="inline-flex items-center gap-2 mt-6 rounded bg-white px-6 py-3 text-sm font-semibold transition-opacity hover:opacity-90"
-            style={{ color: "var(--site-accent)" }}
+            className="inline-flex items-center gap-2 mt-6 rounded px-6 py-3 text-sm font-semibold transition-opacity hover:opacity-90"
+            style={{ background: "var(--site-on-accent)", color: "var(--site-accent)" }}
           >
             Create your website <ArrowRight className="h-4 w-4" />
           </Link>

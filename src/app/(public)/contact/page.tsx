@@ -24,10 +24,13 @@ export default function ContactPage() {
   return (
     <>
       {/* Hero */}
-      <section style={{ background: "var(--site-primary)" }} className="text-white py-14 sm:py-20">
+      <section
+        style={{ background: "var(--site-primary)", color: "var(--site-on-primary)" }}
+        className="py-14 sm:py-20"
+      >
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <h1 className="text-4xl font-bold">Get in Touch</h1>
-          <p className="mt-3 text-white/70 max-w-xl text-lg">
+          <p className="mt-3 max-w-xl text-lg opacity-70">
             Have a question about getting your business online? We&apos;re here to help you launch.
           </p>
         </div>
@@ -60,19 +63,25 @@ export default function ContactPage() {
                 />
               </div>
 
-              <div className="mt-8 p-5 rounded-lg border border-gray-200 bg-white">
+              <div
+                className="mt-8 p-5 rounded-lg border"
+                style={{ background: "var(--site-surface)", borderColor: "var(--site-border)" }}
+              >
                 <h3 className="font-semibold mb-2" style={{ color: "var(--site-primary)" }}>Typical response time</h3>
-                <p className="text-sm text-gray-600">We respond to all enquiries within 24 hours on business days. Ready to launch now? Create your website in minutes.</p>
+                <p className="text-sm" style={{ color: "var(--site-muted-text)" }}>We respond to all enquiries within 24 hours on business days. Ready to launch now? Create your website in minutes.</p>
               </div>
             </div>
 
             {/* Form */}
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <div
+              className="rounded-lg border p-6"
+              style={{ background: "var(--site-surface)", borderColor: "var(--site-border)" }}
+            >
               {status === "sent" ? (
                 <div className="text-center py-10">
                   <div className="text-4xl mb-4">✅</div>
                   <h3 className="text-xl font-bold mb-2" style={{ color: "var(--site-primary)" }}>Message sent!</h3>
-                  <p className="text-gray-600 text-sm">Thanks for getting in touch. We&apos;ll get back to you within 24 hours.</p>
+                  <p className="text-sm" style={{ color: "var(--site-muted-text)" }}>Thanks for getting in touch. We&apos;ll get back to you within 24 hours.</p>
                 </div>
               ) : (
                 <form onSubmit={handleSubmit} className="space-y-4">
@@ -86,7 +95,7 @@ export default function ContactPage() {
                         value={form.name}
                         onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
                         required
-                        className="w-full rounded border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-offset-1"
+                        className="w-full rounded border border-[var(--site-border)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-offset-1"
                         style={{ "--tw-ring-color": "var(--site-primary)" } as any}
                       />
                     </FormField>
@@ -97,7 +106,7 @@ export default function ContactPage() {
                         value={form.email}
                         onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
                         required
-                        className="w-full rounded border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-offset-1"
+                        className="w-full rounded border border-[var(--site-border)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-offset-1"
                       />
                     </FormField>
                   </div>
@@ -109,14 +118,14 @@ export default function ContactPage() {
                         placeholder="0400 000 000"
                         value={form.phone}
                         onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
-                        className="w-full rounded border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-offset-1"
+                        className="w-full rounded border border-[var(--site-border)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-offset-1"
                       />
                     </FormField>
                     <FormField label="Service interested in">
                       <select
                         value={form.service}
                         onChange={e => setForm(f => ({ ...f, service: e.target.value }))}
-                        className="w-full rounded border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-offset-1 bg-white"
+                        className="w-full rounded border border-[var(--site-border)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-offset-1 bg-transparent"
                       >
                         <option value="">— select —</option>
                         <option value="launch">Launch in minutes</option>
@@ -134,7 +143,7 @@ export default function ContactPage() {
                       onChange={e => setForm(f => ({ ...f, message: e.target.value }))}
                       required
                       rows={4}
-                      className="w-full rounded border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-offset-1 resize-none"
+                      className="w-full rounded border border-[var(--site-border)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-offset-1 resize-none"
                     />
                   </FormField>
 
@@ -145,8 +154,8 @@ export default function ContactPage() {
                   <button
                     type="submit"
                     disabled={status === "sending"}
-                    className="w-full flex items-center justify-center gap-2 rounded px-5 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
-                    style={{ background: "var(--site-accent)" }}
+                    className="w-full flex items-center justify-center gap-2 rounded px-5 py-2.5 text-sm font-semibold transition-opacity hover:opacity-90 disabled:opacity-60"
+                    style={{ background: "var(--site-accent)", color: "var(--site-on-accent)" }}
                   >
                     <Send className="h-4 w-4" />
                     {status === "sending" ? "Sending…" : "Send message"}
@@ -164,7 +173,7 @@ export default function ContactPage() {
 function FormField({ label, children, required }: { label: string; children: React.ReactNode; required?: boolean }) {
   return (
     <div>
-      <label className="block text-xs font-medium text-gray-600 mb-1">{label}</label>
+      <label className="block text-xs font-medium text-[var(--site-muted-text)] mb-1">{label}</label>
       {children}
     </div>
   )
@@ -175,8 +184,8 @@ function ContactItem({ icon, label, value, href }: { icon: React.ReactNode; labe
     <div className="flex items-start gap-3">
       <span className="mt-0.5 flex-shrink-0" style={{ color: "var(--site-accent)" }}>{icon}</span>
       <div>
-        <p className="text-xs text-gray-400 uppercase tracking-wider">{label}</p>
-        <p className="text-sm font-medium text-gray-800">{value}</p>
+        <p className="text-xs text-[var(--site-muted-text)] uppercase tracking-wider">{label}</p>
+        <p className="text-sm font-medium text-[var(--site-text)]">{value}</p>
       </div>
     </div>
   )

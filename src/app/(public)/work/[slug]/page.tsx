@@ -126,14 +126,17 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
                 </div>
               </div>
 
-              <div className="rounded-lg p-5 text-white" style={{ background: "var(--site-primary)" }}>
+              <div
+                className="rounded-lg p-5"
+                style={{ background: "var(--site-primary)", color: "var(--site-on-primary)" }}
+              >
                 <h3 className="font-bold mb-2">Need something similar?</h3>
-                <p className="text-sm text-white/80 mb-4">
+                <p className="text-sm opacity-80 mb-4">
                   We&apos;d love to talk about your project — no obligation.
                 </p>
                 <Link href="/contact"
                   className="inline-flex items-center gap-2 rounded px-4 py-2 text-sm font-semibold w-full justify-center"
-                  style={{ background: "var(--site-accent)" }}>
+                  style={{ background: "var(--site-accent)", color: "var(--site-on-accent)" }}>
                   Get in touch <ArrowRight className="h-3.5 w-3.5" />
                 </Link>
               </div>
