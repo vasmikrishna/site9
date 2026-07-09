@@ -51,12 +51,15 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     title,
     description,
     alternates: { canonical: canonicalUrl },
+    // og:image is intentionally NOT set from cover_image_url. The colocated
+    // opengraph-image.tsx generates the branded social card and Next injects it
+    // at its hashed URL; overriding here would replace it with the on-page hero
+    // (which may be an inline data URI that social scrapers can't fetch).
     openGraph: {
       title,
       description,
       type: "article",
       url: canonicalUrl,
-      ...(post.cover_image_url ? { images: [{ url: post.cover_image_url, alt: title }] } : {}),
     },
   }
 }
