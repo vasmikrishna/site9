@@ -12,17 +12,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const mainSite = isMainSite(slug)
 
   const entries: MetadataRoute.Sitemap = [
-    { url: origin, lastModified: now, changeFrequency: "weekly", priority: 1.0 },
-    { url: `${origin}/about`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
-    { url: `${origin}/services`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
-    { url: `${origin}/contact`, lastModified: now, changeFrequency: "monthly", priority: 0.6 },
+    { url: origin, lastModified: now, changeFrequency: "daily", priority: 1.0 },
+    { url: `${origin}/about`, lastModified: now, changeFrequency: "daily", priority: 0.8 },
+    { url: `${origin}/services`, lastModified: now, changeFrequency: "daily", priority: 0.8 },
+    { url: `${origin}/contact`, lastModified: now, changeFrequency: "daily", priority: 0.6 },
   ]
 
   // Marketing pages that only live on the apex site.
   if (mainSite) {
-    entries.push({ url: `${origin}/templates`, lastModified: now, changeFrequency: "weekly", priority: 0.7 })
-    entries.push({ url: `${origin}/pricing`, lastModified: now, changeFrequency: "monthly", priority: 0.8 })
-    entries.push({ url: `${origin}/open-source`, lastModified: now, changeFrequency: "monthly", priority: 0.6 })
+    entries.push({ url: `${origin}/templates`, lastModified: now, changeFrequency: "daily", priority: 0.7 })
+    entries.push({ url: `${origin}/pricing`, lastModified: now, changeFrequency: "daily", priority: 0.8 })
+    entries.push({ url: `${origin}/open-source`, lastModified: now, changeFrequency: "daily", priority: 0.6 })
     entries.push({ url: `${origin}/sites`, lastModified: now, changeFrequency: "daily", priority: 0.7 })
   }
 
@@ -63,7 +63,7 @@ async function appendBlogUrls(
       entries.push({
         url: `${origin}/blog/${post.slug}`,
         lastModified: post.updated_at ? new Date(post.updated_at) : new Date(),
-        changeFrequency: "weekly",
+        changeFrequency: "daily",
         priority: 0.6,
       })
     }
@@ -92,7 +92,7 @@ async function appendCustomPageUrls(
       entries.push({
         url: `${origin}/p/${page.slug}`,
         lastModified: page.updated_at ? new Date(page.updated_at) : new Date(),
-        changeFrequency: "monthly",
+        changeFrequency: "daily",
         priority: 0.5,
       })
     }
