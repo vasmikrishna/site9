@@ -32,6 +32,7 @@ export default function StartPage() {
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState("")
+  const [emailTaken, setEmailTaken] = useState(false)
   const [loading, setLoading] = useState(false)
 
   // Apply a new slug and reset its status; the network check runs debounced below.
@@ -71,6 +72,7 @@ export default function StartPage() {
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault()
     setError("")
+    setEmailTaken(false)
     setLoading(true)
     const res = await fetch("/api/onboarding/create", {
       method: "POST",
@@ -81,8 +83,13 @@ export default function StartPage() {
     if (!res.ok) {
       setError(data.error ?? "Something went wrong")
       setLoading(false)
-      // A taken slug means we have to go back and pick another.
-      if (res.status === 409) { setStep(1); setAvail({ state: "taken", reason: data.error }) }
+      // A taken slug means we have to go back and pick another. An email
+      // conflict is a step-2 problem — keep them here and let them sign in.
+      if (res.status === 409 && data.field !== "email") {
+        setStep(1)
+        setAvail({ state: "taken", reason: data.error })
+      }
+      setEmailTaken(data.field === "email")
       return
     }
     router.push("/build")
@@ -217,7 +224,16 @@ export default function StartPage() {
               </div>
             </div>
 
-            {error && <p className="text-sm text-destructive" data-testid="start-error">{error}</p>}
+            {error && (
+              <p className="text-sm text-destructive" data-testid="start-error">
+                {error}{" "}
+                {emailTaken && (
+                  <Link href="/login" className="font-medium underline" data-testid="start-signin-link">
+                    Sign in
+                  </Link>
+                )}
+              </p>
+            )}
 
             <Button type="submit" className="w-full" variant="brand" loading={loading} data-testid="start-create">
               Create account &amp; start building

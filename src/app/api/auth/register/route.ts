@@ -29,13 +29,18 @@ export async function POST(req: Request) {
     const supabase = createClient(supabaseUrl, supabaseKey)
 
     // Global uniqueness: one account per email (case-insensitive).
+    // Deliberately not maybeSingle() — it errors when more than one row matches,
+    // and a swallowed error there would wave the duplicate through.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: existing } = await (supabase as any)
+    const { data: existing, error: lookupErr } = await (supabase as any)
       .from("users")
       .select("id")
       .ilike("email", email)
-      .maybeSingle()
-    if (existing) {
+      .limit(1)
+    if (lookupErr) {
+      return NextResponse.json({ error: "Failed to create account" }, { status: 500 })
+    }
+    if ((existing ?? []).length > 0) {
       return NextResponse.json({ error: "An account with this email already exists" }, { status: 409 })
     }
 

@@ -1,5 +1,26 @@
 # Known Issues
 
+## Accounts
+
+### Duplicate `users` rows per email — migration written, not applied
+**Status:** App-level fix shipped; DB-level uniqueness pending.
+
+The onboarding takeover hole is closed in the app (see CHANGELOG), but the database still
+allows duplicate rows per email: `users` is unique on `(email, tenant_id)`, not on the email
+itself. Two **concurrent** signups on the same new email could still both pass the app check
+and insert.
+
+`src/lib/supabase/migrations/022_one_user_row_per_email.sql` fixes this properly — it merges
+the remaining duplicates onto the site-owning row (keeping the password so Google *and*
+password sign-in both keep working), re-points every foreign key, then adds
+`unique (lower(email))`. It has **not been applied** because it touches live login rows.
+
+Two emails are affected: `ckrishna@startensystems.com` and `vamsikrishna.chinipireddy@gmail.com`.
+Each has an older Google row (no password, owns the sites) plus a newer `/start` row (has a
+password, owns nothing). Dry-run the migration's ranking `SELECT` before applying.
+
+**Workaround:** none needed for the reported bug — the app-level gate already blocks it.
+
 ## Social Media Management
 
 ### Real Instagram / Facebook posting requires a Meta App + App Review
